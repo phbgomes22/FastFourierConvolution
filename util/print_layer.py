@@ -3,7 +3,6 @@ import torch.nn as nn
 from config import DEBUG
 
 
-
 def debug_print(*txt):
     if DEBUG:
         print(*txt)
