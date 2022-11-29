@@ -1,5 +1,5 @@
 # Folder to store models
-model_output = './model_vanilla_celebsa_baw/'
+model_output = './model_cifar10_baw/'
 
 # Number of workers for dataloader
 workers = 4

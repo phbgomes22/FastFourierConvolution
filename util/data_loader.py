@@ -27,10 +27,10 @@ def load_data():
                                 transforms.Grayscale(),
                             ])
     # - FOR CIFAR10
-    #dataset = CIFAR10(root='./data', train=True, download=True, transform=transform)
+    dataset = CIFAR10(root='./data', train=True, download=True, transform=transform)
 
     # - For CelebA
-    dataset = CelebA(root='./celebsa_data', split='train', download=True, transform=transform)
+    #dataset = CelebA(root='./celebsa_data', split='train', download=True, transform=transform)
 
     # - FOR LOCAL IMAGES IN THE GOOGLE DRIVE
     #dataset = dset.ImageFolder(root=dataroot, transform=transform)
