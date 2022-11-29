@@ -1,7 +1,7 @@
 
 import torch
 import torch.nn as nn
-from fourier_unity import FourierUnit 
+from .fourier_unity import FourierUnit 
 
 '''
 Used in the FFC classs,

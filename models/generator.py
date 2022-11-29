@@ -1,5 +1,5 @@
 import torch.nn as nn
-from config import nz, ngf, nc
+from config import *
 
 # Generator Code
 

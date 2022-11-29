@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from config import DEBUG
+from config import *
 
 
 def debug_print(*txt):

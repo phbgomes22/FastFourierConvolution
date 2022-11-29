@@ -1,6 +1,6 @@
 import torch.nn as nn
 from util import *
-from spectral_transform import SpectralTransform
+from .spectral_transform import SpectralTransform
 
 '''
 The FFC Layer

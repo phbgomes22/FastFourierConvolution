@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from print_layer import Print
+from .print_layer import Print
 
 
 class Resizer(nn.Module):

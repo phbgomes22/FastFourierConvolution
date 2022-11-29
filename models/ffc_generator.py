@@ -1,8 +1,8 @@
 import torch.nn as nn
-from util import Resizer, Print, debug_print
-from ffc import FFC_BN_ACT
-from config import nz, nc
-from ffcmodel import FFCModel
+from util import *
+from ffc import *
+from config import *
+from .ffcmodel import FFCModel
 
 
 

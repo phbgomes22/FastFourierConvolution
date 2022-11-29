@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import torch.utils.data
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +7,7 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
 from torchvision.datasets import CIFAR10, CelebA
-from config import image_size, batch_size, workers, ngpu
+from config import *
 
 
 def get_device():

@@ -1,5 +1,5 @@
 import torch.nn as nn
-from util import Resizer, Print
+from util import *
 
 
 class FFCModel(nn.Module):
