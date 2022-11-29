@@ -63,7 +63,7 @@ def get_discriminator():
 
 
 
-def main(args):
+def main():
 
     dataloader = load_data()
 
