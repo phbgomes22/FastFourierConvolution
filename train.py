@@ -19,7 +19,6 @@ real_label = 1
 fake_label = 0
 
 
-
 # custom weights initialization called on netG and netD
 def weights_init(m):
     classname = m.__class__.__name__
@@ -71,17 +70,13 @@ def main(args):
     netG = get_generator()
     netD = get_discriminator()
 
-    # Setup Adam optimizers for both G and D
-    optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
-    optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
-
 
     train(netG, netD, dataloader)
 
 
 
 def train(netG, netD, dataloader):
-    # optimizers
+    # Setup Adam optimizers for both G and D
     optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
@@ -180,3 +175,7 @@ def train(netG, netD, dataloader):
             # if (iters % 250 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
                 
             iters += 1
+
+
+
+main()
