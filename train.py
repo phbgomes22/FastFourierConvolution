@@ -1,5 +1,5 @@
 import torch
-from torch.nn import nn
+import torch.nn as nn
 import torch.optim as optim
 from config import nz, lr, beta1, ngf, num_epochs, FFC_GENERATOR, FFC_DISCRIMINATOR, model_output
 from util import *
