@@ -1,3 +1,5 @@
+# Folder to store models
+model_output = './model_vanilla_celebsa_baw/'
 
 # Number of workers for dataloader
 workers = 4
@@ -38,3 +40,7 @@ ngpu = 1
 gout_factor = 0.5
 
 DEBUG = False
+
+FFC_GENERATOR = True
+
+FFC_DISCRIMINATOR = False

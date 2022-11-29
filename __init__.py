@@ -1,2 +1,5 @@
 from train import *
-from models import *
+
+
+def main (args):
+    pass
