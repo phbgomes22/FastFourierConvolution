@@ -1,1 +1,1 @@
-from params import *
+from .params import *
