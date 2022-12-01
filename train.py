@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from config import *
+from config.params import Config
 from util import *
 from models import *
 
@@ -10,9 +10,12 @@ criterion = nn.BCELoss()
 
 device = get_device()
 
+config = Config.shared()
+
 # Create batch of latent vectors that we will use to visualize
 #  the progression of the generator
-fixed_noise = torch.randn(64, nz, 1, 1, device=device)
+fixed_noise = torch.randn(64, config.nz, 1, 1, device=device)
+
 
 # Establish convention for real and fake labels during training
 real_label = 1
@@ -31,8 +34,14 @@ def weights_init(m):
 
 
 def get_generator():
-    
-    netG = FFCGenerator(ngf, debug=DEBUG).to(device) if FFC_GENERATOR else Generator(ngf).to(device)
+
+    ngf = config.ngf
+    ngpu = config.ngpu
+    netG = None
+    if config.FFC_GENERATOR:
+        netG = FFCGenerator(ngf, debug=config.DEBUG).to(device) 
+    else:
+        Generator(ngf).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -46,8 +55,17 @@ def get_generator():
 
 
 def get_discriminator():
+
+    ngpu = config.ngpu
+    ndf = config.ndf
+    DEBUG = config.DEBUG
+
     # Create the Discriminator
-    netD = FFCDiscriminator(ndf, debug=DEBUG).to(device) if FFC_DISCRIMINATOR else Discriminator(ngpu=ngpu).to(device) 
+    netD = None
+    if config.FFC_DISCRIMINATOR:
+        netD = FFCDiscriminator(ndf, debug=DEBUG).to(device)
+    else:
+        netD = Discriminator(ngpu=ngpu).to(device) 
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -62,22 +80,29 @@ def get_discriminator():
     return netD
 
 
-
 def main():
 
-    dataloader = load_data()
+    config.read_params()
 
-    netG = get_generator()
-    netD = get_discriminator()
+    print(config.FFC_GENERATOR)
+ #   dataloader = load_data()
+
+  #  netG = get_generator()
+  #  netD = get_discriminator()
 
 
-    train(netG, netD, dataloader)
+   # train(netG, netD, dataloader)
 
 
 
 def train(netG, netD, dataloader):
+    ## parameters
+    beta1 = config.beta1
+    lr = config.lr
+    num_epochs = config.num_epochs
+
     # Setup Adam optimizers for both G and D
-    optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=Config.shared.lr, betas=(beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
     # Training Loop
@@ -175,7 +200,6 @@ def train(netG, netD, dataloader):
             # if (iters % 250 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
                 
             iters += 1
-
 
 
 main()
