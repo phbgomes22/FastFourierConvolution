@@ -109,3 +109,7 @@ class Config:
 
         self.nc = 1 if opts.color == 'greyscale' else 3
 
+        self.batch_size = opts.batch_size
+
+        self.num_epochs = opts.epochs
+

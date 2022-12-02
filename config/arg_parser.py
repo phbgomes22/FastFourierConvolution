@@ -58,6 +58,14 @@ def read_train_options(args = sys.argv[1:]):
                         help="The path to the output to store the trained models",
                         default="../output/")
 
+    parser.add_argument("-e", "--epochs",
+                    help="Number of iterations for the training",
+                    default=400)
+
+    parser.add_argument("-b", "--batch_size",
+                help="Size of the batch size for the training",
+                default=128)
+
     opts = parser.parse_args(args)
 
 
