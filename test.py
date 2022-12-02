@@ -21,6 +21,7 @@ def test():
     nz = config.nz
     nc = config.nc
     model_path = config.model_path
+    number_samples = config.samples
 
    ## Loading generator
     netG = None
@@ -33,11 +34,12 @@ def test():
 
     count = 0
 
-    noise = torch.randn(10000, nz, 1, 1, device=device)
+    noise = torch.randn(number_samples, nz, 1, 1, device=device)
 
     with torch.no_grad():
         fake = netG(noise).detach().cpu()#.numpy()
 
+    ## creates output dir if it does not exist
     output_dir = '../generated_samples/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
