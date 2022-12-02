@@ -1,5 +1,5 @@
 from .arg_parser import *
-
+import os
 
 class Config:
     _instance = None
@@ -64,9 +64,20 @@ class Config:
 
     dataroot = '../data/'
 
+    ## The path for the weights of the pre-trained model
+    model_path = ''
 
-    def read_params(self):
-        opts = read_options()
+    def read_test_params(self):
+
+        opts = read_test_options()
+
+        self.model_path = opts.model_path
+
+        self.model_path 
+
+
+    def read_train_params(self):
+        opts = read_train_options()
 
         self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
@@ -77,6 +88,9 @@ class Config:
         self.model_output = opts.output
         if not self.model_output.endswith('/'):
             self.model_output += '/'
+        ## creates the output dir if it does not exist
+        if not os.path.exists(self.model_output):
+            os.makedirs(self.model_output)
 
         assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
         self.dataset_name = opts.dataset

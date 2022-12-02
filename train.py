@@ -40,7 +40,7 @@ def get_generator():
     if config.FFC_GENERATOR:
         netG = FFCGenerator(nz, nc, ngf, debug=config.DEBUG).to(device) 
     else:
-        Generator(nz, nc, ngf).to(device)
+        netG = Generator(nz, nc, ngf).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -83,7 +83,7 @@ def get_discriminator():
 def main():
 
     ## Reads the parameters send from the user through the terminal call of train.py
-    config.read_params()
+    config.read_train_params()
 
     ## Loads data for traning based on the config set by the user
     dataloader = load_data()

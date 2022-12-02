@@ -27,8 +27,6 @@ class FFCGenerator(FFCModel):
         
         return x
 
-
-
     def forward(self, x):
         debug_print('Começo G --')
         x = self.ffc0(x)

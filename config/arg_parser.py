@@ -3,7 +3,21 @@ import sys
 from .datasets import Datasets
 
 
-def read_options(args = sys.argv[1:]):
+def read_test_options(args = sys.argv[1:]):
+    parser = argparse.ArgumentParser(description="The parsing commands list.")
+
+    parser.add_argument("--model_path",
+                        help="The path to the pre-trained model weights",
+                        required=True)
+
+    opts = parser.parse_args(args)
+
+    return opts
+
+
+
+
+def read_train_options(args = sys.argv[1:]):
     parser = argparse.ArgumentParser(description="The parsing commands list.")
     parser.add_argument("-g", "--generator",
                          help="Choose the type of generator you want the model to use", 
