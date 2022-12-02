@@ -1,9 +1,8 @@
 import torch.nn as nn
-from config import *
 
 
 class Discriminator(nn.Module):
-    def __init__(self, ngpu):
+    def __init__(self, nc: int, ndf: int, ngpu: int = 1):
         super(Discriminator, self).__init__()
         self.ngpu = ngpu
         self.main = nn.Sequential(

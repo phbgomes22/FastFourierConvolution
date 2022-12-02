@@ -7,16 +7,19 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
 from torchvision.datasets import CIFAR10, CelebA
-from config import *
+from config import Config
 
 
 def get_device():
     # Decide which device we want to run on
-    device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+    device = torch.device("cuda:0" if (torch.cuda.is_available() and Config.shared.ngpu > 0) else "cpu")
     return device 
 
 
 def load_data():
+    image_size = Config.shared.image_size
+    batch_size = Config.shared.batch_size
+    workers = Config.shared.workers
     # We can use an image folder dataset the way we have it setup.
     # Create the dataset
     transform = transforms.Compose([

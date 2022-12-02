@@ -1,12 +1,11 @@
 import torch.nn as nn
 from util import *
 from ffc import *
-from config import *
 from .ffcmodel import FFCModel
 
 
 class FFCDiscriminator(FFCModel):
-    def __init__(self, ndf, debug=False):
+    def __init__(self, nc: int, ndf: int, debug: bool = False):
         super(FFCDiscriminator, self).__init__(inplanes=ndf, debug=debug)
 
         ## 3 x 64 x 64

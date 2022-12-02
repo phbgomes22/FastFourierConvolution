@@ -11,7 +11,7 @@ Inverse Fourier Transform to return to pixel domain.
 '''
 class FourierUnit(nn.Module):
 
-    def __init__(self, in_channels, out_channels, groups=1):
+    def __init__(self, in_channels: int, out_channels: int, groups: int = 1):
         # bn_layer not used
         super(FourierUnit, self).__init__()
         self.groups = groups

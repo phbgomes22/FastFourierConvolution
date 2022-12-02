@@ -1,12 +1,11 @@
 import torch.nn as nn
-from config import *
 
 # Generator Code
 
 class Generator(nn.Module):
-    def __init__(self, ngpu):
+    def __init__(self, nz: int, nc: int, ngf: int):
         super(Generator, self).__init__()
-        self.ngpu = ngpu
+        
         self.main = nn.Sequential(
             # input is Z, going into a convolution
             nn.ConvTranspose2d( nz, ngf * 16, 4, 1, 0, bias=False),

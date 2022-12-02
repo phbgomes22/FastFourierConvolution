@@ -12,11 +12,6 @@ device = get_device()
 
 config = Config.shared()
 
-# Create batch of latent vectors that we will use to visualize
-#  the progression of the generator
-fixed_noise = torch.randn(64, config.nz, 1, 1, device=device)
-
-
 # Establish convention for real and fake labels during training
 real_label = 1
 fake_label = 0
@@ -34,14 +29,18 @@ def weights_init(m):
 
 
 def get_generator():
-
+    ## Getting parameters
     ngf = config.ngf
     ngpu = config.ngpu
+    nz = config.nz
+    nc = config.nc
+
+    ## Creating generator
     netG = None
     if config.FFC_GENERATOR:
-        netG = FFCGenerator(ngf, debug=config.DEBUG).to(device) 
+        netG = FFCGenerator(nz, nc, ngf, debug=config.DEBUG).to(device) 
     else:
-        Generator(ngf).to(device)
+        Generator(nz, nc, ngf).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -58,14 +57,15 @@ def get_discriminator():
 
     ngpu = config.ngpu
     ndf = config.ndf
+    nc = config.nc
     DEBUG = config.DEBUG
 
     # Create the Discriminator
     netD = None
     if config.FFC_DISCRIMINATOR:
-        netD = FFCDiscriminator(ndf, debug=DEBUG).to(device)
+        netD = FFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
     else:
-        netD = Discriminator(ngpu=ngpu).to(device) 
+        netD = Discriminator(nc, ndf, ngpu=ngpu).to(device) 
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -100,6 +100,12 @@ def train(netG, netD, dataloader):
     beta1 = config.beta1
     lr = config.lr
     num_epochs = config.num_epochs
+    nz = config.nz
+    model_output = config.model_output
+
+    # Create batch of latent vectors that we will use to visualize
+    #  the progression of the generator
+    fixed_noise = torch.randn(64, nz, 1, 1, device=device)
 
     # Setup Adam optimizers for both G and D
     optimizerD = optim.Adam(netD.parameters(), lr=Config.shared.lr, betas=(beta1, 0.999))

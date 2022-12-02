@@ -1,7 +1,6 @@
 import torch.nn as nn
 from util import *
 from ffc import *
-from config import *
 from .ffcmodel import FFCModel
 
 
@@ -9,7 +8,7 @@ from .ffcmodel import FFCModel
 # FFC Generator Code
 
 class FFCGenerator(FFCModel):
-    def __init__(self, ngf, debug=False):
+    def __init__(self, nz: int, nc: int, ngf: int, debug: bool = False):
         super(FFCGenerator, self).__init__(inplanes=ngf * 8, debug=debug)
 
         self.ffc0 = FFC_BN_ACT(nz, ngf*16, 4, 0, 0.5, 1, 0, activation_layer=nn.ReLU, upsampling=True)
