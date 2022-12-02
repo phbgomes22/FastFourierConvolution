@@ -23,7 +23,7 @@ class Config:
     workers = 2
 
     # Batch size during training
-    batch_size = 512#128
+    batch_size = 1024#128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
@@ -43,7 +43,7 @@ class Config:
     ndf = image_size
 
     # Number of training epochs
-    num_epochs = 100
+    num_epochs = 400
 
     # Learning rate for optimizers
     lr = 0.0005#0.0002
