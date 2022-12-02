@@ -83,3 +83,5 @@ class Config:
         self.dataroot = opts.data_path
 
         self.nc = 1 if opts.color == 'greyscale' else 3
+
+        print(self.nc)
