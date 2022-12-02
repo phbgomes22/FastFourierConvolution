@@ -24,13 +24,18 @@ def load_data():
     workers = config.workers
     # We can use an image folder dataset the way we have it setup.
     # Create the dataset
-    transform = transforms.Compose([
-                                transforms.Resize(image_size),
-                                transforms.CenterCrop(image_size),
-                                transforms.ToTensor(),
-                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                                transforms.Grayscale(),
-                            ])
+
+    list_transforms = [
+        transforms.Resize(image_size),
+        transforms.CenterCrop(image_size),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ]
+    
+    if config.color == 'greyscale':
+        list_transforms.append(transforms.Grayscale())
+
+    transform = transforms.Compose(list_transforms)
 
     dataset = None 
     if config.dataset_name == Datasets.CIFAR10.value:
