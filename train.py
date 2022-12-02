@@ -85,15 +85,13 @@ def main():
     ## Reads the parameters send from the user through the terminal call of train.py
     config.read_params()
 
-    print(config.DEBUG)
+    ## Loads data for traning based on the config set by the user
+    dataloader = load_data()
 
-    # dataloader = load_data()
+    netG = get_generator()
+    netD = get_discriminator()
 
-    # netG = get_generator()
-    # netD = get_discriminator()
-
-
-    # train(netG, netD, dataloader)
+    train(netG, netD, dataloader)
 
 
 
