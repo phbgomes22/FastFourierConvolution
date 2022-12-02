@@ -55,7 +55,7 @@ def load_data():
         print("Loading OMNIGLOT dataset... ")
         dataset = Omniglot(root='../omniglot_data', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
-        # - FOR LOCAL IMAGES IN THE GOOGLE DRIVE
+        # - For local images
         dataset = dset.ImageFolder(root=config.dataroot, transform=transform)
 
     print("Will create dataloader...")
@@ -67,13 +67,13 @@ def load_data():
 
     device = get_device()
     # Plot some training images
-    try:
-        real_batch = next(iter(dataloader))
-        plt.figure(figsize=(8,8))
-        plt.axis("off")
-        plt.title("Training Images")
-        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
-    except OSError:
-        print("Cannot load image")
+    # try:
+    #     real_batch = next(iter(dataloader))
+    #     plt.figure(figsize=(8,8))
+    #     plt.axis("off")
+    #     plt.title("Training Images")
+    #     plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+    # except OSError:
+    #     print("Cannot load image")
 
     return dataloader
