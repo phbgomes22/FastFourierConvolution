@@ -88,9 +88,12 @@ def main():
     ## Loads data for traning based on the config set by the user
     dataloader = load_data()
 
+    print("Will create models...")
+    ## Creating generator and discriminator
     netG = get_generator()
     netD = get_discriminator()
 
+    print("Will begin training... ")
     train(netG, netD, dataloader)
 
 

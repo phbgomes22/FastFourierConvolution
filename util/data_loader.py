@@ -58,9 +58,12 @@ def load_data():
         # - FOR LOCAL IMAGES IN THE GOOGLE DRIVE
         dataset = dset.ImageFolder(root=config.dataroot, transform=transform)
 
+    print("Will create dataloader...")
     # Create the dataloader
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                             shuffle=True, num_workers=workers)
+
+    print("Dataloader created.")
 
     device = get_device()
     # Plot some training images
