@@ -17,7 +17,7 @@ class Config:
     model_output = '../output/'
 
     # Number of workers for dataloader
-    workers = 4
+    workers = 2
 
     # Batch size during training
     batch_size = 128
@@ -78,7 +78,7 @@ class Config:
 
         assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
         self.dataset_name = opts.dataset
-        
+
         # if the dataset chosen is local, then it must be provided the dataroot for the local dataset
         self.dataroot = opts.data_path
 
