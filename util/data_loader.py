@@ -33,7 +33,11 @@ def load_data():
     ]
 
     if config.nc == 1:
+        print("considering greyscale - channels = 1")
         list_transforms.append(transforms.Grayscale())
+    else: 
+        print("considering colored image - channels = 3")
+
 
     transform = transforms.Compose(list_transforms)
 
