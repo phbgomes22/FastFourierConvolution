@@ -29,14 +29,18 @@ def load_data():
         transforms.Resize(image_size),
         transforms.CenterCrop(image_size),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]
 
-    if config.nc == 1:
-        print("considering greyscale - channels = 1")
-        list_transforms.append(transforms.Grayscale())
-    else: 
-        print("considering colored image - channels = 3")
+    if Datasets.is_grayscale(config.dataset_name):
+        list_transforms.append(
+            transforms.Normalize((0.5,), (0.5,))
+        )
+    else:
+        list_transforms.append(
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        )
+        if config.nc == 1:
+            list_transforms.append( transforms.Grayscale() )
 
 
     transform = transforms.Compose(list_transforms)
@@ -71,13 +75,13 @@ def load_data():
 
     device = get_device()
     # Plot some training images
-    # try:
-    #     real_batch = next(iter(dataloader))
-    #     plt.figure(figsize=(8,8))
-    #     plt.axis("off")
-    #     plt.title("Training Images")
-    #     plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
-    # except OSError:
-    #     print("Cannot load image")
+    try:
+        real_batch = next(iter(dataloader))
+        plt.figure(figsize=(8,8))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+    except OSError:
+        print("Cannot load image")
 
     return dataloader
