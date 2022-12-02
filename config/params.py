@@ -40,13 +40,13 @@ class Config:
     ndf = image_size
 
     # Number of training epochs
-    num_epochs = 5000
+    num_epochs = 100
 
     # Learning rate for optimizers
-    lr = 0.0002
+    lr = 0.001#0.0002
 
     # Beta1 hyperparam for Adam optimizers
-    beta1 = 0.5
+    beta1 = 0.9#0.5
 
     # Number of GPUs available. Use 0 for CPU mode.
     ngpu = 1
@@ -75,6 +75,8 @@ class Config:
         self.DEBUG = opts.debug
 
         self.model_output = opts.output
+        if not self.model_output.endswith('/'):
+            self.model_output += '/'
 
         assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
         self.dataset_name = opts.dataset
