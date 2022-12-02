@@ -82,8 +82,11 @@ def get_discriminator():
 
 def main():
 
+    ## Reads the parameters send from the user through the terminal call of train.py
+    config.read_params()
+
     print(config.DEBUG)
-    # config.read_params()
+
     # dataloader = load_data()
 
     # netG = get_generator()
