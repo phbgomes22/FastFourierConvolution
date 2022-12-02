@@ -1,0 +1,13 @@
+from enum import Enum
+
+class Datasets(Enum):
+    MNIST = "MNIST"
+    CIFAR10 = "CIFAR10"
+    CELEBA = "CelebA"
+    OMNIGLOT = "OMNIGLOT"
+    LOCAL_DATASET = "LOCAL_DATASET"
+
+
+    @classmethod
+    def has_value(cls, value):
+        return value in cls._value2member_map_ 

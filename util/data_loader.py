@@ -6,20 +6,22 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torchvision.datasets import CIFAR10, CelebA
-from config import Config
+import scipy
+from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot
+from config import Config, Datasets
 
 
 def get_device():
     # Decide which device we want to run on
-    device = torch.device("cuda:0" if (torch.cuda.is_available() and Config.shared.ngpu > 0) else "cpu")
+    device = torch.device("cuda:0" if (torch.cuda.is_available() and Config.shared().ngpu > 0) else "cpu")
     return device 
 
 
 def load_data():
-    image_size = Config.shared.image_size
-    batch_size = Config.shared.batch_size
-    workers = Config.shared.workers
+    config = Config.shared()
+    image_size = config.image_size
+    batch_size = config.batch_size
+    workers = config.workers
     # We can use an image folder dataset the way we have it setup.
     # Create the dataset
     transform = transforms.Compose([
@@ -29,14 +31,23 @@ def load_data():
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                                 transforms.Grayscale(),
                             ])
-    # - FOR CIFAR10
-    dataset = CIFAR10(root='./data', train=True, download=True, transform=transform)
 
-    # - For CelebA
-    #dataset = CelebA(root='./celebsa_data', split='train', download=True, transform=transform)
-
-    # - FOR LOCAL IMAGES IN THE GOOGLE DRIVE
-    #dataset = dset.ImageFolder(root=dataroot, transform=transform)
+    dataset == None 
+    if config.dataset_name == Datasets.CIFAR10.value:
+        # - FOR CIFAR10
+        dataset = CIFAR10(root='./data', train=True, download=True, transform=transform)
+    elif config.dataset_name == Datasets.CELEBA.value:
+        # - For CelebA
+        dataset = CelebA(root='./celebsa_data', split='train', download=True, transform=transform)
+    elif config.dataset_name == Datasets.MNIST.value:
+        # - For MNIST 
+        dataset = MNIST(root='./celebsa_data', train=True, download=True, transform=transform)
+    elif config.dataset_name == Datasets.OMNIGLOT.value:
+        # - For Omniglot 
+        dataset = Omniglot(root='./celebsa_data', split='train', download=True, transform=transform)
+    elif config.dataset_name == Datasets.LOCAL_DATASET.value:
+        # - FOR LOCAL IMAGES IN THE GOOGLE DRIVE
+        dataset = dset.ImageFolder(root=config.dataroot, transform=transform)
 
     # Create the dataloader
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,

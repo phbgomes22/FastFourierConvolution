@@ -60,14 +60,26 @@ class Config:
 
     FFC_DISCRIMINATOR = False
 
+    dataset_name = Datasets.LOCAL_DATASET.value
+
+    dataroot = '../data/'
+
 
     def read_params(self):
         opts = read_options()
 
-        self.FFC_GENERATOR = False#True if opts.generator == 'ffc' else False
+        self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
         self.FFC_DISCRIMINATOR = True if opts.discriminator == 'ffc' else False
 
         self.DEBUG = opts.debug
+
+        self.model_output = opts.output
+
+        assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
+        self.dataset_name = opts.dataset
+        
+        # if the dataset chosen is local, then it must be provided the dataroot for the local dataset
+        self.dataroot = opts.data_path
 
         self.nc = 1 if opts.color == 'greyscale' else 3

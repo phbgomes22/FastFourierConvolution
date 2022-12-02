@@ -84,14 +84,13 @@ def main():
 
     config.read_params()
 
-    print(config.FFC_GENERATOR)
- #   dataloader = load_data()
+    dataloader = load_data()
 
-  #  netG = get_generator()
-  #  netD = get_discriminator()
+    netG = get_generator()
+    netD = get_discriminator()
 
 
-   # train(netG, netD, dataloader)
+    train(netG, netD, dataloader)
 
 
 
