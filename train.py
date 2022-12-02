@@ -82,15 +82,15 @@ def get_discriminator():
 
 def main():
 
-    config.read_params()
+    print(config.DEBUG)
+    # config.read_params()
+    # dataloader = load_data()
 
-    dataloader = load_data()
-
-    netG = get_generator()
-    netD = get_discriminator()
+    # netG = get_generator()
+    # netD = get_discriminator()
 
 
-    train(netG, netD, dataloader)
+    # train(netG, netD, dataloader)
 
 
 
