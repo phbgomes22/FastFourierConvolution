@@ -13,6 +13,9 @@ class Config:
             cls._instance = cls()
         return cls._instance
 
+    
+    ## --- train.py configuration parameters
+
     # Folder to store models
     model_output = '../output/'
 
@@ -64,15 +67,21 @@ class Config:
 
     dataroot = '../data/'
 
+    ## --- test.py configuration parameters
+
     ## The path for the weights of the pre-trained model
     model_path = ''
+
+    ## Number of samples that the test function will create
+    samples = 1000
 
     def read_test_params(self):
 
         opts = read_test_options()
 
         self.model_path = opts.model_path
-
+        self.samples = opts.number
+        
         self.model_path 
 
 

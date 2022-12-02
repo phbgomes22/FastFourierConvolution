@@ -10,6 +10,10 @@ def read_test_options(args = sys.argv[1:]):
                         help="The path to the pre-trained model weights",
                         required=True)
 
+    parser.add_argument("-n", "--number",
+                        help = "Number of samples that the generator will create",
+                        default=1000)
+
     opts = parser.parse_args(args)
 
     return opts
