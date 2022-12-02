@@ -32,7 +32,7 @@ def load_data():
                                 transforms.Grayscale(),
                             ])
 
-    dataset == None 
+    dataset = None 
     if config.dataset_name == Datasets.CIFAR10.value:
         # - FOR CIFAR10
         print("Loading CIFAR10 dataset... ")
