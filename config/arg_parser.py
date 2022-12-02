@@ -12,6 +12,7 @@ def read_test_options(args = sys.argv[1:]):
 
     parser.add_argument("-n", "--number",
                         help = "Number of samples that the generator will create",
+                        type=int,
                         default=1000)
 
     opts = parser.parse_args(args)
@@ -60,10 +61,12 @@ def read_train_options(args = sys.argv[1:]):
 
     parser.add_argument("-e", "--epochs",
                     help="Number of iterations for the training",
+                    type=int,
                     default=400)
 
     parser.add_argument("-b", "--batch_size",
                 help="Size of the batch size for the training",
+                type=int,
                 default=128)
 
     opts = parser.parse_args(args)
