@@ -49,7 +49,7 @@ class Config:
     lr = 0.001#0.0002
 
     # Beta1 hyperparam for Adam optimizers
-    beta1 = 0.9#0.5
+    beta1 = 0.5
 
     # Number of GPUs available. Use 0 for CPU mode.
     ngpu = 1
@@ -81,7 +81,7 @@ class Config:
 
         self.model_path = opts.model_path
         self.samples = opts.number
-        
+
         self.model_path 
 
 
