@@ -91,7 +91,9 @@ def main():
     print("Will create models...")
     ## Creating generator and discriminator
     netG = get_generator()
+    print("Generator created!")
     netD = get_discriminator()
+    print("Discriminator created!")
 
     print("Will begin training... ")
     train(netG, netD, dataloader)

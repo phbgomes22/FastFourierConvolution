@@ -84,4 +84,3 @@ class Config:
 
         self.nc = 1 if opts.color == 'greyscale' else 3
 
-        print(self.nc)
