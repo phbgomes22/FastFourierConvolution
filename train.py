@@ -111,7 +111,7 @@ def train(netG, netD, dataloader):
     fixed_noise = torch.randn(64, nz, 1, 1, device=device)
 
     # Setup Adam optimizers for both G and D
-    optimizerD = optim.Adam(netD.parameters(), lr=Config.shared.lr, betas=(beta1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=config.lr, betas=(beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
     # Training Loop
