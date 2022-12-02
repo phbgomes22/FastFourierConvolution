@@ -35,15 +35,19 @@ def load_data():
     dataset == None 
     if config.dataset_name == Datasets.CIFAR10.value:
         # - FOR CIFAR10
+        print("Loading CIFAR10 dataset... ")
         dataset = CIFAR10(root='./data', train=True, download=True, transform=transform)
     elif config.dataset_name == Datasets.CELEBA.value:
         # - For CelebA
+        print("Loading CelebA dataset... ")
         dataset = CelebA(root='./celebsa_data', split='train', download=True, transform=transform)
     elif config.dataset_name == Datasets.MNIST.value:
         # - For MNIST 
+        print("Loading MNIST dataset... ")
         dataset = MNIST(root='./celebsa_data', train=True, download=True, transform=transform)
     elif config.dataset_name == Datasets.OMNIGLOT.value:
         # - For Omniglot 
+        print("Loading OMNIGLO dataset... ")
         dataset = Omniglot(root='./celebsa_data', split='train', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
         # - FOR LOCAL IMAGES IN THE GOOGLE DRIVE
