@@ -23,7 +23,7 @@ class Config:
     workers = 2
 
     # Batch size during training
-    batch_size = 128
+    batch_size = 512#128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
@@ -46,7 +46,7 @@ class Config:
     num_epochs = 100
 
     # Learning rate for optimizers
-    lr = 0.001#0.0002
+    lr = 0.0005#0.0002
 
     # Beta1 hyperparam for Adam optimizers
     beta1 = 0.5
