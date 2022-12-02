@@ -31,8 +31,8 @@ def load_data():
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]
-    
-    if config.color == 'greyscale':
+
+    if config.nc == 1:
         list_transforms.append(transforms.Grayscale())
 
     transform = transforms.Compose(list_transforms)
