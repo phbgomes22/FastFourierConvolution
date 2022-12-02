@@ -29,9 +29,7 @@ def read_options(args = sys.argv[1:]):
                          
     parser.add_argument("--debug",
                         help="Choose if running with debug prints or not",
-                        choices=[True, False],
-                        type=bool,
-                        default=False)
+                        action='store_true')
 
     parser.add_argument("--color",
                         help="Choose the color scheme for the images to be generating",
