@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
-from config.params import Config
+from config import Config
 
 
 def debug_print(*txt):
-    if Config.shared.DEBUG:
+    if Config.shared().DEBUG:
         print(*txt)
 
 class Print(nn.Module):

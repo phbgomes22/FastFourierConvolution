@@ -1,4 +1,3 @@
-from util import *
 from .arg_parser import *
 
 
@@ -15,7 +14,7 @@ class Config:
         return cls._instance
 
     # Folder to store models
-    model_output = '../model_cifar10_baw/'
+    model_output = '../output/'
 
     # Number of workers for dataloader
     workers = 4
@@ -64,9 +63,7 @@ class Config:
 
     def read_params(self):
         opts = read_options()
-        print(opts)
 
-        print(opts.generator)
         self.FFC_GENERATOR = False#True if opts.generator == 'ffc' else False
 
         self.FFC_DISCRIMINATOR = True if opts.discriminator == 'ffc' else False
