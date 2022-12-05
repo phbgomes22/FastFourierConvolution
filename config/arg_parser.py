@@ -3,12 +3,20 @@ import sys
 from .datasets import Datasets
 
 
+
 def read_test_options(args = sys.argv[1:]):
+    '''
+    Responsible for setting the possible parameters for `test.py` and returning the parsed values
+    '''
     parser = argparse.ArgumentParser(description="The parsing commands list.")
 
     parser.add_argument("--model_path",
                         help="The path to the pre-trained model weights",
                         required=True)
+
+    parser.add_argument("-o", "--outuput",
+                        help="The path for the output files",
+                        default="../generated_samples/")
 
     parser.add_argument("-n", "--number",
                         help = "Number of samples that the generator will create",
@@ -23,6 +31,9 @@ def read_test_options(args = sys.argv[1:]):
 
 
 def read_train_options(args = sys.argv[1:]):
+    '''
+    Responsible for setting the possible parameters for `train.py` and returning the parsed values
+    '''
     parser = argparse.ArgumentParser(description="The parsing commands list.")
     parser.add_argument("-g", "--generator",
                          help="Choose the type of generator you want the model to use", 

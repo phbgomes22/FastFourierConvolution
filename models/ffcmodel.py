@@ -3,11 +3,15 @@ from util import *
 
 
 class FFCModel(nn.Module):
+    '''
+    Sets default values for the FFC Models. 
+    Both FFC-Generator and FFC-Discriminator inherits from this class.
+    '''
     def __init__(self, inplanes, debug=False):
         super(FFCModel, self).__init__()
         
         self.inplanes = inplanes
-        self.lfu = False # Testei true e false, false pareceu melhor
+        self.lfu = True
         self.groups = 1
         self.use_se = False
         self.base_width = 64

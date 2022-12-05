@@ -22,6 +22,7 @@ def test():
     nc = config.nc
     model_path = config.model_path
     number_samples = config.samples
+    output_dir = config.sample_output
 
    ## Loading generator
     netG = None
@@ -38,11 +39,6 @@ def test():
 
     with torch.no_grad():
         fake = netG(noise).detach().cpu()#.numpy()
-
-    ## creates output dir if it does not exist
-    output_dir = '../generated_samples/'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
     for f in fake:
         generated_image = np.transpose(f, (1,2,0))

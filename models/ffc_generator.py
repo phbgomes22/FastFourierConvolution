@@ -8,6 +8,12 @@ from .ffcmodel import FFCModel
 # FFC Generator Code
 
 class FFCGenerator(FFCModel):
+    '''
+    The Generator model using Fast Fourier Convolutions (FFC-Generator). 
+
+    It edits the regular discriminator model to add fourier convolutions to all layers of the network.
+    The ratio between the global and local signals in the network is set to 0.5 for the hidden layers.
+    '''
     def __init__(self, nz: int, nc: int, ngf: int, debug: bool = False):
         super(FFCGenerator, self).__init__(inplanes=ngf * 8, debug=debug)
 
@@ -18,31 +24,15 @@ class FFCGenerator(FFCModel):
         self.ffc4 = FFC_BN_ACT(ngf*2, nc, 4, 0.5, 0, 2, 1, norm_layer=nn.Identity, activation_layer=nn.Tanh, upsampling=True)
 
     def forward(self, x):
-        x = self.ffc0(x)
-        x = self.ffc1(x)
-        x = self.ffc2(x)
-        x = self.ffc3(x)
-        x = self.ffc4(x)
-        x = self.resizer(x)
-        
-        return x
-
-    def forward(self, x):
         debug_print('G --')
         x = self.ffc0(x)
         x = self.print_size(x)
-        
-        debug_print("FFC 1")
         x = self.ffc1(x)
-        debug_print("=")
         x = self.print_size(x)
-        debug_print("FFC 2")
         x = self.ffc2(x)
-        debug_print("=")
         x = self.print_size(x)
-        debug_print("FFC 3")
         x = self.ffc3(x)
-
+        x = self.print_size(x)
         x = self.ffc4(x)
         x = self.resizer(x)
         debug_print("End G --")
