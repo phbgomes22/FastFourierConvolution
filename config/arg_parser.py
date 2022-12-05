@@ -16,6 +16,7 @@ def read_test_options(args = sys.argv[1:]):
 
     parser.add_argument("-o", "--output",
                         help="The path for the output files",
+                        type=str,
                         default="../generated_samples/")
 
     parser.add_argument("-n", "--number",
@@ -68,6 +69,7 @@ def read_train_options(args = sys.argv[1:]):
 
     parser.add_argument("-o", "--output",
                         help="The path to the output to store the trained models",
+                        type=str,
                         default="../output/")
 
     parser.add_argument("-e", "--epochs",

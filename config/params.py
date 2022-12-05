@@ -112,7 +112,10 @@ class Config:
 
         self.model_path = opts.model_path
         self.samples = opts.number
-        self.sample_output = self.check_and_fill_path(opts.output)
+        self.sample_output = opts.output
+        # treat the output folder
+        self.sample_output = self.check_and_fill_path(self.sample_output)
+
         self.model_path 
 
 
@@ -130,6 +133,8 @@ class Config:
 
         self.DEBUG = opts.debug
 
+        self.model_output = opts.output
+        # treat the output folder
         self.model_output = self.check_and_fill_path(opts.output)
 
         assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
