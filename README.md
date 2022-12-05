@@ -71,12 +71,13 @@ Below, the list of possible arguments for the script. To get the full list of po
 | --model_path | The path to the pre-trained model weights. |  |
 | -n / --number | Number of samples that the generator will create. Default is set to `1000`. | Any positive integer value |
 | -o / --output | The path for the generated samples output. Default is `../generated_samples/` | |
+| -g / --generator | The type of generatator you used for the training of the model | ffc / vanilla |
+
  
- 
-An example for generating 10.000 images for a trained model from epoch 100 in an folder `../output/` is
+An example for generating 10.000 images for a trained ffc model from epoch 100 in an folder `../output/` is
  
 ```
-python test.py --model_path ../output/generator100_0 -n 10000
+python test.py -g ffc --model_path ../output/generator100_0 -n 10000
 ```
  
  

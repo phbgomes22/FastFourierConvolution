@@ -24,6 +24,11 @@ def read_test_options(args = sys.argv[1:]):
                         type=int,
                         default=1000)
 
+    parser.add_argument("-g", "--generator",
+                         help="Choose the type of generator you used when training the model", 
+                         choices=["ffc", "vanilla"],
+                         default='ffc')
+
     opts = parser.parse_args(args)
 
     return opts

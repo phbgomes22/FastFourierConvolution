@@ -113,7 +113,8 @@ class Config:
         self.model_path = opts.model_path
         self.samples = opts.number
         self.sample_output = self.check_and_fill_path(opts.output)
-        self.model_path 
+        
+        self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
 
     def read_train_params(self):
