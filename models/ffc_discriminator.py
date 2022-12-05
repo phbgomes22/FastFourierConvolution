@@ -9,13 +9,12 @@ class FFCDiscriminator(FFCModel):
         super(FFCDiscriminator, self).__init__(inplanes=ndf, debug=debug)
 
         ## 3 x 64 x 64
-        ## We need to keep this because basic block requires the 64 
         self.convolution1 = nn.Sequential(
             # in_ch, out_ch, kernel_size, stride, padding
            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
            nn.LeakyReLU(0.2, inplace=True)
         )
-        # sai BS x 64 x 32 x 32
+        # output: BS x 64 x 32 x 32
 
         self.ffc1 = FFC_BN_ACT(ndf * 1, ndf*2, 4, 0, 0.5, 2, 1, activation_layer=nn.LeakyReLU)
 
@@ -23,7 +22,7 @@ class FFCDiscriminator(FFCModel):
 
         self.ffc3 = FFC_BN_ACT(ndf * 4, ndf*8, 4, 0.5, 0.5, 2, 1, activation_layer=nn.LeakyReLU)
 
-        # sai BS x 516 x 4 x 4
+        # output: BS x 516 x 4 x 4
 
         self.ffc4 = FFC_BN_ACT(ndf * 8, 1, 4, 0.5, 0, 1, 0, norm_layer=nn.Identity, activation_layer=nn.Sigmoid )
 
@@ -35,7 +34,7 @@ class FFCDiscriminator(FFCModel):
 
 
     def forward(self, x):
-        debug_print('Começo D --')
+        debug_print('D --')
         x = self.print_size(x)
 
         x = self.convolution1(x)
@@ -58,5 +57,5 @@ class FFCDiscriminator(FFCModel):
 
        # x = self.conv5(x)
         x = self.print_size(x)
-        debug_print("Fim D --")
+        debug_print("End D --")
         return x

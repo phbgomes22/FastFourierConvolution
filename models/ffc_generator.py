@@ -28,7 +28,7 @@ class FFCGenerator(FFCModel):
         return x
 
     def forward(self, x):
-        debug_print('Começo G --')
+        debug_print('G --')
         x = self.ffc0(x)
         x = self.print_size(x)
         
@@ -45,5 +45,6 @@ class FFCGenerator(FFCModel):
 
         x = self.ffc4(x)
         x = self.resizer(x)
+        debug_print("End G --")
         
         return x

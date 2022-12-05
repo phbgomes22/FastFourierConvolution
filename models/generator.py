@@ -3,7 +3,15 @@ import torch.nn as nn
 # Generator Code
 
 class Generator(nn.Module):
+    '''
+    The regular Generator model - running with regular convolutions.
+    '''
     def __init__(self, nz: int, nc: int, ngf: int):
+        '''
+        `nz`: the size of the noise vector,
+        `nc`: number of color channels (1 for grayscale, 3 for colored images),
+        `ngf`: size of feature maps in the generator - same as the image siz (64),
+        '''
         super(Generator, self).__init__()
         
         self.main = nn.Sequential(
