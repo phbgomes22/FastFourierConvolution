@@ -18,6 +18,12 @@ def get_device():
 
 
 def load_data():
+    ''''
+    Based on the configuration setup, this function loads the dataset for the training.
+    For this implementation, the training set will always have 64x64 images. The available datasets are defined
+    in the `Datasets` file in the module config. 
+    The function returns a dataloader in order to iterate over the training samples.
+    '''
     config = Config.shared()
     image_size = config.image_size
     batch_size = config.batch_size

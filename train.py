@@ -5,21 +5,29 @@ from config import Config
 from util import *
 from models import *
 
-# Initialize BCELoss function
-criterion = nn.BCELoss()
+'''
+The `train.py` file is responsible for training the model based on the arguments it receives.
+
+In its `main` function, it reads the input from the user. Then, it loads the training dataset. 
+After that, it creates the generator and discriminator models and begins the training loop.
+'''
 
 device = get_device()
 
 config = Config.shared()
+
+# Initialize BCELoss function
+criterion = nn.BCELoss()
 
 # Establish convention for real and fake labels during training
 real_label = 1
 fake_label = 0
 
 
-
-# custom weights initialization called on netG and netD
 def weights_init(m):
+    '''
+    Custom weights initialization called on netG and netD
+    '''
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
@@ -29,6 +37,12 @@ def weights_init(m):
 
 
 def get_generator():
+    '''
+    Creates and returns the Generator model. 
+    The parameter -g / --generator provided by the user will control whether the generator
+    has fourier convolutions or regular ones. The default value is to use FFC.
+    Weight initialization is set by applying the `weights_init` function.
+    '''
     ## Getting parameters
     ngf = config.ngf
     ngpu = config.ngpu
@@ -54,6 +68,12 @@ def get_generator():
 
 
 def get_discriminator():
+    '''
+    Creates and returns the Discriminator model. 
+    The parameter -d / --discriminator provided by the user will control whether the discriminator
+    has fourier convolutions or regular ones. The default is using regular convolutions.
+    Weight initialization is set by applying the `weights_init` function.
+    '''
 
     ngpu = config.ngpu
     ndf = config.ndf
@@ -80,27 +100,12 @@ def get_discriminator():
     return netD
 
 
-def main():
-
-    ## Reads the parameters send from the user through the terminal call of train.py
-    config.read_train_params()
-
-    ## Loads data for traning based on the config set by the user
-    dataloader = load_data()
-
-    print("Will create models...")
-    ## Creating generator and discriminator
-    netG = get_generator()
-    print("Generator created!")
-    netD = get_discriminator()
-    print("Discriminator created!")
-
-    print("Will begin training... ")
-    train(netG, netD, dataloader)
-
 
 
 def train(netG, netD, dataloader):
+    '''
+    Controls the training loop of the GAN.
+    '''
     ## parameters
     beta1 = config.beta1
     lr = config.lr
@@ -119,7 +124,6 @@ def train(netG, netD, dataloader):
     # Training Loop
 
     # Lists to keep track of progress
-    img_list = []
     G_losses = []
     D_losses = []
     iters = 0
@@ -191,11 +195,12 @@ def train(netG, netD, dataloader):
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
-                img_list.append(curr_fake)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))
                 plt.imshow(image_to_show)
+                # saves the image representing samples from the generator
                 plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
+                # saves the generator model from the current epoch and batch
                 torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
                 plt.show()
             
@@ -207,10 +212,26 @@ def train(netG, netD, dataloader):
             if len(D_losses) > 1 and abs(D_losses[-1] - D_losses[-2]) > 20.0:
                 break
             
-            # Check how the generator is doing by saving G's output on fixed_noise
-            # if (iters % 250 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
-                
             iters += 1
+
+
+def main():
+
+    ## Reads the parameters send from the user through the terminal call of train.py
+    config.read_train_params()
+
+    ## Loads data for traning based on the config set by the user
+    dataloader = load_data()
+
+    print("Will create models...")
+    ## Creating generator and discriminator
+    netG = get_generator()
+    print("Generator created!")
+    netD = get_discriminator()
+    print("Discriminator created!")
+
+    print("Will begin training... ")
+    train(netG, netD, dataloader)
 
 
 main()
