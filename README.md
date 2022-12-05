@@ -79,7 +79,17 @@ An example for generating 10.000 images for a trained ffc model from epoch 100 i
 ```
 python test.py -g ffc --model_path ../output/generator100_0 -n 10000
 ```
+
+## Results
  
+Results for the CelebA, Omniglot, and MNIST datasets
+
+<p align="center">
+  <img src="images/celeba_example.jpeg" style="width:280px;"/>
+  <img src="images/omniglot_example.jpeg" style="width:280px;"/>
+  <img src="images/mnist_example.jpeg" style="width:280px;"/>
+</p>
+
  
 ## References
  
