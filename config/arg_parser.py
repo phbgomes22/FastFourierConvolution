@@ -14,7 +14,7 @@ def read_test_options(args = sys.argv[1:]):
                         help="The path to the pre-trained model weights",
                         required=True)
 
-    parser.add_argument("-o", "--outuput",
+    parser.add_argument("-o", "--output",
                         help="The path for the output files",
                         default="../generated_samples/")
 
