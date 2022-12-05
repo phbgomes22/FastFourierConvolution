@@ -155,22 +155,12 @@ class FFCTranspose(nn.Module):
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
-       # self.upsample = 
 
         self.convg2g = nn.Sequential(
-
-           # nn.ConvTranspose2d(in_cg,  out_cg, kernel_size,
-           #                   stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation),
-            #module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
-
-            # SpectralTransform (self, in_channels, out_channels, stride=1, groups=1, enable_lfu=False)
             module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
-            ## [PG] - already tested: inverting Umpsample with Spectral Convolution didnt work
-            ## [PG - 22/aug/02] - upsample may be a problem, will test with another conv2d
-           # nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True), 
+            # Upsample with convolution
             nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
-            ## UPSAMPLING DO SPECTRAL COM BILINEAR!!!
         )
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
@@ -256,12 +246,12 @@ class FFC_BN_ACT(nn.Module):
         gact = nn.Identity if ratio_gout == 0 else activation_layer
 
         if lact is nn.Tanh or lact is nn.Sigmoid:
-            self.act_l = lact() # was inplace=True
+            self.act_l = lact() # was inplace=True, had to change due to new Tanh function
         else:
             self.act_l = lact(inplace=True)
 
         if gact is nn.Tanh or gact is nn.Sigmoid:
-            self.act_g = gact() # was inplace=True
+            self.act_g = gact() # was inplace=True, had to change due to new Tanh function
         else:
             self.act_g = gact(inplace=True)
 
