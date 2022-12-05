@@ -3,24 +3,21 @@ from util import *
 from .spectral_transform import SpectralTransform
 from config import Config
 
-'''
-The FFC Layer
 
-It represents the module that receives the total signal, splits into local and global signals and returns the complete signal in the end.
-This represents the layer of the Fast Fourier Convolution that comes in place of a vanilla convolution layer.
-
-It contains:
-    Conv2ds with a kernel_size received as a parameter from the __init__ in `kernel_size`.
-    The Spectral Transform module for the processing of the global signal. 
-'''
 class FFC(nn.Module):
-    
+    '''
+    The FFC Layer
+
+    It represents the module that receives the total signal, splits into local and global signals and returns the complete signal in the end.
+    This represents the layer of the Fast Fourier Convolution that comes in place of a vanilla convolution layer.
+
+    It contains:
+        Conv2ds with a kernel_size received as a parameter from the __init__ in `kernel_size`.
+        The Spectral Transform module for the processing of the global signal. 
+    '''
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0,
                  dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True):
-        '''
-        Teste
-        '''
         super(FFC, self).__init__()
 
         assert stride == 1 or stride == 2, "Stride should be 1 or 2."
@@ -89,18 +86,14 @@ class FFC(nn.Module):
 
 
 
-'''
-The FFC Layer
 
-It represents the module that receives the total signal, splits into local and global signals and returns the complete signal in the end.
-This represents the layer of the Fast Fourier Convolution that comes in place of a vanilla convolution layer.
-
-It contains:
-    Conv2ds with a kernel_size received as a parameter from the __init__ in `kernel_size`.
-    The Spectral Transform module for the processing of the global signal. 
-'''
-### EDITADO PARA FAZER UPSAMPLING COM FFC!!!
 class FFCTranspose(nn.Module):
+    '''
+    The FFC Transposed Layer
+
+    New layer created to make upsampling possible with Fourer Convolutions.
+    This represents the layer of the Transposed Fourier Convolution that comes in place of a vanilla transposed convolution.
+    '''
 
     def __init__(self, in_channels, out_channels, kernel_size,
                  ratio_gin, ratio_gout, stride=1, padding=0, 
@@ -201,27 +194,29 @@ class FFCTranspose(nn.Module):
         return out_xl, out_xg
 
 
-
-'''
-Creates a single FFC -> Batch normalization -> Activation Module flow.
-
-This is the class that is put in the models as a blackbox. 
-So this is on of the entry point of all code related to the FFC (the other being the FFCSE_block).
-
-It has:
-    The FFC layer module.
-    Followed by Bach Normalization components for both the local and global signals.
-    Followed by an ActivationLayer 
-        -   The default activation layer is nn.Identity, so I think we are supposed to change it.
-'''
-## ADICIONEI PARAMETRO UPSAMPLING
 class FFC_BN_ACT(nn.Module):
+    '''
+    Creates a single FFC -> Batch normalization -> Activation Module flow.
+
+    This is the class that is put in the models as a blackbox. 
+    So this is on of the entry point of all code related to the FFC (the other being the FFCSE_block).
+
+    It has:
+        The FFC layer module.
+        Followed by Bach Normalization components for both the local and global signals.
+        Followed by an ActivationLayer 
+            -   The default activation layer is nn.Identity, so I think we are supposed to change it.
+    '''
 
     def __init__(self, in_channels, out_channels,
                  kernel_size, ratio_gin, ratio_gout,
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
                  norm_layer=nn.BatchNorm2d, activation_layer=nn.Identity,
                  enable_lfu=True, upsampling=False, out_padding=0):
+        '''
+        The parameter `upsampling` controls whether the FFC module or the FFCTransposed module will be used. 
+        The FFC works for downsampling, while FFCTransposed, for upsampling.
+        '''
         super(FFC_BN_ACT, self).__init__()
 
         # Creates the FFC layer, that will process the signal 
