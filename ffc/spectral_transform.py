@@ -9,11 +9,8 @@ It defines the flow of the Spectral Transform
 Within, the Fourier Unit
 '''
 class SpectralTransform(nn.Module):
-
-    # I changed the enable_lfu default value to False, as LaMa does not use it and it 
-    # increases complexity to the architecture.
     def __init__(self, in_channels: int, out_channels: int, 
-                stride: int = 1, groups: int = 1, enable_lfu: bool = False):
+                stride: int = 1, groups: int = 1, enable_lfu: bool = True):
         # bn_layer not used
         super(SpectralTransform, self).__init__()
         self.enable_lfu = enable_lfu
