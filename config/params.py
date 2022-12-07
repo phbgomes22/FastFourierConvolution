@@ -1,6 +1,7 @@
 from .arg_parser import *
 import os
 
+
 class Config:
     '''
     Class responsible for storing the information on what configurations are the 
@@ -88,7 +89,6 @@ class Config:
     ## The path for the output files
     sample_output = "../generated_samples/"
 
-
     def check_and_fill_path(self, pth: str):
         '''
         Check if path ends with `/`. If not, adds it and return new value.
@@ -113,7 +113,7 @@ class Config:
         self.model_path = opts.model_path
         self.samples = opts.number
         self.sample_output = self.check_and_fill_path(opts.output)
-        
+
         self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
 
@@ -145,3 +145,9 @@ class Config:
 
         self.num_epochs = opts.epochs
 
+
+class ConfigCond(Config): 
+    def __init__(self):
+        super(ConfigCond, self).__init__()
+
+    num_classes = 10
