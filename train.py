@@ -188,7 +188,7 @@ def train(netG, netD, dataloader):
             optimizerG.step()
             
             # Output training stats
-            if i % 4 == 0 and epoch%4 == 0:
+            if i % 32 == 0 and epoch%4 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
