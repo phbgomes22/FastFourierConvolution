@@ -11,7 +11,7 @@ Many related works focus on the task of image classification, image inpainting, 
  
 ## Data
  
-The implementation allows the use of four datasets from Torchvision, manely MNIST, CIFAR-10, CelebA, and Omniglot.
+The implementation allows the use of four datasets from Torchvision, manely [MNIST](http://yann.lecun.com/exdb/mnist/), [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html), [CelebA](https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html), and [Omniglot](https://github.com/brendenlake/omniglot).
  
 The MNIST database of handwritten digits and has a training set of 60,000 example with 10 classes. The CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes, with 50000 training images. CelebA is a large-scale face attributes dataset with more than 200K celebrity images. Omniglot contains 1623 different handwritten characters from 50 different alphabets.
  
@@ -49,7 +49,10 @@ Below, the list of possible arguments for the script. To get the full list of po
 | -e / --epochs | Number of iterations for the training. Default is 400. | Any positive integer value |
 | -b / --batch_size | ize of the batch size for the training. Default is 128. | Any positive integer value |
  
- 
+ **Note**
+The Dataloader expects a dataset with the format `{dir_name}/{class_names}/{images}`. Make sure that the dataset specified in `--data_path` follows this format of directory organization. 
+
+
 An example for training the FFC-DCGAN for the MNIST dataset with 600 epochs and a batch size of 256 is
  
 ```
