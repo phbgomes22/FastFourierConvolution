@@ -1,7 +1,6 @@
 import torch.nn as nn
 from util import *
 from ffc import *
-from .ffcmodel import FFCModel
 
 
 class CondDiscriminator(nn.Module):

@@ -6,7 +6,6 @@ from .ffcmodel import FFCModel
 
 
 # Generator Code
-
 class FFCCondGenerator(FFCModel):
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int, debug=False):
         super(FFCCondGenerator, self).__init__(inplanes=ngf * 8, debug=debug)

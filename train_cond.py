@@ -45,10 +45,18 @@ def get_generator():
     num_classes = config.num_classes
     embed_size = config.gen_embed
 
+    
     ## Creating generator
-    netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, 
-                            num_classes= num_classes, image_size=image_size, 
-                            embed_size=)
+    netG = None
+    if config.FFC_GENERATOR:
+        netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, 
+                                num_classes= num_classes, image_size=image_size, 
+                                embed_size=embed_size).to(device) 
+    else:
+        netG = CondGenerator(nz=nz, nc=nc, ngf=ngf, 
+                                num_classes= num_classes, image_size=image_size, 
+                                embed_size=embed_size).to(device)
+        
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -72,14 +80,12 @@ def get_discriminator():
     ngpu = config.ngpu
     ndf = config.ndf
     nc = config.nc
+    image_size = config.image_size
+    num_classes = config.num_classes
     DEBUG = config.DEBUG
 
     # Create the Discriminator
-    netD = None
-    if config.FFC_DISCRIMINATOR:
-        netD = FFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
-    else:
-        netD = Discriminator(nc, ndf, ngpu=ngpu).to(device) 
+    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, image_size=image_size) 
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -106,6 +112,7 @@ def train(netG, netD, dataloader):
     num_epochs = config.num_epochs
     nz = config.nz
     model_output = config.model_output
+    num_classes = config.num_classes
 
     # Create batch of latent vectors that we will use to visualize
     #  the progression of the generator
@@ -122,11 +129,24 @@ def train(netG, netD, dataloader):
     D_losses = []
     iters = 0
 
+    #
+    labels = range(num_classes)
+    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 7)[:64] ) ).float().to(device)
+
+
+
     print("Starting Training Loop...")
     # For each epoch
     for epoch in range(num_epochs):
         # For each batch in the dataloader
         for i, data in enumerate(dataloader, 0):
+            ############################
+            ## (0) Conditional Training 
+            ## Getting labels
+            ############################
+            labels = data[1].to(device)
+            one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
+
             
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -137,8 +157,9 @@ def train(netG, netD, dataloader):
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
             label = torch.full((b_size,), real_label, device=device)
-            # Forward pass real batch through D
-            output = netD(real_cpu).view(-1)
+            # Conditional Training 
+            # Forward pass real batch through D alonside one_hot_labels
+            output = netD(real_cpu, one_hot_labels).view(-1)
     
             # Calculate loss on all-real batch
             errD_real = criterion(output, label.float())
@@ -149,12 +170,15 @@ def train(netG, netD, dataloader):
             ## Train with all-fake batch
             # Generate batch of latent vectors
             noise = torch.randn(b_size, nz, 1, 1, device=device)
-            # Generate fake image batch with G
-            fake = netG(noise)
+            # Conditional Training 
+            # Generate fake image batch with G alongside one_hot_labels
+            fake = netG(noise, one_hot_labels)
 
             label.fill_(fake_label)
-            # Classify all fake batch with D
-            output = netD(fake.detach()).view(-1)
+            # Conditional Training 
+            # Classify all fake batch with D  alongside one_hot_labels
+            output = netD(fake.detach(), one_hot_labels).view(-1)
+            
             # Calculate D's loss on the all-fake batch
             errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
@@ -171,8 +195,9 @@ def train(netG, netD, dataloader):
             ###########################
             netG.zero_grad()
             label.fill_(real_label)  # fake labels are real for generator cost
-            # Since we just updated D, perform another forward pass of all-fake batch through D
-            output = netD(fake).view(-1)
+            # Conditional Training 
+            # Since we just updated D, perform another forward pass of all-fake batch through D  alongside one_hot_labels
+            output = netD(fake, one_hot_labels).view(-1)
             # Calculate G's loss based on this output
             errG = criterion(output, label.float())
             # Calculate gradients for G
@@ -187,7 +212,8 @@ def train(netG, netD, dataloader):
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
                 with torch.no_grad():
-                    fake = netG(fixed_noise).detach().cpu()
+                    # Conditional training - sampling
+                    fake = netG(fixed_noise, fixed_labels).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))

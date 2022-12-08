@@ -4,6 +4,29 @@ from .datasets import Datasets
 
 
 
+def read_cond_params(args = sys.argv[1:]):
+    '''
+    Responsible for setting the possible parameters for `train_cond.py` and returning the parsed values
+    '''
+    parser = argparse.ArgumentParser(description="The parsing commands list.")
+
+    parser.add_argument("-c", "--nu_classes",
+                    help = "Number of classes for conditional tarining",
+                    type=int,
+                    required=True)
+
+    parser.add_argument("-e", "--epochs",
+                    help="Number of iterations for the training",
+                    type=int,
+                    default=400)
+
+
+    cond_opts = parser.parse_args(args)
+
+    return cond_opts
+    
+
+
 def read_test_options(args = sys.argv[1:]):
     '''
     Responsible for setting the possible parameters for `test.py` and returning the parsed values

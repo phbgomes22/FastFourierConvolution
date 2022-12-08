@@ -59,7 +59,9 @@ def load_data():
     elif config.dataset_name == Datasets.CELEBA.value:
         # - For CelebA
         print("Loading CelebA dataset... ")
-        dataset = CelebA(root='../celeba_data', split='train', transform=transform)
+        ## - Trouble loading CelebA from dir?
+        ## - https://stackoverflow.com/questions/69755609/dataset-not-found-or-corrupted-you-can-use-download-true-to-download-it
+        dataset = CelebA(root='../celeba_data', split='train', download=True, transform=transform)
     elif config.dataset_name == Datasets.MNIST.value:
         # - For MNIST 
         print("Loading MNIST dataset... ")
