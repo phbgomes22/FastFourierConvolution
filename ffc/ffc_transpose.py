@@ -13,7 +13,8 @@ class FFCTranspose(nn.Module):
     The FFC Transposed Layer
 
     New layer created to make upsampling possible with Fourer Convolutions.
-    This represents the layer of the Transposed Fourier Convolution that comes in place of a vanilla transposed convolution.
+    This represents the layer of the Transposed Fourier Convolution that comes 
+    in place of a vanilla transposed convolution.
     '''
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
