@@ -24,11 +24,9 @@ class ConfigCond(Config):
         '''
         ## First, read the train params
         ## They are a subset of the parameters for the condinitional training
-        self.read_train_params()
+        opts = self.read_train_params()
 
         assert self.FFC_GENERATOR == True, "Only FFC-Generator available for conditional training"
 
         ## Then, read the extra params for the conditional training
-        opts = read_cond_params()
-
         self.num_classes = opts.num_classes

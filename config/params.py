@@ -149,3 +149,5 @@ class Config:
 
         self.num_epochs = opts.epochs
 
+        return opts
+

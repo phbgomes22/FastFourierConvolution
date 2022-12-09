@@ -6,22 +6,6 @@ import argparse
 import sys
 from .datasets import Datasets
 
-
-
-def read_cond_params(args = sys.argv[1:]):
-    '''
-    Responsible for setting the possible parameters for `train_cond.py` and returning the parsed values
-    '''
-    parser = argparse.ArgumentParser(description="The parsing commands list.")
-
-    parser.add_argument("-c", "--num_classes",
-                    help = "Number of classes for conditional tarining",
-                    type=int,
-                    required=True)
-
-    cond_opts = parser.parse_args(args)
-
-    return cond_opts
     
 
 
@@ -112,6 +96,11 @@ def read_train_options(args = sys.argv[1:]):
                 help="Size of the batch size for the training",
                 type=int,
                 default=128)
+
+    parser.add_argument("-c", "--num_classes",
+                    help = "Number of classes for conditional tarining",
+                    type=int,
+                    required=True)
 
     opts = parser.parse_args(args)
 
