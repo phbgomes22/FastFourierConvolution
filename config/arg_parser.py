@@ -52,6 +52,11 @@ def read_test_options(args = sys.argv[1:]):
                          choices=["ffc", "vanilla"],
                          default='ffc')
 
+    parser.add_argument("--color",
+                        help="Choose the color scheme for the images to be generating",
+                        choices=["greyscale", "colorized"],
+                        default="colorized")
+
     opts = parser.parse_args(args)
 
     return opts
