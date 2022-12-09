@@ -100,10 +100,8 @@ def read_train_options(args = sys.argv[1:]):
     parser.add_argument("-c", "--num_classes",
                     help = "Number of classes for conditional tarining",
                     type=int,
-                    required=True)
+                    default=-1)
 
     opts = parser.parse_args(args)
-
-
 
     return opts

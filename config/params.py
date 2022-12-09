@@ -92,6 +92,15 @@ class Config:
     ## The path for the output files
     sample_output = "../generated_samples/"
 
+    ## -- conditional training extra values
+            
+    # number of classes in the dataset
+    num_classes = 10
+
+    # generator embedding - hyperparameter
+    gen_embed = 100
+
+
     def check_and_fill_path(self, pth: str):
         '''
         Check if path ends with `/`. If not, adds it and return new value.
@@ -121,7 +130,7 @@ class Config:
         self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
 
-    def read_train_params(self):
+    def read_train_params(self, conditional: bool = False):
         '''
         Uses the `arg_parser.py` functions to parse the configuration from the user
         and update the Config shared instance.
@@ -148,6 +157,11 @@ class Config:
         self.batch_size = opts.batch_size
 
         self.num_epochs = opts.epochs
+
+        self.num_classes = opts.num_classes
+
+        if conditional:
+            assert opts.num_classes != -1, "Number of classes must be set for conditional training"
 
         return opts
 
