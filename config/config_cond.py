@@ -7,8 +7,22 @@ from .params import Config
 
 
 class ConfigCond(Config): 
+
+    _instance = None
+
     def __init__(self):
         super(ConfigCond, self).__init__()
+        self.some_attribute = None
+
+    @classmethod
+    def shared(cls):
+        '''
+        A shared instance of Config that is shared throughout the different
+        models of the project.
+        '''
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
         
     # number of classes in the dataset
     num_classes = 10

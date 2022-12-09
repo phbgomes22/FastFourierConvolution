@@ -8,8 +8,6 @@ from models import *
 
 device = get_device()
 
-config = ConfigCond.shared()
-
 # Initialize BCELoss function
 criterion = nn.BCELoss()
 
@@ -37,6 +35,7 @@ def get_generator():
     Weight initialization is set by applying the `weights_init` function.
     '''
     ## Getting parameters
+    config = ConfigCond.shared()
     ngf = config.ngf
     ngpu = config.ngpu
     nz = config.nz
@@ -77,6 +76,7 @@ def get_discriminator():
     Weight initialization is set by applying the `weights_init` function.
     '''
 
+    config = ConfigCond.shared()
     ngpu = config.ngpu
     ndf = config.ndf
     nc = config.nc
@@ -106,6 +106,7 @@ def train(netG, netD, dataloader):
     '''
     Controls the training loop of the GAN.
     '''
+    config = ConfigCond.shared()
     ## parameters
     beta1 = config.beta1
     lr = config.lr
@@ -237,6 +238,7 @@ def train(netG, netD, dataloader):
 
 def main():
 
+    config = ConfigCond.shared()
     ## Reads the parameters send from the user through the terminal call of train.py
     config.read_train_params()
 
