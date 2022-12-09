@@ -89,6 +89,7 @@ Results for the CelebA, Omniglot, and MNIST datasets
 
 <p align="center">
   <img src="images/celeba_example.jpeg" style="width:280px;"/>
+  <img src="images/celeba_col_example.jpeg" style="width:280px;"/>
   <img src="images/omniglot_example.jpeg" style="width:280px;"/>
   <img src="images/mnist_example.jpeg" style="width:280px;"/>
 </p>
