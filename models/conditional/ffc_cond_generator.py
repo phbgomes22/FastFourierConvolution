@@ -1,7 +1,7 @@
 import torch.nn as nn
 from util import *
 from ffc import *
-from .ffcmodel import FFCModel
+from ..ffcmodel import FFCModel
 
 
 
