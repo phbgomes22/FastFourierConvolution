@@ -4,7 +4,6 @@ Authors: Pedro Gomes
 
 from .arg_parser import *
 from .params import Config
-import os
 
 
 class ConfigCond(Config): 
@@ -18,14 +17,11 @@ class ConfigCond(Config):
     gen_embed = 100
 
 
-
-
     def read_cond_params(self):
         '''
         Uses the `arg_parser.py` functions to parse the configuration from the user
         and update the ConfigConnd shared instance.
         '''
-
         ## First, read the train params
         ## They are a subset of the parameters for the condinitional training
         self.read_train_params()
@@ -36,4 +32,3 @@ class ConfigCond(Config):
         opts = read_cond_params()
 
         self.num_classes = opts.num_classes
-        self.gen_embed = opts.gen_embed

@@ -14,16 +14,10 @@ def read_cond_params(args = sys.argv[1:]):
     '''
     parser = argparse.ArgumentParser(description="The parsing commands list.")
 
-    parser.add_argument("-c", "--nu_classes",
+    parser.add_argument("-c", "--num_classes",
                     help = "Number of classes for conditional tarining",
                     type=int,
                     required=True)
-
-    parser.add_argument("-e", "--epochs",
-                    help="Number of iterations for the training",
-                    type=int,
-                    default=400)
-
 
     cond_opts = parser.parse_args(args)
 
