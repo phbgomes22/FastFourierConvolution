@@ -1,3 +1,7 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 from .arg_parser import *
 from .params import Config
 import os

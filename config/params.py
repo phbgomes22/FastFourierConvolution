@@ -1,6 +1,9 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 from .arg_parser import *
 import os
-
 
 class Config:
     '''

@@ -1,9 +1,11 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 import torch.nn as nn
 from util import *
 from .spectral_transform import SpectralTransform
 from config import Config
-
-
 
 
 class FFCTranspose(nn.Module):
@@ -14,9 +16,17 @@ class FFCTranspose(nn.Module):
     This represents the layer of the Transposed Fourier Convolution that comes in place of a vanilla transposed convolution.
     '''
 
-    def __init__(self, in_channels, out_channels, kernel_size,
-                 ratio_gin, ratio_gout, stride=1, padding=0, 
-                 dilation=1, groups=1, bias=False, enable_lfu=True, out_padding=0):
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
+                 ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
+                 dilation: int = 1, groups: int = 1, bias: bool = False, 
+                 enable_lfu: bool = True, out_padding: int = 0):
+        '''
+        in_channels: number of channels that the FFCTranspose receives,
+        out_channels: number of channes that the FFCTranspose returns in the output tensor,
+        ratio_gin: the split between the local and global signals in the input (0, 1)
+        ratio_gout: the split between the local and global signals in the output (0, 1)
+        enable_lfu: if the local fourier unit is active or not 
+        '''
         super(FFCTranspose, self).__init__()
 
         assert stride == 1 or stride == 2, "Stride should be 1 or 2."

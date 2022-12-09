@@ -1,3 +1,7 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 import argparse
 import sys
 from .datasets import Datasets

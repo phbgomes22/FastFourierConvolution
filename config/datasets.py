@@ -1,3 +1,7 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 from enum import Enum
 
 class Datasets(Enum):

@@ -1,3 +1,7 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 import torch
 import torch.utils.data
 import matplotlib.pyplot as plt
@@ -6,7 +10,6 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-import scipy
 from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot
 from config import Config, Datasets
 

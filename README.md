@@ -97,4 +97,6 @@ Results for the CelebA, Omniglot, and MNIST datasets
 ## References
  
 1. Chi, Lu, Borui Jiang, and Yadong Mu. "Fast fourier convolution." Advances in Neural Information Processing Systems 33 (2020): 4479-4488.
+2. Fast Fourier Convolution implementation on [Github](https://github.com/pkumivision/FFC), authored by Chi, Lu and Jiang, Borui and Mu, Yadong.
+3. Radford, Alec, Luke Metz, and Soumith Chintala. "Unsupervised representation learning with deep convolutional generative adversarial networks." arXiv preprint arXiv:1511.06434 (2015).
 

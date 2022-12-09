@@ -1,3 +1,7 @@
+'''
+Authors: Chi, Lu and Jiang, Borui and Mu, Yadong
+Adaptations: Pedro Gomes 
+'''
 
 import torch
 import torch.nn as nn
@@ -52,7 +56,7 @@ class SpectralTransform(nn.Module):
         # gets the output from the Fourier Unit (back in pixel domain)
         output = self.fu(x)
 
-        # lfu is optional, and for the initial tests I will remove it
+        # lfu is optional
         if self.enable_lfu:
             n, c, h, w = x.shape
             split_no = 2

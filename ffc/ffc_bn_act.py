@@ -1,6 +1,10 @@
+'''
+Authors: Chi, Lu and Jiang, Borui and Mu, Yadong
+Adaptations: Pedro Gomes 
+'''
+
 import torch.nn as nn
 from util import *
-from .spectral_transform import SpectralTransform
 from config import Config
 from .ffc import *
 from .ffc_transpose import *

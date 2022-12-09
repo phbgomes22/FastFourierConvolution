@@ -1,3 +1,7 @@
+'''
+Authors: Chi, Lu and Jiang, Borui and Mu, Yadong
+Adaptations: Pedro Gomes 
+'''
 
 import torch
 import torch.nn as nn

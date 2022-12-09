@@ -1,3 +1,7 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 import torch
 import torch.nn as nn
 from .print_layer import Print

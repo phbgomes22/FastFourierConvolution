@@ -1,3 +1,8 @@
+'''
+Author: Nathan Inkawhich (PyTorch official documentation)
+Adaptations: Pedro Gomes 
+'''
+
 import torch.nn as nn
 
 # Generator Code

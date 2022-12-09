@@ -1,5 +1,9 @@
-import torch.nn as nn
+'''
+Author: Nathan Inkawhich (PyTorch official documentation)
+Adaptation: Pedro Gomes 
+'''
 
+import torch.nn as nn
 
 class Discriminator(nn.Module):
     '''
