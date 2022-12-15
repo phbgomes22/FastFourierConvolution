@@ -12,7 +12,7 @@ from .cond_bn import ConditionalBatchNorm2d
 # Generator Code
 class FFCCondGenerator(FFCModel):
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int, debug=False):
-        super(FFCCondGenerator, self).__init__(inplanes=ngf * 8, debug=debug)
+        super(FFCCondGenerator, self).__init__(inplanes=ngf * 16, debug=debug)
         self.image_size = image_size
         self.embed_size = embed_size
         self.nz = nz
@@ -45,7 +45,7 @@ class FFCCondGenerator(FFCModel):
                                activation_layer=nn.Tanh, upsampling=True)
         
         self.ylabel=nn.Sequential(
-            nn.Linear(num_classes,embed_size),
+            nn.Linear(num_classes, embed_size),
             nn.ReLU(True)
         )
 
