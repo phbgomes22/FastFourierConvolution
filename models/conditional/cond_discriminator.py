@@ -55,8 +55,7 @@ class CondDiscriminator(nn.Module):
 
     def forward(self, input, labels):
         y=self.ylabel(labels)
-        rand = torch.randint(10, (20, )) 
-
+        # revert one hot to labels to pass it to conditional batch norm
         discrete_labels = torch.argmax(labels, dim=1)
 
         y=y.view(labels.shape[0],1,64,64)
@@ -66,9 +65,9 @@ class CondDiscriminator(nn.Module):
         
         output = self.cbn1(output, discrete_labels)
         output = self.main2(output)
-        output = self.cbn2(output, labels)
+        output = self.cbn2(output, discrete_labels)
         output = self.main3(output)
-        output = self.cbn3(output, labels)
+        output = self.cbn3(output, discrete_labels)
         output = self.main4(output)
         
         return output.view(-1, 1).squeeze(1)
