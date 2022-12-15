@@ -54,18 +54,30 @@ class CondDiscriminator(nn.Module):
 
 
     def forward(self, input, labels):
-        print(labels)
+        print("Labels")
+        print(labels.shape)
         y=self.ylabel(labels)
+        print("y")
+        print(y.shape)
+        print(" = = = == = = = = ")
+        input = torch.randn(20, 100, 35, 45)
+        print("random input")
+        print(input.shape)
+        rand = torch.randint(10, (20, ))
+        print("random x")
+        print(rand.shape)
+
+
         y=y.view(labels.shape[0],1,64,64)
 
         inp=torch.cat([input,y],1)
         output = self.main(inp)
-        y_input = torch.tensor(labels).long()
-        output = self.cbn1(output, y_input)
+        
+        output = self.cbn1(output, labels)
         output = self.main2(output)
-        output = self.cbn2(output, y_input)
+        output = self.cbn2(output, labels)
         output = self.main3(output)
-        output = self.cbn3(output, y_input)
+        output = self.cbn3(output, labels)
         output = self.main4(output)
         
         return output.view(-1, 1).squeeze(1)
