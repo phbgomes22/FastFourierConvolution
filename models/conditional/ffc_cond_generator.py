@@ -16,13 +16,13 @@ class FFCCondGenerator(FFCModel):
         self.image_size = image_size
         self.embed_size = embed_size
         self.nz = nz
-        self.ffc0 = FFC_BN_ACT_COND(nz, ngf*16, 4, 0, 0.5, 1, 0, 
+        self.ffc0 = FFC_BN_ACT_COND(nz + embed_size, ngf*16, 4, 0, 0.5, 1, 0, 
                               activation_layer=nn.ReLU, 
                               norm_layer=ConditionalBatchNorm2d, 
                               upsampling=True,
                               num_classes=num_classes)
         
-        self.ffc1 = FFC_BN_ACT_COND(ngf*8, ngf*4, 4, 0, 0.5, 2, 1, 
+        self.ffc1 = FFC_BN_ACT_COND(ngf*8, ngf*4, 4, 0.5, 0.5, 2, 1, 
                                activation_layer=nn.ReLU, 
                                norm_layer=ConditionalBatchNorm2d, 
                                upsampling=True,
