@@ -22,25 +22,25 @@ class FFCCondGenerator(FFCModel):
                               upsampling=True,
                               num_classes=num_classes)
         
-        self.ffc1 = FFC_BN_ACT_COND(ngf*8, ngf*4, 4, 0.5, 0.5, 2, 1, 
+        self.ffc1 = FFC_BN_ACT_COND(ngf*16, ngf*8, 4, 0.5, 0.5, 2, 1, 
                                activation_layer=nn.ReLU, 
                                norm_layer=ConditionalBatchNorm2d, 
                                upsampling=True,
                               num_classes=num_classes)
 
-        self.ffc2 = FFC_BN_ACT_COND(ngf*4, ngf*2, 4, 0.5, 0.5, 2, 1, 
+        self.ffc2 = FFC_BN_ACT_COND(ngf*8, ngf*4, 4, 0.5, 0.5, 2, 1, 
                                activation_layer=nn.ReLU, 
                                norm_layer=ConditionalBatchNorm2d,  
                                upsampling=True,
                                num_classes=num_classes)
 
-        self.ffc3 = FFC_BN_ACT_COND(ngf*2, ngf, 4, 0.5, 0.5, 2, 1, 
+        self.ffc3 = FFC_BN_ACT_COND(ngf*4, ngf*2, 4, 0.5, 0.5, 2, 1, 
                                activation_layer=nn.ReLU, 
                                norm_layer=ConditionalBatchNorm2d,  
                                upsampling=True,
                                num_classes=num_classes)
 
-        self.ffc4 = FFC_BN_ACT(ngf, nc, 4, 0.5, 0, 2, 1, 
+        self.ffc4 = FFC_BN_ACT(ngf*2, nc, 4, 0.5, 0, 2, 1, 
                                norm_layer=nn.Identity, 
                                activation_layer=nn.Tanh, upsampling=True)
         
