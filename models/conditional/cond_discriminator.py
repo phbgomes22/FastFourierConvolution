@@ -59,11 +59,12 @@ class CondDiscriminator(nn.Module):
 
         inp=torch.cat([input,y],1)
         output = self.main(inp)
-        output = self.cbn1(output, labels)
+        y_input = torch.tensor(labels).long()
+        output = self.cbn1(output, y_input)
         output = self.main2(output)
-        output = self.cbn2(output, labels)
+        output = self.cbn2(output, y_input)
         output = self.main3(output)
-        output = self.cbn3(output, labels)
+        output = self.cbn3(output, y_input)
         output = self.main4(output)
         
         return output.view(-1, 1).squeeze(1)
