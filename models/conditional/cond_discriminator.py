@@ -36,7 +36,7 @@ class CondDiscriminator(nn.Module):
            # nn.BatchNorm2d(ndf * 4),
         self.cbn2 = ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes)
 
-        self.main3 = (
+        self.main3 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*4) x 8 x 8
             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
@@ -45,7 +45,7 @@ class CondDiscriminator(nn.Module):
             # Batch normalization conditioned to class
         self.cbn3 = ConditionalBatchNorm2d(ndf * 8, num_classes=num_classes)
 
-        self.main4 = (
+        self.main4 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
