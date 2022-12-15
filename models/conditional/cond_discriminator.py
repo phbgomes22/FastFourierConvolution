@@ -54,6 +54,7 @@ class CondDiscriminator(nn.Module):
 
 
     def forward(self, input, labels):
+        print(labels)
         y=self.ylabel(labels)
         y=y.view(labels.shape[0],1,64,64)
 
