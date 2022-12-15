@@ -25,7 +25,7 @@ def weights_init(m):
     if classname.find('Conv') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
     elif classname.find('BatchNorm') != -1:
-        if m is ConditionalBatchNorm2d:
+        if type(m) is ConditionalBatchNorm2d:
             nn.init.normal_(m.bn.weight.data, 1.0, 0.02)
             nn.init.constant_(m.bias.data, 0)
         else:
