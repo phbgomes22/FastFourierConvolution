@@ -40,7 +40,6 @@ class FFCCondGenerator(FFCModel):
 
         self.ffc4 = FFC_BN_ACT(ngf, nc, 4, 0.5, 0, 2, 1, 
                                norm_layer=nn.Identity, 
-                               norm_layer=ConditionalBatchNorm2d, 
                                activation_layer=nn.Tanh, upsampling=True)
         
         self.ylabel=nn.Sequential(
