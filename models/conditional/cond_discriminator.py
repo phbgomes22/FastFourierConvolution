@@ -23,6 +23,8 @@ class CondDiscriminator(nn.Module):
             nn.Conv2d(nc+1, ndf, 4, 2, 1, bias=False), # +1 due to conditional
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf) x 32 x 32
+        )
+        self.main2 = nn.Sequential(
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
            # nn.BatchNorm2d(ndf * 2),
             ConditionalBatchNorm2d(ndf * 2, num_classes=num_classes),
@@ -51,5 +53,6 @@ class CondDiscriminator(nn.Module):
 
         inp=torch.cat([input,y],1)
         output = self.main(inp)
+        output = self.main2(output)
         
         return output.view(-1, 1).squeeze(1)
