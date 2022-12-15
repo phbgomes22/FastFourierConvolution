@@ -5,6 +5,7 @@ Author: Pedro Gomes
 import torch.nn as nn
 from util import *
 from ffc import *
+from .cond_bn import ConditionalBatchNorm2d
 
 
 class CondDiscriminator(nn.Module):
@@ -23,15 +24,20 @@ class CondDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf) x 32 x 32
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 2),
+           # nn.BatchNorm2d(ndf * 2),
+            ConditionalBatchNorm2d(ndf * 2, num_classes=num_classes),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*2) x 16 x 16
             nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 4),
+           # nn.BatchNorm2d(ndf * 4),
+            ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*4) x 8 x 8
             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 8),
+
+            #nn.BatchNorm2d(ndf * 8),
+            # Batch normalization conditioned to class
+            ConditionalBatchNorm2d(ndf * 8, num_classes=num_classes),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),

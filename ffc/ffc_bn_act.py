@@ -11,7 +11,6 @@ from .ffc_transpose import *
 
 
 
-
 class FFC_BN_ACT(nn.Module):
     '''
     Creates a single FFC -> Batch normalization -> Activation Module flow.
@@ -30,7 +29,7 @@ class FFC_BN_ACT(nn.Module):
                  kernel_size, ratio_gin, ratio_gout,
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
                  norm_layer=nn.BatchNorm2d, activation_layer=nn.Identity,
-                 enable_lfu=True, upsampling=False, out_padding=0):
+                 enable_lfu=True, upsampling=False, out_padding=0, num_classes=0):
         '''
         The parameter `upsampling` controls whether the FFC module or the FFCTransposed module will be used. 
         The FFC works for downsampling, while FFCTransposed, for upsampling.
@@ -51,8 +50,12 @@ class FFC_BN_ACT(nn.Module):
         # create the BatchNormalization layers
         lnorm = nn.Identity if ratio_gout == 1 else norm_layer
         gnorm = nn.Identity if ratio_gout == 0 else norm_layer
-        self.bn_l = lnorm(int(out_channels * (1 - ratio_gout)))
-        self.bn_g = gnorm(int(out_channels * ratio_gout))
+        if num_classes > 0:
+            self.bn_l = lnorm(int(out_channels * (1 - ratio_gout)), num_classes)
+            self.bn_g = gnorm(int(out_channels * ratio_gout), num_classes)
+        else:
+            self.bn_l = lnorm(int(out_channels * (1 - ratio_gout)))
+            self.bn_g = gnorm(int(out_channels * ratio_gout))
 
         # create the activation function layers
         lact = nn.Identity if ratio_gout == 1 else activation_layer

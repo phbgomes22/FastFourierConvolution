@@ -6,7 +6,7 @@ import torch.nn as nn
 from util import *
 from ffc import *
 from ..ffcmodel import FFCModel
-
+from .cond_bn import ConditionalBatchNorm2d
 
 
 # Generator Code
@@ -23,10 +23,25 @@ class FFCCondGenerator(FFCModel):
             nn.ReLU(True)
         )
         
-        self.ffc1 = FFC_BN_ACT(ngf*8, ngf*4, 4, 0, 0.5, 2, 1, activation_layer=nn.ReLU, upsampling=True)
-        self.ffc2 = FFC_BN_ACT(ngf*4, ngf*2, 4, 0.5, 0.5, 2, 1, activation_layer=nn.ReLU,  upsampling=True)
-        self.ffc3 = FFC_BN_ACT(ngf*2, ngf, 4, 0.5, 0.5, 2, 1, activation_layer=nn.ReLU,  upsampling=True)
-        self.ffc4 = FFC_BN_ACT(ngf, nc, 4, 0.5, 0, 2, 1, norm_layer=nn.Identity, activation_layer=nn.Tanh, upsampling=True)
+        self.ffc1 = FFC_BN_ACT(ngf*8, ngf*4, 4, 0, 0.5, 2, 1, 
+                               activation_layer=nn.ReLU, 
+                               norm_layer=ConditionalBatchNorm2d, 
+                               upsampling=True)
+
+        self.ffc2 = FFC_BN_ACT(ngf*4, ngf*2, 4, 0.5, 0.5, 2, 1, 
+                               activation_layer=nn.ReLU, 
+                               norm_layer=ConditionalBatchNorm2d,  
+                               upsampling=True)
+
+        self.ffc3 = FFC_BN_ACT(ngf*2, ngf, 4, 0.5, 0.5, 2, 1, 
+                               activation_layer=nn.ReLU, 
+                               norm_layer=ConditionalBatchNorm2d,  
+                               upsampling=True)
+
+        self.ffc4 = FFC_BN_ACT(ngf, nc, 4, 0.5, 0, 2, 1, 
+                               norm_layer=nn.Identity, 
+                               norm_layer=ConditionalBatchNorm2d, 
+                               activation_layer=nn.Tanh, upsampling=True)
         
         self.ylabel=nn.Sequential(
             nn.Linear(num_classes,embed_size),
