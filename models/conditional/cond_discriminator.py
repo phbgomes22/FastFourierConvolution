@@ -5,7 +5,7 @@ Author: Pedro Gomes
 import torch.nn as nn
 from util import *
 from ffc import *
-from .cond_bn import CategoricalConditionalBatchNorm2d
+from .cond_bn import ConditionalBatchNorm2d
 
 
 class CondDiscriminator(nn.Module):
@@ -27,14 +27,14 @@ class CondDiscriminator(nn.Module):
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
         )
            # nn.BatchNorm2d(ndf * 2),
-        self.cbn1 = CategoricalConditionalBatchNorm2d(num_classes, ndf * 2)
+        self.cbn1 = ConditionalBatchNorm2d(ndf * 2, num_classes=num_classes)
         self.main2 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*2) x 16 x 16
             nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False)
         )
            # nn.BatchNorm2d(ndf * 4),
-        self.cbn2 = CategoricalConditionalBatchNorm2d(num_classes, ndf * 4)
+        self.cbn2 = ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes)
 
         self.main3 = (
             nn.LeakyReLU(0.2, inplace=True),
@@ -43,7 +43,7 @@ class CondDiscriminator(nn.Module):
         )
             #nn.BatchNorm2d(ndf * 8),
             # Batch normalization conditioned to class
-        self.cbn3 = CategoricalConditionalBatchNorm2d(num_classes, ndf * 8)
+        self.cbn3 = ConditionalBatchNorm2d(ndf * 8, num_classes=num_classes)
 
         self.main4 = (
             nn.LeakyReLU(0.2, inplace=True),
@@ -59,11 +59,11 @@ class CondDiscriminator(nn.Module):
 
         inp=torch.cat([input,y],1)
         output = self.main(inp)
-        output = self.cbn1(output, self.num_classes)
+        output = self.cbn1(output, labels)
         output = self.main2(output)
-        output = self.cbn2(output, self.num_classes)
+        output = self.cbn2(output, labels)
         output = self.main3(output)
-        output = self.cbn3(output, self.num_classes)
+        output = self.cbn3(output, labels)
         output = self.main4(output)
         
         return output.view(-1, 1).squeeze(1)
