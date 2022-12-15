@@ -66,14 +66,16 @@ class CondDiscriminator(nn.Module):
         rand = torch.randint(10, (20, ))
         print("random x")
         print(rand.shape)
-
+        discrete_labels = torch.argmax(labels, dim=1)
+        print("labels?")
+        print(discrete_labels.shape)
 
         y=y.view(labels.shape[0],1,64,64)
 
         inp=torch.cat([input,y],1)
         output = self.main(inp)
         
-        output = self.cbn1(output, labels)
+        output = self.cbn1(output, discrete_labels)
         output = self.main2(output)
         output = self.cbn2(output, labels)
         output = self.main3(output)
