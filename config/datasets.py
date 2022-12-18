@@ -11,6 +11,7 @@ class Datasets(Enum):
     OMNIGLOT = "OMNIGLOT"
     FOOD101 = "FOOD101"
     LOCAL_DATASET = "LOCAL_DATASET"
+    LOCAL_TAR = "TAR"
 
 
     @classmethod

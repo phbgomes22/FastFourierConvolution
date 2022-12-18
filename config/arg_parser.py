@@ -71,7 +71,7 @@ def read_train_options(args = sys.argv[1:]):
                         default=Datasets.LOCAL_DATASET.value)
 
     parser.add_argument("--data_path",
-                        help="The path to the training data",
+                        help="The path to the training data. If the data is in a .tar file, pass the path to the .tar file",
                         default="../data/")
                          
     parser.add_argument("--debug",
