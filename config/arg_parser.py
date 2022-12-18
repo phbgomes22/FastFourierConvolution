@@ -66,7 +66,8 @@ def read_train_options(args = sys.argv[1:]):
                         choices=[Datasets.CIFAR10.value,
                                  Datasets.CELEBA.value, 
                                  Datasets.MNIST.value,
-                                 Datasets.OMNIGLOT.value],
+                                 Datasets.OMNIGLOT.value,
+                                 Datasets.FOOD101.value],
                         default=Datasets.LOCAL_DATASET.value)
 
     parser.add_argument("--data_path",

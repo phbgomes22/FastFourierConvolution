@@ -10,7 +10,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot
+from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101
 from config import Config, Datasets
 
 
@@ -73,6 +73,10 @@ def load_data():
         # - For Omniglot 
         print("Loading OMNIGLOT dataset... ")
         dataset = Omniglot(root='../omniglot_data', download=True, transform=transform)
+    elif config.dataset_name == Datasets.FOOD101.value:
+        # - For Food101
+        print("Loading Food101 dataset... ")
+        dataset = Food101(root='../food101_data', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
         # - For local images
         dataset = dset.ImageFolder(root=config.dataroot, transform=transform)

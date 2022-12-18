@@ -9,6 +9,7 @@ class Datasets(Enum):
     CIFAR10 = "CIFAR10"
     CELEBA = "CelebA"
     OMNIGLOT = "OMNIGLOT"
+    FOOD101 = "FOOD101"
     LOCAL_DATASET = "LOCAL_DATASET"
 
 
