@@ -48,11 +48,12 @@ def get_generator():
     ngpu = config.ngpu
     nz = config.nz
     nc = config.nc
+    g_factor = config.gout_factor
 
     ## Creating generator
     netG = None
     if config.FFC_GENERATOR:
-        netG = FFCGenerator(nz, nc, ngf, debug=config.DEBUG).to(device) 
+        netG = FFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
     else:
         netG = Generator(nz, nc, ngf).to(device)
 
