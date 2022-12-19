@@ -62,18 +62,18 @@ class SNFFCTranspose(nn.Module):
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
 
         
-        module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.ConvTranspose2d
+        module = nn.Identity if in_cl == 0 or out_cg == 0 else spectral_norm(nn.ConvTranspose2d)
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = spectral_norm(module(in_cl, out_cg, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
+        self.convl2g = module(in_cl, out_cg, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
        
-        module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.ConvTranspose2d
+        module = nn.Identity if in_cg == 0 or out_cl == 0 else spectral_norm(nn.ConvTranspose2d)
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = spectral_norm(module(in_cg, out_cl, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
+        self.convg2l = module(in_cg, out_cl, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         # defines the module as the Spectral Transform unless the channels output are zero
         module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
@@ -82,7 +82,7 @@ class SNFFCTranspose(nn.Module):
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
         self.convg2g = nn.Sequential(
-            spectral_norm(module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)),
+            module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
             # Upsample with convolution
             spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
