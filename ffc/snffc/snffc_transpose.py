@@ -58,18 +58,18 @@ class SNFFCTranspose(nn.Module):
 
         # (in_channels: int, out_channels: int, kernel_size: _size_2_t, stride: _size_2_t=1, padding: _size_2_t=0, 
         # output_padding: _size_2_t=0, groups: int=1, bias: bool=True, dilation: int=1, padding_mode: str='zeros', device=None, dtype=None)
-        self.convl2l = spectral_norm(module(in_cl, out_cl, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
+        self.convl2l = module(in_cl, out_cl, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         
-        module = nn.Identity if in_cl == 0 or out_cg == 0 else spectral_norm(nn.ConvTranspose2d)
+        module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.ConvTranspose2d
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
         self.convl2g = module(in_cl, out_cg, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
        
-        module = nn.Identity if in_cg == 0 or out_cl == 0 else spectral_norm(nn.ConvTranspose2d)
+        module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.ConvTranspose2d
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
         self.convg2l = module(in_cg, out_cl, kernel_size,

@@ -6,6 +6,7 @@ import torch.nn as nn
 from util import *
 from .spectral_transform import SpectralTransform
 from config import Config
+from torch.nn.utils import spectral_norm
 
 
 class FFCTranspose(nn.Module):
@@ -78,12 +79,11 @@ class FFCTranspose(nn.Module):
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
-
         self.convg2g = nn.Sequential(
             module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
             # Upsample with convolution
-            nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+            spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
         )
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
