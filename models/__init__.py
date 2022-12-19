@@ -6,3 +6,5 @@ from .conditional.ffc_cond_generator import *
 from .conditional.cond_discriminator import *
 from .conditional.cond_generator import *
 from .conditional.cond_bn import *
+from .sn.sndiscriminator import *
+from .sn.snffcgenerator import *
