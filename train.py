@@ -4,7 +4,6 @@ import torch.optim as optim
 from config import Config
 from util import *
 from models import *
-from torch.nn.utils import spectral_norm
 
 '''
 The `train.py` file is responsible for training the model based on the arguments it receives.
@@ -36,13 +35,6 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
-# Make all layers to be spectral normalization layer
-def add_sn(m):    
-    if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
-        return spectral_norm(m)
-    else:
-        return m
-    
 
 def get_generator():
     '''
@@ -61,8 +53,7 @@ def get_generator():
     ## Creating generator
     netG = None
     if config.FFC_GENERATOR:
-        netG = FFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
-        netG.apply(add_sn)
+        netG = SNFFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
     else:
         netG = Generator(nz, nc, ngf).to(device)
 

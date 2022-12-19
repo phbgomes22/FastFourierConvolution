@@ -6,6 +6,7 @@ Adaptations: Pedro Gomes
 import torch
 import torch.nn as nn
 from .fourier_unity import FourierUnit 
+from torch.nn.utils import spectral_norm
 
 '''
 Used in the FFC classs,
@@ -29,8 +30,8 @@ class SpectralTransform(nn.Module):
 
         # sets the initial 1x1 convolution, batch normalization and relu flow.
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels //
-                      2, kernel_size=1, groups=groups, bias=False),
+            spectral_norm(nn.Conv2d(in_channels, out_channels //
+                      2, kernel_size=1, groups=groups, bias=False)),
             nn.BatchNorm2d(out_channels // 2),
             nn.ReLU(inplace=True)
         )
@@ -44,8 +45,8 @@ class SpectralTransform(nn.Module):
             self.lfu = FourierUnit(
                 out_channels // 2, out_channels // 2, groups)
         ## sets the convolution that will occur at the end of the Spectral Transform
-        self.conv2 = torch.nn.Conv2d(
-            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
+        self.conv2 = spectral_norm(torch.nn.Conv2d(
+            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False))
 
 
     def forward(self, x):
