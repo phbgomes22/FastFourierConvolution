@@ -53,7 +53,7 @@ def get_generator():
     ## Creating generator
     netG = None
     if config.FFC_GENERATOR:
-        netG = SNFFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
+        netG = FFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
     else:
         netG = Generator(nz, nc, ngf).to(device)
 
@@ -86,7 +86,7 @@ def get_discriminator():
     if config.FFC_DISCRIMINATOR:
         netD = FFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
     else:
-        netD = Discriminator(nc, ndf, ngpu=ngpu).to(device) 
+        netD = SNDiscriminator(nc, ndf, ngpu=ngpu).to(device) 
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
