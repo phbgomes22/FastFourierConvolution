@@ -23,8 +23,6 @@ criterion = nn.BCELoss()
 real_label = 1
 fake_label = 0
 
-from torch.nn.init import xavier_uniform_
-
 
 def weights_init(m):
     '''
@@ -33,7 +31,7 @@ def weights_init(m):
     # if classname.find('Conv') != -1:
     #     nn.init.normal_(m.weight.data, 0.0, 0.02)
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
-        xavier_uniform_(m.weight)
+        nn.init.xavier_uniform_(m.weight)
     elif type(m) == nn.BatchNorm2d:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         if hasattr(m.bias, 'data'):
