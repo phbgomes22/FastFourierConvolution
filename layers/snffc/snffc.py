@@ -69,7 +69,7 @@ class SNFFC(nn.Module):
             in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
 
 
-    def snconv2d(condition:bool, in_cg: int, out_cl:int, kernel_size:int,
+    def snconv2d(self, condition:bool, in_cg: int, out_cl:int, kernel_size:int,
                  stride: int, padding: int, dilation: int, groups: int, bias: int):
         if condition:
             return spectral_norm(nn.Conv2d(in_cg, out_cl, kernel_size,

@@ -85,13 +85,13 @@ class SNFFCTranspose(nn.Module):
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
         
-    def snconvtransp2d(condition:bool, in_ch: int, out_ch:int, kernel_size:int,
+    def snconvtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
                  stride: int, padding: int, output_padding: int, groups: int, bias: int, dilation: int):
         if condition:
             return spectral_norm(nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
                               stride, padding, output_padding=output_padding, 
                               groups=groups, bias=bias, dilation=dilation))
-                              
+
         return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
 
 
