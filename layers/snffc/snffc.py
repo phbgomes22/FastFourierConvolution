@@ -5,7 +5,7 @@ Adaptations: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from ..spectral_transform import SpectralTransform
+from .snspectral_transform import SNSpectralTransform
 from torch.nn.utils import spectral_norm
 
 class SNFFC(nn.Module):
@@ -23,7 +23,8 @@ class SNFFC(nn.Module):
     '''
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0,
-                 dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True):
+                 dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True,
+                 num_classes: int = 1):
         super(SNFFC, self).__init__()
 
         assert stride == 1 or stride == 2, "Stride should be 1 or 2."

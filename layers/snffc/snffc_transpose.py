@@ -4,7 +4,7 @@ Authors: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from ..spectral_transform import SpectralTransform
+from .snspectral_transform import SNSpectralTransform
 from config import Config
 from torch.nn.utils import spectral_norm
 
@@ -23,7 +23,8 @@ class SNFFCTranspose(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
                  dilation: int = 1, groups: int = 1, bias: bool = False, 
-                 enable_lfu: bool = True, out_padding: int = 0):
+                 enable_lfu: bool = True, out_padding: int = 0,
+                 num_classes: int = 1):
         '''
         in_channels: number of channels that the FFCTranspose receives,
         out_channels: number of channes that the FFCTranspose returns in the output tensor,
@@ -61,35 +62,42 @@ class SNFFCTranspose(nn.Module):
         self.convl2l = module(in_cl, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
-        
-        module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.ConvTranspose2d
+        condition = not (in_cl == 0 or out_cg == 0)
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = module(in_cl, out_cg, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+        self.convl2g = self.snconvtransp2d(condition, 
+                                           in_cl, out_cg, kernel_size,
+                                           stride, padding, output_padding=out_padding, 
+                                           groups=groups, bias=bias, dilation=dilation)
 
        
-        module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.ConvTranspose2d
+        condition = not (in_cg == 0 or out_cl == 0)
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = module(in_cg, out_cl, kernel_size,
+        self.convg2l = self.snconvtransp2d(condition, in_cg, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         # defines the module as the Spectral Transform unless the channels output are zero
-        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
-
+        module = nn.Identity if in_cg == 0 or out_cg == 0 else SNSpectralTransform
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
         self.convg2g = nn.Sequential(
             module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
             # Upsample with convolution
-            nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+            spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
         )
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
+        
+    def snconvtransp2d(condition:bool, in_cg: int, out_cl:int, kernel_size:int,
+                 stride: int, padding: int, dilation: int, groups: int, bias: int):
+        if condition:
+            return spectral_norm(nn.ConvTranspose2d(in_cg, out_cl, kernel_size,
+                              stride, padding, dilation, groups, bias))
+        return nn.Identity(in_cg, out_cl, kernel_size, stride, padding, dilation, groups, bias)
 
 
     # receives the signal as a tuple containing the local signal in the first position

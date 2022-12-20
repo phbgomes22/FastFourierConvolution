@@ -6,6 +6,7 @@ Adaptations: Pedro Gomes
 import torch
 import torch.nn as nn
 from torch.nn.utils import spectral_norm
+from ..cond.cond_bn import ConditionalBatchNorm2d
 
 
 '''
@@ -16,7 +17,8 @@ Inverse Fourier Transform to return to pixel domain.
 '''
 class SNFourierUnit(nn.Module):
 
-    def __init__(self, in_channels: int, out_channels: int, groups: int = 1):
+    def __init__(self, in_channels: int, out_channels: int, groups: int = 1,
+                 num_classes: int = 1):
         # bn_layer not used
         super(SNFourierUnit, self).__init__()
         self.groups = groups
@@ -25,7 +27,7 @@ class SNFourierUnit(nn.Module):
         self.conv_layer = spectral_norm(torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
                                           kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False))
         # batch normalization for the spectral domain
-        self.bn = torch.nn.BatchNorm2d(out_channels * 2)
+        self.bn = ConditionalBatchNorm2d(out_channels * 2, num_classes=num_classes)
         # relu for the spectral domain
         self.relu = torch.nn.ReLU(inplace=True)
 
