@@ -13,7 +13,6 @@ from .snffc_transpose import *
 
 class SNFFC_ACT(nn.Module):
     '''
-    Creates a single FFC -> Batch normalization -> Activation Module flow.
 
     This is the class that is put in the models as a blackbox. 
     So this is on of the entry point of all code related to the FFC (the other being the FFCSE_block).
