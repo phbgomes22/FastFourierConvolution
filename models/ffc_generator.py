@@ -4,7 +4,7 @@ Author: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from ffc import *
+from layers import *
 from .ffcmodel import FFCModel
 
 

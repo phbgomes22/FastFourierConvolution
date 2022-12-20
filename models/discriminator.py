@@ -4,7 +4,6 @@ Adaptation: Pedro Gomes
 '''
 
 import torch.nn as nn
-#from torch.nn.utils.parametrizations.spectral_norm import spectral_norm
 
 
 class Discriminator(nn.Module):
