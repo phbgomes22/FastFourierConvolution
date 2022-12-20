@@ -48,19 +48,13 @@ class SNFFCTranspose(nn.Module):
         self.ratio_gout = ratio_gout
 
         
-        # defines the module as a Conv2d unless the channels input or output are zero
-        module = nn.Identity if in_cl == 0 or out_cl == 0 else nn.ConvTranspose2d
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
-
-        debug_print("----")    
-        debug_print(in_cg, in_cl,  kernel_size, padding, stride)
-        debug_print("----")
-
+        condition = not (in_cl == 0 or out_cl == 0)
         # (in_channels: int, out_channels: int, kernel_size: _size_2_t, stride: _size_2_t=1, padding: _size_2_t=0, 
-        # output_padding: _size_2_t=0, groups: int=1, bias: bool=True, dilation: int=1, padding_mode: str='zeros', device=None, dtype=None)
-        self.convl2l = module(in_cl, out_cl, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+        self.convl2l = self.snconvtransp2d(condition,
+                            in_cl, out_cl, kernel_size, stride, padding, 
+                            output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         condition = not (in_cl == 0 or out_cg == 0)
         # this is the convolution that processes the local signal and contributes 
@@ -92,12 +86,13 @@ class SNFFCTranspose(nn.Module):
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
         
-    def snconvtransp2d(condition:bool, in_cg: int, out_cl:int, kernel_size:int,
-                 stride: int, padding: int, dilation: int, groups: int, bias: int):
+    def snconvtransp2d(condition:bool, in_ch: int, out_ch:int, kernel_size:int,
+                 stride: int, padding: int, output_padding: int, groups: int, bias: int, dilation: int,):
         if condition:
-            return spectral_norm(nn.ConvTranspose2d(in_cg, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias))
-        return nn.Identity(in_cg, out_cl, kernel_size, stride, padding, dilation, groups, bias)
+            return spectral_norm(nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
+                              stride, padding, output_padding=output_padding, 
+                              groups=groups, bias=bias, dilation=dilation))
+        return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
 
 
     # receives the signal as a tuple containing the local signal in the first position
