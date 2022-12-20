@@ -4,8 +4,7 @@ Author: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from ffc import *
-from .cond_bn import ConditionalBatchNorm2d
+from layers import *
 
 
 class CondDiscriminator(nn.Module):
