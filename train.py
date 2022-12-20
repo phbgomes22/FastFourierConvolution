@@ -23,15 +23,21 @@ criterion = nn.BCELoss()
 real_label = 1
 fake_label = 0
 
+from torch.nn.init import xavier_uniform_
+
+
 
 def weights_init(m):
     '''
     Custom weights initialization called on netG and netD
     '''
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
+    # if classname.find('Conv') != -1:
+    #     nn.init.normal_(m.weight.data, 0.0, 0.02)
+    if type(m) == nn.Linear or type(m) == nn.Conv2d:
+        xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.)
+    elif type(m) == nn.BatchNorm2d:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
@@ -53,7 +59,7 @@ def get_generator():
     ## Creating generator
     netG = None
     if config.FFC_GENERATOR:
-        netG = FFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
+        netG = SNFFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
     else:
         netG = Generator(nz, nc, ngf).to(device)
 

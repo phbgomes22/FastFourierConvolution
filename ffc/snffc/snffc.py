@@ -29,10 +29,6 @@ class SNFFC(nn.Module):
         assert stride == 1 or stride == 2, "Stride should be 1 or 2."
         self.stride = stride
 
-        debug_print("****")
-        debug_print(kernel_size, padding, stride)
-        debug_print("****")
-
         # calculate the number of input and output channels based on the ratio (alpha) 
         # of the local and global signals 
         in_cg = int(in_channels * ratio_gin)
@@ -44,34 +40,40 @@ class SNFFC(nn.Module):
         self.ratio_gout = ratio_gout
 
         # defines the module as a Conv2d unless the channels input or output are zero
-        module = nn.Identity if in_cl == 0 or out_cl == 0 else nn.Conv2d
+        condition = not (in_cl == 0 or out_cl == 0)
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
+        self.convl2l = self.snconv2d(condition, 
+                                    in_cg, out_cl, kernel_size, stride, padding, dilation, groups, bias)
 
-        self.convl2l = spectral_norm(module(in_cl, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias))
-
-        module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.Conv2d
+        condition = not (in_cl == 0 or out_cg == 0)
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = spectral_norm(module(in_cl, out_cg, kernel_size,
-                              stride, padding, dilation, groups, bias))
+        self.convl2g = self.snconv2d(condition, 
+                                    in_cg, out_cl, kernel_size, stride, padding, dilation, groups, bias)
 
-        module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.Conv2d
+        condition = not (in_cg == 0 or out_cl)
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = spectral_norm(module(in_cg, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias))
-
+        self.convg2l = self.snconv2d(condition, 
+                                    in_cg, out_cl, kernel_size, stride, padding, dilation, groups, bias)
+        
         # defines the module as the Spectral Transform unless the channels output are zero
-        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
+        module = nn.Identity if in_cg == 0 or out_cg == 0 else SNSpectralTransform
 
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
-        self.convg2g = spectral_norm(module(
-            in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu))
+        self.convg2g = module(
+            in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
 
+
+    def snconv2d(condition:bool, in_cg: int, out_cl:int, kernel_size:int,
+                 stride: int, padding: int, dilation: int, groups: int, bias: int):
+        if condition:
+            return spectral_norm(nn.Conv2d(in_cg, out_cl, kernel_size,
+                              stride, padding, dilation, groups, bias))
+        return nn.Identity(in_cg, out_cl, kernel_size, stride, padding, dilation, groups, bias)
 
     # receives the signal as a tuple containing the local signal in the first position
     # and the global signal in the second position
