@@ -26,12 +26,10 @@ fake_label = 0
 from torch.nn.init import xavier_uniform_
 
 
-
 def weights_init(m):
     '''
     Custom weights initialization called on netG and netD
     '''
-    classname = m.__class__.__name__
     # if classname.find('Conv') != -1:
     #     nn.init.normal_(m.weight.data, 0.0, 0.02)
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
@@ -39,7 +37,8 @@ def weights_init(m):
         m.bias.data.fill_(0.)
     elif type(m) == nn.BatchNorm2d:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
-        nn.init.constant_(m.bias.data, 0)
+        if hasattr(m.bias, 'data'):
+            nn.init.constant_(m.bias.data, 0)
 
 
 def get_generator():
