@@ -52,8 +52,7 @@ class SNFFCTranspose(nn.Module):
         # for the formation of the outputted local signal
         condition = not (in_cl == 0 or out_cl == 0)
         # (in_channels: int, out_channels: int, kernel_size: _size_2_t, stride: _size_2_t=1, padding: _size_2_t=0, 
-        self.convl2l = self.snconvtransp2d(condition,
-                            in_cl, out_cl, kernel_size, stride, padding, 
+        self.convl2l = self.snconvtransp2d(condition,in_cl, out_cl, kernel_size, stride, padding, 
                             output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         condition = not (in_cl == 0 or out_cg == 0)
@@ -92,6 +91,7 @@ class SNFFCTranspose(nn.Module):
             return spectral_norm(nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
                               stride, padding, output_padding=output_padding, 
                               groups=groups, bias=bias, dilation=dilation))
+                              
         return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
 
 

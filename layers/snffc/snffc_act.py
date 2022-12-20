@@ -23,7 +23,7 @@ class SNFFC_ACT(nn.Module):
         Followed by an ActivationLayer 
             -   The default activation layer is nn.Identity, so I think we are supposed to change it.
     '''
-
+    
     def __init__(self, in_channels, out_channels,
                  kernel_size, ratio_gin, ratio_gout,
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
@@ -39,7 +39,7 @@ class SNFFC_ACT(nn.Module):
         if upsampling:
             self.ffc = SNFFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding)
+                       groups, bias, enable_lfu, out_padding=out_padding)
         else:
             self.ffc = SNFFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
