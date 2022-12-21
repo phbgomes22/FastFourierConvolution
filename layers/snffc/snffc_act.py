@@ -38,9 +38,9 @@ class SNFFC_ACT(nn.Module):
         # Creates the FFC layer, that will process the signal 
         # (divided into local and global and apply the convolutions and Fast Fourier)
         if upsampling:
-            self.ffc = spectral_norm(SNFFCTranspose(in_channels, out_channels, kernel_size,
+            self.ffc = SNFFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding=out_padding))
+                       groups, bias, enable_lfu, out_padding=out_padding)
         else:
             self.ffc = SNFFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
@@ -50,6 +50,13 @@ class SNFFC_ACT(nn.Module):
         # create the activation function layers
         lact = nn.Identity if ratio_gout == 1 else activation_layer
         gact = nn.Identity if ratio_gout == 0 else activation_layer
+
+        # create the BatchNormalization layers
+        lnorm = nn.Identity if ratio_gout == 1 else nn.BatchNorm2d
+        gnorm = nn.Identity if ratio_gout == 0 else nn.BatchNorm2d
+
+        self.bn_l = lnorm(int(out_channels * (1 - ratio_gout)))
+        self.bn_g = gnorm(int(out_channels * ratio_gout))
 
         if lact is nn.Tanh or lact is nn.Sigmoid:
             self.act_l = lact() # was inplace=True, had to change due to new Tanh function
@@ -68,9 +75,9 @@ class SNFFC_ACT(nn.Module):
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(x_l)
+        x_l = self.act_l(self.lnorm(x_l))
         self.print_size(x_l)
 
-        x_g = self.act_g(x_g)
+        x_g = self.act_g(self.gnorm(x_g))
         debug_print(" -- Fim FFC_BN_ACT")
         return x_l, x_g
