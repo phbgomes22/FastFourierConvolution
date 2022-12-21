@@ -50,12 +50,12 @@ class SNFFCTranspose(nn.Module):
         
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
-        condition = not (in_cl == 0 or out_cl == 0)
+        condition = in_cl == 0 or out_cl == 0
         # (in_channels: int, out_channels: int, kernel_size: _size_2_t, stride: _size_2_t=1, padding: _size_2_t=0, 
         self.convl2l = self.snconvtransp2d(condition,in_cl, out_cl, kernel_size, stride, padding, 
                             output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
-        condition = not (in_cl == 0 or out_cg == 0)
+        condition = in_cl == 0 or out_cg == 0
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
         self.convl2g = self.snconvtransp2d(condition, 
@@ -64,7 +64,7 @@ class SNFFCTranspose(nn.Module):
                                            groups=groups, bias=bias, dilation=dilation)
 
        
-        condition = not (in_cg == 0 or out_cl == 0)
+        condition = in_cg == 0 or out_cl == 0
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
         self.convg2l = self.snconvtransp2d(condition, in_cg, out_cl, kernel_size,
@@ -77,7 +77,7 @@ class SNFFCTranspose(nn.Module):
         # for the formation of the outputted global signal 
         self.convg2g = module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes=num_classes)
 
-        condition = not (in_cg == 0 or out_cg == 0)
+        condition = in_cg == 0 or out_cg == 0
         self.convg2gupsample = self.snconvtransp2d(condition,
                                 out_cg,  out_cg*2, kernel_size, stride, padding, 
                                 output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
@@ -91,11 +91,12 @@ class SNFFCTranspose(nn.Module):
     def snconvtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
                  stride: int, padding: int, output_padding: int, groups: int, bias: int, dilation: int):
         if condition:
-            return nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
+            return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
+            
+        nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
                               stride, padding, output_padding=output_padding, 
                               groups=groups, bias=bias, dilation=dilation) #spectral_norm()
 
-        return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
 
 
     # receives the signal as a tuple containing the local signal in the first position
