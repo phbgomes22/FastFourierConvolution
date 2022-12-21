@@ -87,7 +87,7 @@ def get_discriminator():
     # Create the Discriminator
     netD = None
     if config.FFC_DISCRIMINATOR:
-        netD = FFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
+        netD = SNFFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
     else:
         netD = SNDiscriminator(nc, ndf, ngpu=ngpu).to(device) 
 
