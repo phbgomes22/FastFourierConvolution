@@ -34,7 +34,7 @@ class SNSpectralTransform(nn.Module):
         self.conv1 = nn.Sequential(
             spectral_norm(nn.Conv2d(in_channels, out_channels //
                       2, kernel_size=1, groups=groups, bias=False)),
-            ConditionalBatchNorm2d(out_channels // 2, num_classes=num_classes),
+            nn.BatchNorm2d(out_channels // 2), #num_classes=num_classes
             nn.ReLU(inplace=True)
         )
 
