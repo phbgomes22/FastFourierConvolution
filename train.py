@@ -30,7 +30,9 @@ def weights_init(m):
     '''
     # if classname.find('Conv') != -1:
     #     nn.init.normal_(m.weight.data, 0.0, 0.02)
-    if type(m) == nn.Linear or type(m) == nn.Conv2d:
+    if type(m) == nn.Conv2d:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif type(m) == nn.Linear:
         nn.init.xavier_uniform_(m.weight)
     elif type(m) == nn.BatchNorm2d:
         if hasattr(m.weight, 'data'):
