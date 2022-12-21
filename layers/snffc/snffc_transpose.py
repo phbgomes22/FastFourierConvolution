@@ -93,7 +93,7 @@ class SNFFCTranspose(nn.Module):
         if condition:
             return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
             
-        nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
+        return nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
                               stride, padding, output_padding=output_padding, 
                               groups=groups, bias=bias, dilation=dilation) #spectral_norm()
 
