@@ -75,9 +75,9 @@ class SNFFC_ACT(nn.Module):
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(self.lnorm(x_l))
+        x_l = self.act_l(self.bn_l(x_l))
         self.print_size(x_l)
 
-        x_g = self.act_g(self.gnorm(x_g))
+        x_g = self.act_g(self.bn_g(x_g))
         debug_print(" -- Fim FFC_BN_ACT")
         return x_l, x_g
