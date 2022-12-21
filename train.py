@@ -33,7 +33,8 @@ def weights_init(m):
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
         nn.init.xavier_uniform_(m.weight)
     elif type(m) == nn.BatchNorm2d:
-        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        if hasattr(m.weight, 'data'):
+            nn.init.normal_(m.weight.data, 1.0, 0.02)
         if hasattr(m.bias, 'data'):
             nn.init.constant_(m.bias.data, 0)
 
