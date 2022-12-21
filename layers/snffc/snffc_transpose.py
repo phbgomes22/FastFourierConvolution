@@ -11,20 +11,17 @@ from torch.nn.utils import spectral_norm
 
 class SNFFCTranspose(nn.Module):
     '''
-    The SNFFC Transposed Layer
+    The FFC Transposed Layer
 
     New layer created to make upsampling possible with Fourer Convolutions.
     This represents the layer of the Transposed Fourier Convolution that comes 
     in place of a vanilla transposed convolution.
-
-    It also contains Spectral Normalization instead of Batch Normalization.
     '''
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
                  dilation: int = 1, groups: int = 1, bias: bool = False, 
-                 enable_lfu: bool = True, out_padding: int = 0,
-                 num_classes: int = 1):
+                 enable_lfu: bool = True, out_padding: int = 0):
         '''
         in_channels: number of channels that the FFCTranspose receives,
         out_channels: number of channes that the FFCTranspose returns in the output tensor,
@@ -47,27 +44,27 @@ class SNFFCTranspose(nn.Module):
         self.ratio_gin = ratio_gin
         self.ratio_gout = ratio_gout
 
-        
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
+
         condition = in_cl == 0 or out_cl == 0
+        # defines the module as a Conv2d unless the channels input or output are zero
         # (in_channels: int, out_channels: int, kernel_size: _size_2_t, stride: _size_2_t=1, padding: _size_2_t=0, 
-        self.convl2l = self.snconvtransp2d(condition,in_cl, out_cl, kernel_size, stride, padding, 
-                            output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+        # output_padding: _size_2_t=0, groups: int=1, bias: bool=True, dilation: int=1, padding_mode: str='zeros', device=None, dtype=None)
+        self.convl2l = self.convtransp2d(condition, in_cl, out_cl, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         condition = in_cl == 0 or out_cg == 0
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = self.snconvtransp2d(condition, 
-                                           in_cl, out_cg, kernel_size,
-                                           stride, padding, output_padding=out_padding, 
-                                           groups=groups, bias=bias, dilation=dilation)
+        self.convl2g = self.convtransp2d(condition, in_cl, out_cg, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
        
         condition = in_cg == 0 or out_cl == 0
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = self.snconvtransp2d(condition, in_cg, out_cl, kernel_size,
+        self.convg2l = self.convtransp2d(condition, in_cg, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         # defines the module as the Spectral Transform unless the channels output are zero
@@ -75,28 +72,24 @@ class SNFFCTranspose(nn.Module):
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
-        self.convg2g = module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes=num_classes)
+        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
+            # Upsample with convolution
+        self.convg2gup = nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+        
 
-        condition = in_cg == 0 or out_cg == 0
-        self.convg2gupsample = self.snconvtransp2d(condition,
-                                out_cg,  out_cg*2, kernel_size, stride, padding, 
-                                output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
-
-      #  self.convg2gupsample = nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size, stride, padding, 
-      #                          output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
         
-    def snconvtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
+    def convtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
                  stride: int, padding: int, output_padding: int, groups: int, bias: int, dilation: int):
         if condition:
             return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
-            
+
         return nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
                               stride, padding, output_padding=output_padding, 
-                              groups=groups, bias=bias, dilation=dilation) #spectral_norm()
-
+                              groups=groups, bias=bias, dilation=dilation) 
 
 
     # receives the signal as a tuple containing the local signal in the first position
@@ -124,13 +117,11 @@ class SNFFCTranspose(nn.Module):
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l)
-
             if type(x_g) is tuple:
                 ## testing upsampling first, then Spectral Transform
-                x_g = self.convg2gupsample(x_g)
+                x_g = self.convg2gup(x_g)
                 out_xg = out_xg + self.convg2g(x_g)
                
         
         # returns both signals as a tuple
         return out_xl, out_xg
-

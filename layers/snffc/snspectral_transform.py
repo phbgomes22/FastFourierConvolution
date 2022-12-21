@@ -16,8 +16,7 @@ Within, the Fourier Unit
 '''
 class SNSpectralTransform(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, 
-                stride: int = 1, groups: int = 1, enable_lfu: bool = True,
-                num_classes: int = 1):
+                stride: int = 1, groups: int = 1, enable_lfu: bool = True):
         # bn_layer not used
         super(SNSpectralTransform, self).__init__()
         self.enable_lfu = enable_lfu
@@ -33,24 +32,22 @@ class SNSpectralTransform(nn.Module):
         # sets the initial 1x1 convolution, batch normalization and relu flow.
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, out_channels //
-                      2, kernel_size=1, groups=groups, bias=False), #spectral_norm(),
-            nn.BatchNorm2d(out_channels // 2), #num_classes=num_classes
+                      2, kernel_size=1, groups=groups, bias=False),
+            nn.BatchNorm2d(out_channels // 2),
             nn.ReLU(inplace=True)
         )
 
         # creates the Fourier Unit that will do convolutions in the spectral domain.
         self.fu = SNFourierUnit(
-            out_channels // 2, out_channels // 2, groups,
-            num_classes=num_classes)
+            out_channels // 2, out_channels // 2, groups)
         
         # creates the enable lfu, if set. I set the default to false.
         if self.enable_lfu:
             self.lfu = SNFourierUnit(
-                out_channels // 2, out_channels // 2, groups,
-                num_classes=num_classes)
+                out_channels // 2, out_channels // 2, groups)
         ## sets the convolution that will occur at the end of the Spectral Transform
         self.conv2 = torch.nn.Conv2d(
-            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False) #spectral_norm()
+            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
 
 
     def forward(self, x):

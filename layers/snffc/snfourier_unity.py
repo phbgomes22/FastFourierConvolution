@@ -17,17 +17,16 @@ Inverse Fourier Transform to return to pixel domain.
 '''
 class SNFourierUnit(nn.Module):
 
-    def __init__(self, in_channels: int, out_channels: int, groups: int = 1,
-                 num_classes: int = 1):
+    def __init__(self, in_channels: int, out_channels: int, groups: int = 1):
         # bn_layer not used
         super(SNFourierUnit, self).__init__()
         self.groups = groups
 
         # the convolution layer that will be used in the spectral domain
         self.conv_layer = torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
-                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False) #spectral_norm()
+                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False)
         # batch normalization for the spectral domain
-        self.bn = nn.BatchNorm2d(out_channels * 2) #ConditionalBatchNorm2d(out_channels * 2, num_classes=num_classes)
+        self.bn = torch.nn.BatchNorm2d(out_channels * 2)
         # relu for the spectral domain
         self.relu = torch.nn.ReLU(inplace=True)
 
