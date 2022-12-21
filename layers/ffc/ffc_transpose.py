@@ -73,7 +73,7 @@ class FFCTranspose(nn.Module):
         # for the formation of the outputted global signal 
         self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
             # Upsample with convolution
-        self.convg2gup =  nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
+        self.convg2gup = nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
         
 
@@ -115,9 +115,9 @@ class FFCTranspose(nn.Module):
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l)
-
             if type(x_g) is tuple:
-                out_xg = out_xg + self.convg2gup(self.convg2g(x_g))
+                x_g = self.convg2g(x_g)
+                out_xg = out_xg + self.convg2gup(x_g)
                
         
         # returns both signals as a tuple
