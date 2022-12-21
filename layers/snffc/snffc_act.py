@@ -38,9 +38,9 @@ class SNFFC_ACT(nn.Module):
         # Creates the FFC layer, that will process the signal 
         # (divided into local and global and apply the convolutions and Fast Fourier)
         if upsampling:
-            self.ffc = SNFFCTranspose(in_channels, out_channels, kernel_size,
+            self.ffc = spectral_norm(SNFFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding=out_padding)
+                       groups, bias, enable_lfu, out_padding=out_padding))
         else:
             self.ffc = SNFFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
@@ -68,9 +68,9 @@ class SNFFC_ACT(nn.Module):
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(spectral_norm(x_l))
+        x_l = self.act_l(x_l)
         self.print_size(x_l)
 
-        x_g = self.act_g(spectral_norm(x_g))
+        x_g = self.act_g(x_g)
         debug_print(" -- Fim FFC_BN_ACT")
         return x_l, x_g
