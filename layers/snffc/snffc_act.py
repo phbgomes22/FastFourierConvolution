@@ -8,6 +8,7 @@ from util import *
 from config import Config
 from .snffc import *
 from .snffc_transpose import *
+from torch.nn.utils import spectral_norm
 
 
 
@@ -67,9 +68,9 @@ class SNFFC_ACT(nn.Module):
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(x_l)
+        x_l = self.act_l(spectral_norm(x_l))
         self.print_size(x_l)
 
-        x_g = self.act_g(x_g)
+        x_g = self.act_g(spectral_norm(x_g))
         debug_print(" -- Fim FFC_BN_ACT")
         return x_l, x_g
