@@ -116,6 +116,7 @@ class FFCTranspose(nn.Module):
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l)
             if type(x_g) is tuple:
+                ## testing upsampling first, then Spectral Transform
                 x_g = self.convg2gup(x_g)
                 out_xg = out_xg + self.convg2g(x_g)
                

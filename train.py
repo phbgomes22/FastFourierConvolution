@@ -56,7 +56,7 @@ def get_generator():
     ## Creating generator
     netG = None
     if config.FFC_GENERATOR:
-        netG = FFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
+        netG = SNFFCGenerator(nz, nc, ngf, g_factor=g_factor, debug=config.DEBUG).to(device) 
     else:
         netG = Generator(nz, nc, ngf).to(device)
 

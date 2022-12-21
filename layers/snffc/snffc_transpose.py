@@ -126,8 +126,9 @@ class SNFFCTranspose(nn.Module):
             out_xg = self.convl2g(x_l)
 
             if type(x_g) is tuple:
-                x_g = self.convg2g(x_g)
-                out_xg = out_xg + self.convg2gupsample(x_g)
+                ## testing upsampling first, then Spectral Transform
+                x_g = self.convg2gupsample(x_g)
+                out_xg = out_xg + self.convg2g(x_g)
                
         
         # returns both signals as a tuple
