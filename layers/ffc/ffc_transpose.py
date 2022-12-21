@@ -6,7 +6,6 @@ import torch.nn as nn
 from util import *
 from .spectral_transform import SpectralTransform
 from config import Config
-from torch.nn.utils import spectral_norm
 
 
 class FFCTranspose(nn.Module):
@@ -82,8 +81,8 @@ class FFCTranspose(nn.Module):
         self.convg2g = nn.Sequential(
             module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
             # Upsample with convolution
-            spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
+            nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
         )
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
