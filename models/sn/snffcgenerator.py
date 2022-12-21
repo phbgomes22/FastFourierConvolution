@@ -10,7 +10,6 @@ from ..ffcmodel import FFCModel
 
 
 # FFC Generator Code
-
 class SNFFCGenerator(FFCModel):
     '''
     The Generator model using Fast Fourier Convolutions (FFC-Generator). 
