@@ -75,12 +75,12 @@ class SNFFCTranspose(nn.Module):
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
-        self.convg2g = nn.Sequential(
-            module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes=num_classes),
-            # Upsample with convolution
-            spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
-        )
+        self.convg2g = module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes=num_classes)
+
+        condition = not (in_cg == 0 or out_cg == 0)
+        self.convg2gupsample = self.snconvtransp2d(condition,
+                                out_cg,  out_cg*2, kernel_size, stride, padding, 
+                                output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
@@ -122,7 +122,7 @@ class SNFFCTranspose(nn.Module):
             out_xg = self.convl2g(x_l)
 
             if type(x_g) is tuple:
-                out_xg = out_xg + self.convg2g(x_g)
+                out_xg = out_xg + self.convg2gupsample(self.convg2g(x_g))
                
         
         # returns both signals as a tuple
