@@ -43,38 +43,31 @@ class FFCTranspose(nn.Module):
         self.ratio_gin = ratio_gin
         self.ratio_gout = ratio_gout
 
-        
-        # defines the module as a Conv2d unless the channels input or output are zero
-        module = nn.Identity if in_cl == 0 or out_cl == 0 else nn.ConvTranspose2d
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
 
-        debug_print("----")    
-        debug_print(in_cg, in_cl,  kernel_size, padding, stride)
-        debug_print("----")
-
+        condition = in_cl == 0 or out_cl == 0
+        # defines the module as a Conv2d unless the channels input or output are zero
         # (in_channels: int, out_channels: int, kernel_size: _size_2_t, stride: _size_2_t=1, padding: _size_2_t=0, 
         # output_padding: _size_2_t=0, groups: int=1, bias: bool=True, dilation: int=1, padding_mode: str='zeros', device=None, dtype=None)
-        self.convl2l = module(in_cl, out_cl, kernel_size,
+        self.convl2l = self.convtransp2d(condition, in_cl, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
-        
-        module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.ConvTranspose2d
+        condition = in_cl == 0 or out_cg == 0
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = module(in_cl, out_cg, kernel_size,
+        self.convl2g = self.convtransp2d(condition, in_cl, out_cg, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
        
-        module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.ConvTranspose2d
+        condition = in_cg == 0 or out_cl == 0
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = module(in_cg, out_cl, kernel_size,
+        self.convg2l = self.convtransp2d(condition, in_cg, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         # defines the module as the Spectral Transform unless the channels output are zero
         module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
-
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
@@ -87,6 +80,14 @@ class FFCTranspose(nn.Module):
         ## -- debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
+    def convtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
+                 stride: int, padding: int, output_padding: int, groups: int, bias: int, dilation: int):
+        if condition:
+            return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
+
+        return nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
+                              stride, padding, output_padding=output_padding, 
+                              groups=groups, bias=bias, dilation=dilation) 
 
 
     # receives the signal as a tuple containing the local signal in the first position
