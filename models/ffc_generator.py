@@ -22,9 +22,9 @@ class FFCGenerator(FFCModel):
         super(FFCGenerator, self).__init__(inplanes=ngf * 16, debug=debug)
 
         self.ffc0 = FFC_BN_ACT(nz, ngf*16, 4, 0, g_factor, 1, 0, activation_layer=nn.ReLU, upsampling=True)
-        self.ffc1 = FFC_SN_ACT(ngf*16, ngf*8, 4, g_factor, g_factor, 2, 1, activation_layer=nn.ReLU, upsampling=True)
-        self.ffc2 = FFC_SN_ACT(ngf*8, ngf*4, 4, g_factor, g_factor, 2, 1, activation_layer=nn.ReLU,  upsampling=True)
-        self.ffc3 = FFC_SN_ACT(ngf*4, ngf*2, 4, g_factor, g_factor, 2, 1, activation_layer=nn.ReLU,  upsampling=True)
+        self.ffc1 = FFC_BN_ACT(ngf*16, ngf*8, 4, g_factor, g_factor, 2, 1, activation_layer=nn.ReLU, upsampling=True)
+        self.ffc2 = FFC_BN_ACT(ngf*8, ngf*4, 4, g_factor, g_factor, 2, 1, activation_layer=nn.ReLU,  upsampling=True)
+        self.ffc3 = FFC_BN_ACT(ngf*4, ngf*2, 4, g_factor, g_factor, 2, 1, activation_layer=nn.ReLU,  upsampling=True)
         self.ffc4 = FFC_BN_ACT(ngf*2, nc, 4, g_factor, 0, 2, 1, norm_layer=nn.Identity, activation_layer=nn.Tanh, upsampling=True)
 
     def forward(self, x):
