@@ -6,8 +6,8 @@ Adaptations: Pedro Gomes
 import torch.nn as nn
 from util import *
 from config import Config
-from ..snffc.snffc import *
-from ..snffc.snffc_transpose import *
+from ..ffc.ffc import *
+from ..ffc.ffc_transpose import *
 
 
 
@@ -39,13 +39,13 @@ class FFC_BN_ACT_COND(nn.Module):
         # Creates the FFC layer, that will process the signal 
         # (divided into local and global and apply the convolutions and Fast Fourier)
         if upsampling:
-            self.ffc = SNFFCTranspose(in_channels, out_channels, kernel_size,
+            self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding, num_classes=num_classes)
+                       groups, bias, enable_lfu, out_padding)
         else:
-            self.ffc = SNFFC(in_channels, out_channels, kernel_size,
+            self.ffc = FFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, num_classes=num_classes)
+                       groups, bias, enable_lfu)
 
         # create the BatchNormalization layers
         lnorm = nn.Identity if ratio_gout == 1 else norm_layer
