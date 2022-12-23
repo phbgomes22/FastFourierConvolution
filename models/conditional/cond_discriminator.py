@@ -5,6 +5,7 @@ Author: Pedro Gomes
 import torch.nn as nn
 from util import *
 from layers import *
+from torch.nn.utils import spectral_norm
 
 
 class CondDiscriminator(nn.Module):
@@ -14,23 +15,23 @@ class CondDiscriminator(nn.Module):
         self.num_classes = num_classes
 
         self.ylabel=nn.Sequential(
-            nn.Linear(num_classes, image_size*image_size),
+            spectral_norm(nn.Linear(num_classes, image_size*image_size)),
             nn.ReLU(True)
         )
 
         self.main = nn.Sequential(
             # input is (nc) x 64 x 64
-            nn.Conv2d(nc+1, ndf, 4, 2, 1, bias=False), # +1 due to conditional
+            nn.Conv2d(nc+1, ndf * 2, 4, 2, 1, bias=False), # +1 due to conditional
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf) x 32 x 32
-            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
+            spectral_norm(nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=True)),
         )
            # nn.BatchNorm2d(ndf * 2),
-        self.cbn1 = ConditionalBatchNorm2d(ndf * 2, num_classes=num_classes)
+        self.cbn1 = ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes)
         self.main2 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False)
+            spectral_norm(nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=True))
         )
            # nn.BatchNorm2d(ndf * 4),
         self.cbn2 = ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes)
@@ -38,16 +39,16 @@ class CondDiscriminator(nn.Module):
         self.main3 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
+            spectral_norm(nn.Conv2d(ndf * 8, ndf * 16, 4, 2, 1, bias=True))
         )
             #nn.BatchNorm2d(ndf * 8),
             # Batch normalization conditioned to class
-        self.cbn3 = ConditionalBatchNorm2d(ndf * 8, num_classes=num_classes)
+        self.cbn3 = ConditionalBatchNorm2d(ndf * 16, num_classes=num_classes)
 
         self.main4 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+            spectral_norm(nn.Conv2d(ndf * 16, 1, 4, 1, 0, bias=True)),
             nn.Sigmoid()
         )
 
