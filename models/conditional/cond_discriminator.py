@@ -34,7 +34,7 @@ class CondDiscriminator(nn.Module):
             spectral_norm(nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=True))
         )
            # nn.BatchNorm2d(ndf * 4),
-        self.cbn2 = ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes)
+        self.cbn2 = ConditionalBatchNorm2d(ndf * 8, num_classes=num_classes)
 
         self.main3 = nn.Sequential(
             nn.LeakyReLU(0.2, inplace=True),
