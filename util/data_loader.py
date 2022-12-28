@@ -81,9 +81,12 @@ def load_data():
         dataset = Food101(root='../food101_data', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
         # - For local images
+        print("Loading local dataset... ")
         dataset = dset.ImageFolder(root=config.dataroot, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_TAR.value:
-            dataset = TarDataset(config.dataroot)
+        # - For local tar images
+        print("Loading local Tar dataset... ")
+        dataset = TarDataset(config.dataroot)
 
     print("Will create dataloader...")
     # Create the dataloader
