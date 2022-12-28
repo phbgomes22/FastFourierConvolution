@@ -13,7 +13,7 @@ from torchvision.utils import save_image
 from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101
 from config import Config, Datasets
 
-from .tar_loader import TarDataset
+from .tar_loader import TarImageFolder
 
 
 def get_device():
@@ -86,7 +86,7 @@ def load_data():
     elif config.dataset_name == Datasets.LOCAL_TAR.value:
         # - For local tar images
         print("Loading local Tar dataset... ")
-        dataset = TarDataset(config.dataroot)
+        dataset = TarImageFolder(config.dataroot, transform=transform, root_in_archive='celeba_data')
 
     print("Will create dataloader...")
     # Create the dataloader
