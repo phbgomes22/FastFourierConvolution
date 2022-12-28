@@ -86,7 +86,7 @@ def load_data():
     elif config.dataset_name == Datasets.LOCAL_TAR.value:
         # - For local tar images
         print("Loading local Tar dataset... ")
-        dataset = TarImageFolder(config.dataroot, transform=transform, root_in_archive='celeba_data')
+        dataset = TarImageFolder(config.dataroot, transform=transform)
 
     print("Will create dataloader...")
     # Create the dataloader

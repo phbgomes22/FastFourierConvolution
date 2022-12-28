@@ -151,7 +151,7 @@ class Config:
 
         # if the dataset chosen is local, then it must be provided the dataroot for the local dataset
         self.dataroot = opts.data_path
-        if self.dataroot.endswith('.tar.gz'):
+        if self.dataroot.endswith('.tar'):
             self.dataset_name = Datasets.LOCAL_TAR.value
 
         self.nc = 1 if opts.color == 'greyscale' else 3

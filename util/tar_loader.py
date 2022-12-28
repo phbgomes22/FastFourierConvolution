@@ -256,10 +256,10 @@ class TarImageFolder(TarDataset):
       raise IOError("No classes (top-level folders) were found with the given criteria. The given\n"
         "extensions, is_valid_file or root_in_archive are too strict, or the archive is empty.")
 
-    elif len(self.class_to_idx) == 1:
-      raise IOError(f"Only one class (top-level folder) was found: {next(iter(self.class_to_idx))}.\n"
-        f"To choose the correct path in the archive where the label folders are located, specify\n"
-        f"root_in_archive in the TarImageFolder's constructor.")
+    # elif len(self.class_to_idx) == 1:
+    #   raise IOError(f"Only one class (top-level folder) was found: {next(iter(self.class_to_idx))}.\n"
+    #     f"To choose the correct path in the archive where the label folders are located, specify\n"
+    #     f"root_in_archive in the TarImageFolder's constructor.")
     
     # the inverse mapping is often useful
     self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
