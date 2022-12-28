@@ -270,7 +270,8 @@ class TarImageFolder(TarDataset):
     filter further to select only samples within the given root path."""
     super().filter_samples(is_valid_file, extensions)
     self.samples = [filename for filename in self.samples if filename.startswith(self.root_in_archive)]
-
+    ## - pg (28/12/22) - fix code for celeba
+    self.samples = [name.replace("._", "") for name in self.samples]
 
   def __getitem__(self, index):
     """Return a single sample.
