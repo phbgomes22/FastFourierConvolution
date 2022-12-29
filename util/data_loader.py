@@ -93,14 +93,6 @@ def load_data():
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                             shuffle=True, num_workers=workers)
 
-    count = 0
-    for (image, label) in dataloader:
-        print(f"Dimensions of image batch: {image.shape}")
-        print(f"Labels in batch: {label}")
-        count += 1
-        if count == 5: 
-            break
-
     print("Dataloader created.")
 
     device = get_device()
