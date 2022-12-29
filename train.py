@@ -140,8 +140,11 @@ def train(netG, netD, dataloader):
     # For each epoch
     for epoch in range(num_epochs):
         # For each batch in the dataloader
-        for i, data in enumerate(dataloader, 0)[:train_cutoff]:
+        for i, data in enumerate(dataloader, 0):
             
+            if i > train_cutoff:
+                break
+
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
