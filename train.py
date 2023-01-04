@@ -169,14 +169,14 @@ def train(netG, netD):
 
             # Forward pass real batch through D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(dtype=torch.float16):
-                output = netD(real_cpu).view(-1)
+           # with torch.cuda.amp.autocast(dtype=torch.float16):
+            output = netD(real_cpu).view(-1)
                 # Calculate loss on all-real batch
-                errD_real = criterion(output, label.float())
+            errD_real = criterion(output, label.float())
             # Calculate gradients for D in backward pass
             # -- using 16-bit precision
-            scaler.scale(errD_real).backward()
-            #errD_real.backward()
+            #scaler.scale(errD_real).backward()
+            errD_real.backward()
 
             D_x = output.mean().item()
 
@@ -185,27 +185,27 @@ def train(netG, netD):
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Generate fake image batch with G
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(dtype=torch.float16):
-                fake = netG(noise)
+            #with torch.cuda.amp.autocast(dtype=torch.float16):
+            fake = netG(noise)
 
             label.fill_(fake_label)
             # Classify all fake batch with D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(dtype=torch.float16):
-                output = netD(fake.detach()).view(-1)
+            #with torch.cuda.amp.autocast(dtype=torch.float16):
+            output = netD(fake.detach()).view(-1)
                 # Calculate D's loss on the all-fake batch
-                errD_fake = criterion(output, label.float())
+            errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
             # -- using 16-bit precision
-            scaler.scale(errD_fake).backward()
-            #errD_fake.backward()
+            #scaler.scale(errD_fake).backward()
+            errD_fake.backward()
             D_G_z1 = output.mean().item()
             # Add the gradients from the all-real and all-fake batches
             errD = errD_real + errD_fake
             # Update D
             # -- using 16-bit precision
-            scaler.step(optimizerD)
-            
+           # scaler.step(optimizerD)
+            optimizerD.step()
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
@@ -214,22 +214,24 @@ def train(netG, netD):
             label.fill_(real_label)  # fake labels are real for generator cost
             # Since we just updated D, perform another forward pass of all-fake batch through D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(dtype=torch.float16):
-                output = netD(fake).view(-1)
+            #with torch.cuda.amp.autocast(dtype=torch.float16):
+            output = netD(fake).view(-1)
                 # Calculate G's loss based on this output
-                errG = criterion(output, label.float())
+            errG = criterion(output, label.float())
             # Calculate gradients for G
             # -- using 16-bit precision
-            scaler.scale(errG).backward()
+            #scaler.scale(errG).backward()
+            errG.backward()
             D_G_z2 = output.mean().item()
             # Update G
             # -- using 16-bit precision
-            scaler.step(optimizerG)
-
+           # scaler.step(optimizerG)
+            optimizerG.step()
+            
             #####################
             # (3) Updates Scaler
             #####################
-            scaler.update()
+            #scaler.update()
 
             # Output training stats
             if i % 32 == 0 and epoch%4 == 0:
