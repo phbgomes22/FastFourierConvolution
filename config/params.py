@@ -34,10 +34,10 @@ class Config:
     model_output = '../output/'
 
     # Number of workers for dataloader
-    workers = 10#4
+    workers = 8#4
 
     # Batch size during training
-    batch_size = 128
+    batch_size = 512#128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
@@ -60,7 +60,7 @@ class Config:
     num_epochs = 400
 
     # Learning rate for optimizers
-    lr = 0.0005#0.0002
+    lr = 0.0015#0.0005
 
     # Beta1 hyperparam for Adam optimizers
     beta1 = 0.5
@@ -157,6 +157,8 @@ class Config:
         self.nc = 1 if opts.color == 'greyscale' else 3
 
         self.batch_size = opts.batch_size
+
+        self.lr = opts.learning_rate
 
         self.num_epochs = opts.epochs
 

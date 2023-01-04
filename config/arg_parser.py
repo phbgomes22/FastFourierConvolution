@@ -98,6 +98,10 @@ def read_train_options(args = sys.argv[1:]):
                 type=int,
                 default=128)
 
+    parser.add_argument("-l", "--learning_rate",
+                help="The learning rate for the training",
+                default=0.005)
+
     parser.add_argument("-c", "--num_classes",
                     help = "Number of classes for conditional tarining",
                     type=int,
