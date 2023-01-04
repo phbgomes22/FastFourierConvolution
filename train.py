@@ -4,6 +4,7 @@ import torch.optim as optim
 from config import Config
 from util import *
 from models import *
+import timeit
 
 '''
 The `train.py` file is responsible for training the model based on the arguments it receives.
@@ -151,6 +152,7 @@ def train(netG, netD):
     for epoch in range(num_epochs):
         # For each batch in the dataloader
         for i, data in enumerate(dataloader, 0):
+            start = timeit.default_timer()
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -163,14 +165,14 @@ def train(netG, netD):
 
             # Forward pass real batch through D
             # -- using 16-bit precision
-           # with torch.cuda.amp.autocast(dtype=torch.float16):
-            output = netD(real_cpu).view(-1)
+            with torch.cuda.amp.autocast(dtype=torch.float16):
+                output = netD(real_cpu).view(-1)
                 # Calculate loss on all-real batch
             errD_real = criterion(output, label.float())
             # Calculate gradients for D in backward pass
             # -- using 16-bit precision
-            #scaler.scale(errD_real).backward()
-            errD_real.backward()
+            scaler.scale(errD_real).backward()
+            #errD_real.backward()
 
             D_x = output.mean().item()
 
@@ -179,27 +181,27 @@ def train(netG, netD):
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Generate fake image batch with G
             # -- using 16-bit precision
-            #with torch.cuda.amp.autocast(dtype=torch.float16):
-            fake = netG(noise)
+            with torch.cuda.amp.autocast(dtype=torch.float16):
+                fake = netG(noise)
 
             label.fill_(fake_label)
             # Classify all fake batch with D
             # -- using 16-bit precision
-            #with torch.cuda.amp.autocast(dtype=torch.float16):
-            output = netD(fake.detach()).view(-1)
+            with torch.cuda.amp.autocast(dtype=torch.float16):
+                output = netD(fake.detach()).view(-1)
                 # Calculate D's loss on the all-fake batch
             errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
             # -- using 16-bit precision
-            #scaler.scale(errD_fake).backward()
-            errD_fake.backward()
+            scaler.scale(errD_fake).backward()
+           # errD_fake.backward()
             D_G_z1 = output.mean().item()
             # Add the gradients from the all-real and all-fake batches
             errD = errD_real + errD_fake
             # Update D
             # -- using 16-bit precision
-           # scaler.step(optimizerD)
-            optimizerD.step()
+            scaler.step(optimizerD)
+            #optimizerD.step()
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
@@ -208,51 +210,50 @@ def train(netG, netD):
             label.fill_(real_label)  # fake labels are real for generator cost
             # Since we just updated D, perform another forward pass of all-fake batch through D
             # -- using 16-bit precision
-            #with torch.cuda.amp.autocast(dtype=torch.float16):
-            output = netD(fake).view(-1)
+            with torch.cuda.amp.autocast(dtype=torch.float16):
+                output = netD(fake).view(-1)
                 # Calculate G's loss based on this output
             errG = criterion(output, label.float())
             # Calculate gradients for G
             # -- using 16-bit precision
-            #scaler.scale(errG).backward()
-            errG.backward()
+            scaler.scale(errG).backward()
+            #errG.backward()
             D_G_z2 = output.mean().item()
             # Update G
             # -- using 16-bit precision
-           # scaler.step(optimizerG)
-            optimizerG.step()
+            scaler.step(optimizerG)
+           # optimizerG.step()
 
             #####################
             # (3) Updates Scaler
             #####################
-            #scaler.update()
+            scaler.update()
 
             # Output training stats
-            if i == 0 and epoch%4 == 0:
+            if i == 0: 
+                stop = timeit.default_timer()
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-                with torch.no_grad():
-                    fake = netG(fixed_noise).detach().cpu()
-                curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
-                image_to_show = np.transpose(curr_fake, (1,2,0))
-                plt.figure(figsize=(5,5))
-                plt.imshow(image_to_show)
-                # saves the image representing samples from the generator
-                plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
-                # saves the generator model from the current epoch and batch
-                torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
-                plt.show()
+                print('Time: ', stop - start)
+                if epoch%4 == 0:
+                    with torch.no_grad():
+                        fake = netG(fixed_noise).detach().cpu()
+                    curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
+                    image_to_show = np.transpose(curr_fake, (1,2,0))
+                    plt.figure(figsize=(5,5))
+                    plt.imshow(image_to_show)
+                    # saves the image representing samples from the generator
+                    plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
+                    # saves the generator model from the current epoch and batch
+                    torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
+                    plt.show()
             
             # Save Losses for plotting later
            # G_losses.append(errG.item())
            # D_losses.append(errD.item())
-
-
-            # if len(D_losses) > 1 and abs(D_losses[-1] - D_losses[-2]) > 20.0:
-            #     break
-            
             iters += 1
+        
 
 
 def main():
