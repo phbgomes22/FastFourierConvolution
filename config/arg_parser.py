@@ -100,6 +100,7 @@ def read_train_options(args = sys.argv[1:]):
 
     parser.add_argument("-l", "--learning_rate",
                 help="The learning rate for the training",
+                type=float,
                 default=0.005)
 
     parser.add_argument("-c", "--num_classes",
