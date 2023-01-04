@@ -91,7 +91,8 @@ def load_data():
     print("Will create dataloader...")
     # Create the dataloader
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                            shuffle=True, num_workers=workers)
+                                            shuffle=True, num_workers=workers,
+                                            pin_memory=True)
 
     print("Dataloader created.")
 

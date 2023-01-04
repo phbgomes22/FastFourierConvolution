@@ -127,6 +127,9 @@ def train(netG, netD, dataloader):
     optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
+    # Scaler -- 16-bit precision
+    scaler = torch.cuda.amp.GradScaler()
+
     # Training Loop
 
     # Lists to keep track of progress
@@ -154,33 +157,46 @@ def train(netG, netD, dataloader):
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
             label = torch.full((b_size,), real_label, device=device)
+
             # Forward pass real batch through D
-            output = netD(real_cpu).view(-1)
+            # -- using 16-bit precision
+            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+                output = netD(real_cpu).view(-1)
     
             # Calculate loss on all-real batch
             errD_real = criterion(output, label.float())
             # Calculate gradients for D in backward pass
-            errD_real.backward()
+            # -- using 16-bit precision
+            scaler.scale(errD_real).backward()
+            #errD_real.backward()
+
             D_x = output.mean().item()
 
             ## Train with all-fake batch
             # Generate batch of latent vectors
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Generate fake image batch with G
-            fake = netG(noise)
+            # -- using 16-bit precision
+            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+                fake = netG(noise)
 
             label.fill_(fake_label)
             # Classify all fake batch with D
-            output = netD(fake.detach()).view(-1)
+            # -- using 16-bit precision
+            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+                output = netD(fake.detach()).view(-1)
             # Calculate D's loss on the all-fake batch
             errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
-            errD_fake.backward()
+            # -- using 16-bit precision
+            scaler.scale(errD_fake).backward()
+            #errD_fake.backward()
             D_G_z1 = output.mean().item()
             # Add the gradients from the all-real and all-fake batches
             errD = errD_real + errD_fake
             # Update D
-            optimizerD.step()
+            # -- using 16-bit precision
+            scaler.step(optimizerD)
             
 
             ############################
@@ -189,15 +205,24 @@ def train(netG, netD, dataloader):
             netG.zero_grad()
             label.fill_(real_label)  # fake labels are real for generator cost
             # Since we just updated D, perform another forward pass of all-fake batch through D
-            output = netD(fake).view(-1)
+            # -- using 16-bit precision
+            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+                output = netD(fake).view(-1)
             # Calculate G's loss based on this output
             errG = criterion(output, label.float())
             # Calculate gradients for G
-            errG.backward()
+            # -- using 16-bit precision
+            scaler.scale(errG).backward()
             D_G_z2 = output.mean().item()
             # Update G
-            optimizerG.step()
-            
+            # -- using 16-bit precision
+            scaler.step(optimizerG)
+
+            #####################
+            # (3) Updates Scaler
+            #####################
+            scaler.update()
+
             # Output training stats
             if i % 32 == 0 and epoch%4 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
@@ -216,8 +241,8 @@ def train(netG, netD, dataloader):
                 plt.show()
             
             # Save Losses for plotting later
-            G_losses.append(errG.item())
-            D_losses.append(errD.item())
+           # G_losses.append(errG.item())
+           # D_losses.append(errD.item())
 
 
             # if len(D_losses) > 1 and abs(D_losses[-1] - D_losses[-2]) > 20.0:
