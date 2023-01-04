@@ -168,7 +168,7 @@ def train(netG, netD):
             with torch.cuda.amp.autocast(dtype=torch.float16):
                 output = netD(real_cpu).view(-1)
                 # Calculate loss on all-real batch
-            errD_real = criterion(output, label.float())
+                errD_real = criterion(output, label.float())
             # Calculate gradients for D in backward pass
             # -- using 16-bit precision
             scaler.scale(errD_real).backward()
@@ -190,7 +190,7 @@ def train(netG, netD):
             with torch.cuda.amp.autocast(dtype=torch.float16):
                 output = netD(fake.detach()).view(-1)
                 # Calculate D's loss on the all-fake batch
-            errD_fake = criterion(output, label.float())
+                errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
             # -- using 16-bit precision
             scaler.scale(errD_fake).backward()
@@ -213,7 +213,7 @@ def train(netG, netD):
             with torch.cuda.amp.autocast(dtype=torch.float16):
                 output = netD(fake).view(-1)
                 # Calculate G's loss based on this output
-            errG = criterion(output, label.float())
+                errG = criterion(output, label.float())
             # Calculate gradients for G
             # -- using 16-bit precision
             scaler.scale(errG).backward()
