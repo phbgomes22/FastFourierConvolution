@@ -108,10 +108,14 @@ def get_discriminator():
 
 
 
-def train(netG, netD, dataloader):
+def train(netG, netD):
     '''
     Controls the training loop of the GAN.
     '''
+
+    ## Loads data for traning based on the config set by the user
+    dataloader = load_data()
+
     ## parameters
     beta1 = config.beta1
     lr = config.lr
@@ -160,7 +164,7 @@ def train(netG, netD, dataloader):
 
             # Forward pass real batch through D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast( dtype=torch.float16):
+            with torch.cuda.amp.autocast(dtype=torch.float16):
                 output = netD(real_cpu).view(-1)
                 # Calculate loss on all-real batch
                 errD_real = criterion(output, label.float())
@@ -255,9 +259,6 @@ def main():
     ## Reads the parameters send from the user through the terminal call of train.py
     config.read_train_params()
 
-    ## Loads data for traning based on the config set by the user
-    dataloader = load_data()
-
     print("Will create models...")
     ## Creating generator and discriminator
     netG = get_generator()
@@ -266,7 +267,7 @@ def main():
     print("Discriminator created!")
 
     print("Will begin training... ")
-    train(netG, netD, dataloader)
+    train(netG, netD)
 
 
 main()

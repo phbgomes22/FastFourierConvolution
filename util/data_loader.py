@@ -96,18 +96,18 @@ def load_data():
 
     print("Dataloader created.")
 
-    device = get_device()
+    # device = get_device()
 
-    model_output = config.model_output
-    # Plot some training images
-    try:
-        real_batch = next(iter(dataloader))
-        plt.figure(figsize=(8,8))
-        plt.axis("off")
-        plt.title("Training Images")
-        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
-        plt.savefig(model_output + "training_set.jpg")
-    except OSError:
-        print("Cannot load image")
+    # model_output = config.model_output
+    # # Plot some training images
+    # try:
+    #     real_batch = next(iter(dataloader))
+    #     plt.figure(figsize=(8,8))
+    #     plt.axis("off")
+    #     plt.title("Training Images")
+    #     plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+    #     plt.savefig(model_output + "training_set.jpg")
+    # except OSError:
+    #     print("Cannot load image")
 
     return dataloader
