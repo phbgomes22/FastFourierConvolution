@@ -160,11 +160,10 @@ def train(netG, netD, dataloader):
 
             # Forward pass real batch through D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+            with torch.cuda.amp.autocast( dtype=torch.float16):
                 output = netD(real_cpu).view(-1)
-    
-            # Calculate loss on all-real batch
-            errD_real = criterion(output, label.float())
+                # Calculate loss on all-real batch
+                errD_real = criterion(output, label.float())
             # Calculate gradients for D in backward pass
             # -- using 16-bit precision
             scaler.scale(errD_real).backward()
@@ -177,16 +176,16 @@ def train(netG, netD, dataloader):
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Generate fake image batch with G
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+            with torch.cuda.amp.autocast(dtype=torch.float16):
                 fake = netG(noise)
 
             label.fill_(fake_label)
             # Classify all fake batch with D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+            with torch.cuda.amp.autocast(dtype=torch.float16):
                 output = netD(fake.detach()).view(-1)
-            # Calculate D's loss on the all-fake batch
-            errD_fake = criterion(output, label.float())
+                # Calculate D's loss on the all-fake batch
+                errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
             # -- using 16-bit precision
             scaler.scale(errD_fake).backward()
@@ -206,10 +205,10 @@ def train(netG, netD, dataloader):
             label.fill_(real_label)  # fake labels are real for generator cost
             # Since we just updated D, perform another forward pass of all-fake batch through D
             # -- using 16-bit precision
-            with torch.cuda.amp.autocast(device_type="cuda", dtype=torch.float16):
+            with torch.cuda.amp.autocast(dtype=torch.float16):
                 output = netD(fake).view(-1)
-            # Calculate G's loss based on this output
-            errG = criterion(output, label.float())
+                # Calculate G's loss based on this output
+                errG = criterion(output, label.float())
             # Calculate gradients for G
             # -- using 16-bit precision
             scaler.scale(errG).backward()
