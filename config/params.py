@@ -34,7 +34,7 @@ class Config:
     model_output = '../output/'
 
     # Number of workers for dataloader
-    workers = 2
+    workers = 4#2
 
     # Batch size during training
     batch_size = 128

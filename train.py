@@ -220,8 +220,8 @@ def train(netG, netD, dataloader):
             D_losses.append(errD.item())
 
 
-            if len(D_losses) > 1 and abs(D_losses[-1] - D_losses[-2]) > 20.0:
-                break
+            # if len(D_losses) > 1 and abs(D_losses[-1] - D_losses[-2]) > 20.0:
+            #     break
             
             iters += 1
 
