@@ -146,17 +146,11 @@ def train(netG, netD):
     D_losses = []
     iters = 0
 
-    train_cutoff = int(len(dataloader)/10)
-
     print("Starting Training Loop...")
     # For each epoch
     for epoch in range(num_epochs):
         # For each batch in the dataloader
         for i, data in enumerate(dataloader, 0):
-            
-            if i > train_cutoff:
-                break
-
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -227,14 +221,14 @@ def train(netG, netD):
             # -- using 16-bit precision
            # scaler.step(optimizerG)
             optimizerG.step()
-            
+
             #####################
             # (3) Updates Scaler
             #####################
             #scaler.update()
 
             # Output training stats
-            if i % 32 == 0 and epoch%4 == 0:
+            if i == 0 and epoch%4 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
