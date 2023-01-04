@@ -114,7 +114,12 @@ def train(netG, netD):
     '''
 
     ## Loads data for traning based on the config set by the user
-    dataloader = load_data()
+    dataset, batch_size, workers = load_data()
+
+    # Create the dataloader
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                            shuffle=True, num_workers=workers,
+                                            pin_memory=True)
 
     ## parameters
     beta1 = config.beta1

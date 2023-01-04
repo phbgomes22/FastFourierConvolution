@@ -89,10 +89,6 @@ def load_data():
         dataset = TarImageFolder(config.dataroot, transform=transform)
 
     print("Will create dataloader...")
-    # Create the dataloader
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                            shuffle=True, num_workers=workers,
-                                            pin_memory=True)
 
     print("Dataloader created.")
 
@@ -110,4 +106,4 @@ def load_data():
     # except OSError:
     #     print("Cannot load image")
 
-    return dataloader
+    return dataset, batch_size, workers
