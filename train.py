@@ -162,7 +162,7 @@ def train(netG, netD):
 
     ## ADDED
     data_iter = iter(dataloader)
-    next_batch = data_iter.next() # start loading the first batch
+    next_batch = next(data_iter) # start loading the first batch
     next_batch = [ _.cuda(non_blocking=True) for _ in next_batch ]  # with pin_memory=True and non_blocking=True, this will copy data to GPU non blockingly
     ## END ADDED
 
@@ -199,7 +199,7 @@ def train(netG, netD):
             data = next_batch
             if i + 2 != len(dataloader): 
                 # start copying data of next batch
-                next_batch = data_iter.next()
+                next_batch = next(data_iter)
                 next_batch = [ _.cuda(non_blocking=True) for _ in next_batch]
 
             ## END ADDED
