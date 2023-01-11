@@ -218,18 +218,18 @@ def train(netG, netD):
                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
             print('Time: ', stop - start)
             # Output training stats
-            if i == 0:
-                    with torch.no_grad():
-                        fake = netG(fixed_noise).detach().cpu()
-                    curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
-                    image_to_show = np.transpose(curr_fake, (1,2,0))
-                    plt.figure(figsize=(5,5))
-                    plt.imshow(image_to_show)
-                    # saves the image representing samples from the generator
-                    plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
-                    # saves the generator model from the current epoch and batch
-                    torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
-                    plt.show()
+            if i % 16 == 0:
+                with torch.no_grad():
+                    fake = netG(fixed_noise).detach().cpu()
+                curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
+                image_to_show = np.transpose(curr_fake, (1,2,0))
+                plt.figure(figsize=(5,5))
+                plt.imshow(image_to_show)
+                # saves the image representing samples from the generator
+                plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
+                # saves the generator model from the current epoch and batch
+                torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
+                plt.show()
             
             # Save Losses for plotting later
            # G_losses.append(errG.item())
