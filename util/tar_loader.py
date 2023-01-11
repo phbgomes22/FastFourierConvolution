@@ -22,6 +22,9 @@ except:
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+## ADDED for multiprocess
+from multiprocessing import Pool
+
 
 class UnexpectedEOFTarFile(tarfile.TarFile):
   def _load(self):
@@ -151,6 +154,12 @@ class TarDataset(Dataset):
       return image
     return to_tensor(image)
 
+  ## PG
+  def get_image_pil(self, name):
+    ## PG
+    return Image.open(BytesIO(self.get_file(name).read()))
+
+
 
   def get_text_file(self, name, encoding='utf-8'):
     """Read a text file from the Tar archive, returned as a string.
@@ -264,6 +273,17 @@ class TarImageFolder(TarDataset):
     # the inverse mapping is often useful
     self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
 
+    ## Get all images - PG
+    self.load_all_images()
+
+
+  def load_all_images(self):
+    ## - Trying multiprocess
+    with Pool(8) as pool:
+      self.images = pool.map(self.get_image_pil, self.samples)
+
+    print("Tar Images loaded!")
+
 
   def filter_samples(self, is_valid_file=None, extensions=('.png', '.jpg', '.jpeg')):
     """In addition to TarDataset's filtering by extension (or user-supplied),
@@ -283,7 +303,7 @@ class TarImageFolder(TarDataset):
     Returns:
       tuple[Tensor, int]: The image and the corresponding label index.
     """
-    image = self.get_image(self.samples[index], pil=True)
+    image = self.images[index] #self.get_image(self.samples[index], pil=True)
     image = image.convert('RGB')  # if it's grayscale, convert to RGB
     if self.transform:  # apply any custom transforms
       image = self.transform(image)
