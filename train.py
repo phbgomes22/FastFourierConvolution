@@ -161,9 +161,9 @@ def train(netG, netD):
                                             pin_memory=True, persistent_workers=True)
 
     ## ADDED
-    data_iter = iter(dataloader)
-    next_batch = next(data_iter) # start loading the first batch
-    next_batch = [ _.cuda(non_blocking=True) for _ in next_batch ]  # with pin_memory=True and non_blocking=True, this will copy data to GPU non blockingly
+    # data_iter = iter(dataloader)
+    # next_batch = next(data_iter) # start loading the first batch
+    # next_batch = [ _.cuda(non_blocking=True) for _ in next_batch ]  # with pin_memory=True and non_blocking=True, this will copy data to GPU non blockingly
     ## END ADDED
 
     ## parameters
@@ -192,16 +192,7 @@ def train(netG, netD):
     # For each epoch
     for epoch in range(num_epochs):
         # For each batch in the dataloader
-        #for i, data in enumerate(dataloader, 0):
-        ## ADDED
-        for i in range(len(dataloader)):
-            ## ADDED
-            data = next_batch
-            if i + 2 != len(dataloader): 
-                # start copying data of next batch
-                next_batch = next(data_iter)
-                next_batch = [ _.cuda(non_blocking=True) for _ in next_batch]
-
+        for i, data in enumerate(dataloader, 0):
             ## END ADDED
 
             start = timeit.default_timer()
