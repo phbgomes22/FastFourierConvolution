@@ -212,14 +212,13 @@ def train(netG, netD):
             optimizerG.step()
 
 
+            stop = timeit.default_timer()
+            print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
+                % (epoch, num_epochs, i, len(dataloader),
+                    errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+            print('Time: ', stop - start)
             # Output training stats
-            if i == 0: 
-                stop = timeit.default_timer()
-                print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                    % (epoch, num_epochs, i, len(dataloader),
-                        errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-                print('Time: ', stop - start)
-                if epoch%4 == 0:
+            if i == 0 and epoch%4 == 0:
                     with torch.no_grad():
                         fake = netG(fixed_noise).detach().cpu()
                     curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
