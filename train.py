@@ -6,6 +6,38 @@ from util import *
 from models import *
 import timeit
 
+
+## TESTING
+class MultiEpochsDataLoader(torch.utils.data.DataLoader):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._DataLoader__initialized = False
+        self.batch_sampler = _RepeatSampler(self.batch_sampler)
+        self._DataLoader__initialized = True
+        self.iterator = super().__iter__()
+
+    def __len__(self):
+        return len(self.batch_sampler.sampler)
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield next(self.iterator)
+
+
+class _RepeatSampler(object):
+    """ Sampler that repeats forever.
+    Args:
+        sampler (Sampler)
+    """
+
+    def __init__(self, sampler):
+        self.sampler = sampler
+
+    def __iter__(self):
+        while True:
+            yield from iter(self.sampler)
+
 '''
 The `train.py` file is responsible for training the model based on the arguments it receives.
 
@@ -124,9 +156,15 @@ def train(netG, netD):
     dataset, batch_size, workers = load_data()
 
     # Create the dataloader
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    dataloader = MultiEpochsDataLoader(dataset, batch_size=batch_size,
                                             shuffle=True, num_workers=workers,
-                                            pin_memory=True)
+                                            pin_memory=True, persistent_workers=True)
+
+    ## ADDED
+    data_iter = iter(dataloader)
+    next_batch = data_iter.next() # start loading the first batch
+    next_batch = [ _.cuda(non_blocking=True) for _ in next_batch ]  # with pin_memory=True and non_blocking=True, this will copy data to GPU non blockingly
+    ## END ADDED
 
     ## parameters
     beta1 = config.beta1
@@ -154,7 +192,18 @@ def train(netG, netD):
     # For each epoch
     for epoch in range(num_epochs):
         # For each batch in the dataloader
-        for i, data in enumerate(dataloader, 0):
+        #for i, data in enumerate(dataloader, 0):
+        ## ADDED
+        for i in range(len(dataloader)):
+            ## ADDED
+            data = next_batch
+            if i + 2 != len(dataloader): 
+                # start copying data of next batch
+                next_batch = data_iter.next()
+                next_batch = [ _.cuda(non_blocking=True) for _ in next_batch]
+
+            ## END ADDED
+
             start = timeit.default_timer()
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -212,11 +261,10 @@ def train(netG, netD):
             optimizerG.step()
 
 
-            stop = timeit.default_timer()
+            
             print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                 % (epoch, num_epochs, i, len(dataloader),
                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-            print('Time: ', stop - start)
             # Output training stats
             if i % 16 == 0:
                 with torch.no_grad():
@@ -235,6 +283,9 @@ def train(netG, netD):
            # G_losses.append(errG.item())
            # D_losses.append(errD.item())
             iters += 1
+
+            stop = timeit.default_timer()
+            print('Time: ', stop - start)
         
 
 
