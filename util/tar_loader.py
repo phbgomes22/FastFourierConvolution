@@ -274,7 +274,7 @@ class TarImageFolder(TarDataset):
     self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
 
     ## Get all images - PG
-    self.load_all_images()
+   # self.load_all_images()
 
 
   def load_all_images(self):
@@ -303,7 +303,7 @@ class TarImageFolder(TarDataset):
     Returns:
       tuple[Tensor, int]: The image and the corresponding label index.
     """
-    image = self.images[index] #self.get_image(self.samples[index], pil=True)
+    image = self.get_image(self.samples[index], pil=True) ## - ENHANCE - using cpu everytime
     image = image.convert('RGB')  # if it's grayscale, convert to RGB
     if self.transform:  # apply any custom transforms
       image = self.transform(image)
