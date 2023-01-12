@@ -7,7 +7,7 @@ from util import *
 from layers import *
 from ..ffcmodel import FFCModel
 
-
+## == NOT WORKING - REGULAR FFCGENERATOR!
 
 # FFC Generator Code
 class SNFFCGenerator(FFCModel):

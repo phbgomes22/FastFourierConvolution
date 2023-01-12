@@ -24,6 +24,9 @@ def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
 
 
 
@@ -145,7 +148,6 @@ def train(netG, netD, dataloader):
             labels = data[1].to(device)
             one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
 
-            
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -154,13 +156,13 @@ def train(netG, netD, dataloader):
             # Format batch
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
-            label = torch.full((b_size,), real_label, device=device)
+            label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
             # Conditional Training 
             # Forward pass real batch through D alonside one_hot_labels
             output = netD(real_cpu, one_hot_labels).view(-1)
     
             # Calculate loss on all-real batch
-            errD_real = criterion(output, label.float())
+            errD_real = criterion(output, label)
             # Calculate gradients for D in backward pass
             errD_real.backward()
             D_x = output.mean().item()
@@ -178,7 +180,7 @@ def train(netG, netD, dataloader):
             output = netD(fake.detach(), one_hot_labels).view(-1)
             
             # Calculate D's loss on the all-fake batch
-            errD_fake = criterion(output, label.float())
+            errD_fake = criterion(output, label)
             # Calculate the gradients for this batch
             errD_fake.backward()
             D_G_z1 = output.mean().item()
@@ -197,7 +199,7 @@ def train(netG, netD, dataloader):
             # Since we just updated D, perform another forward pass of all-fake batch through D  alongside one_hot_labels
             output = netD(fake, one_hot_labels).view(-1)
             # Calculate G's loss based on this output
-            errG = criterion(output, label.float())
+            errG = criterion(output, label)
             # Calculate gradients for G
             errG.backward()
             D_G_z2 = output.mean().item()
@@ -205,13 +207,13 @@ def train(netG, netD, dataloader):
             optimizerG.step()
             
             # Output training stats
-            if i % 32 == 0 and epoch%4 == 0:
+            if i % 16 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                    % (epoch, num_epochs, i, len(dataloader),
-                        errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+                % (epoch, num_epochs, i, len(dataloader),
+                    errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+
                 with torch.no_grad():
-                    # Conditional training - sampling
-                    fake = netG(fixed_noise, fixed_labels).detach().cpu()
+                    fake = netG(fixed_noise).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))
@@ -219,7 +221,8 @@ def train(netG, netD, dataloader):
                 # saves the image representing samples from the generator
                 plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
                 # saves the generator model from the current epoch and batch
-                torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
+                ## - Removing save file for now
+               # torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
                 plt.show()
             
             # Save Losses for plotting later

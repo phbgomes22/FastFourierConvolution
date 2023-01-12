@@ -71,6 +71,7 @@ class FFC_BN_ACT(nn.Module):
 
         self.print_size = Print(debug=Config.shared().DEBUG)
 
+        ## Add Noise - PG
         self.noise = NoiseInjection()
 
     def forward(self, x):

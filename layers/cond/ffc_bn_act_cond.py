@@ -8,6 +8,7 @@ from util import *
 from config import Config
 from ..ffc.ffc import *
 from ..ffc.ffc_transpose import *
+from ..noise_injection import *
 
 
 
@@ -73,6 +74,8 @@ class FFC_BN_ACT_COND(nn.Module):
             self.act_g = gact(inplace=True)
 
         self.print_size = Print(debug=Config.shared().DEBUG)
+        
+        self.noise = NoiseInjection()
 
     def forward(self, x, labels):
         debug_print(" -- FFC_BN_ACT")
@@ -86,5 +89,11 @@ class FFC_BN_ACT_COND(nn.Module):
         self.print_size(x_l)
 
         x_g = self.act_g(self.bn_g(x_g, discrete_labels))
+
+        ## Add Noise - PG
+        x_l = self.noise(x_l, noise=None)
+        if type(x_g) != int:
+            x_g = self.noise(x_g, noise=None)
+
         debug_print(" -- Fim FFC_BN_ACT")
         return x_l, x_g

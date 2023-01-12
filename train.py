@@ -161,10 +161,8 @@ def train(netG, netD):
     # For each epoch
     for epoch in range(num_epochs):
         # For each batch in the dataloader
+        start = timeit.default_timer()
         for i, data in enumerate(dataloader, 0):
-            ## END ADDED
-
-            start = timeit.default_timer()
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -220,7 +218,7 @@ def train(netG, netD):
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                 % (epoch, num_epochs, i, len(dataloader),
                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-                    
+
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
@@ -238,9 +236,9 @@ def train(netG, netD):
            # G_losses.append(errG.item())
            # D_losses.append(errD.item())
             iters += 1
-
-            stop = timeit.default_timer()
-            print('Time: ', stop - start)
+        stop = timeit.default_timer()
+        print('Time: ', stop - start)
+            
         
 
 
