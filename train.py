@@ -204,15 +204,13 @@ def train(netG, netD):
             # Format batch
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
-            label = torch.full((b_size,), real_label, device=device)
-
+            label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
             # Forward pass real batch through D
             output = netD(real_cpu).view(-1)
-                # Calculate loss on all-real batch
-            errD_real = criterion(output, label.float())
+            # Calculate loss on all-real batch
+            errD_real = criterion(output, label)
             # Calculate gradients for D in backward pass
             errD_real.backward()
-
             D_x = output.mean().item()
 
             ## Train with all-fake batch
@@ -220,20 +218,17 @@ def train(netG, netD):
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Generate fake image batch with G
             fake = netG(noise)
-
             label.fill_(fake_label)
             # Classify all fake batch with D
             output = netD(fake.detach()).view(-1)
             # Calculate D's loss on the all-fake batch
-            errD_fake = criterion(output, label.float())
-            # Calculate the gradients for this batch
+            errD_fake = criterion(output, label)
+            # Calculate the gradients for this batch, accumulated (summed) with previous gradients
             errD_fake.backward()
             D_G_z1 = output.mean().item()
-            # Add the gradients from the all-real and all-fake batches
+            # Compute error of D as sum over the fake and the real batches
             errD = errD_real + errD_fake
             # Update D
-            # -- using 16-bit precision
-           # scaler.step(optimizerD)
             optimizerD.step()
 
             ############################
@@ -244,14 +239,12 @@ def train(netG, netD):
             # Since we just updated D, perform another forward pass of all-fake batch through D
             output = netD(fake).view(-1)
             # Calculate G's loss based on this output
-            errG = criterion(output, label.float())
+            errG = criterion(output, label)
             # Calculate gradients for G
             errG.backward()
             D_G_z2 = output.mean().item()
             # Update G
             optimizerG.step()
-
-
             
             print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                 % (epoch, num_epochs, i, len(dataloader),
