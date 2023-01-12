@@ -128,7 +128,7 @@ def get_discriminator():
     if config.FFC_DISCRIMINATOR:
         netD = FFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
     else:
-        netD = SNDiscriminator(nc, ndf, ngpu=ngpu).to(device) 
+        netD = Discriminator(nc, ndf, ngpu=ngpu).to(device) 
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
