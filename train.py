@@ -7,37 +7,6 @@ from models import *
 import timeit
 
 
-## TESTING
-class MultiEpochsDataLoader(torch.utils.data.DataLoader):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._DataLoader__initialized = False
-        self.batch_sampler = _RepeatSampler(self.batch_sampler)
-        self._DataLoader__initialized = True
-        self.iterator = super().__iter__()
-
-    def __len__(self):
-        return len(self.batch_sampler.sampler)
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield next(self.iterator)
-
-
-class _RepeatSampler(object):
-    """ Sampler that repeats forever.
-    Args:
-        sampler (Sampler)
-    """
-
-    def __init__(self, sampler):
-        self.sampler = sampler
-
-    def __iter__(self):
-        while True:
-            yield from iter(self.sampler)
-
 '''
 The `train.py` file is responsible for training the model based on the arguments it receives.
 
@@ -59,30 +28,23 @@ fake_label = 0.
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-# def weights_init(m):
-#     '''
-#     Custom weights initialization called on netG and netD
-#     '''
-#     # if classname.find('Conv') != -1:
-#     #     nn.init.normal_(m.weight.data, 0.0, 0.02)
-#     if type(m) == nn.Conv2d:
-#         nn.init.normal_(m.weight.data, 0.0, 0.02)
-#     elif type(m) == nn.Linear:
-#         nn.init.xavier_uniform_(m.weight)
-#     elif type(m) == nn.BatchNorm2d:
-#         if hasattr(m.weight, 'data'):
-#             nn.init.normal_(m.weight.data, 1.0, 0.02)
-#         if hasattr(m.bias, 'data'):
-#             nn.init.constant_(m.bias.data, 0)
-
-# custom weights initialization called on netG and netD
 def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
+    '''
+    Custom weights initialization called on netG and netD
+    '''
+    # if classname.find('Conv') != -1:
+    #     nn.init.normal_(m.weight.data, 0.0, 0.02)
+    if type(m) == nn.Conv2d:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
-        nn.init.normal_(m.weight.data, 1.0, 0.02)
-        nn.init.constant_(m.bias.data, 0)
+    elif type(m) == nn.Linear:
+        nn.init.xavier_uniform_(m.weight)
+    elif type(m) == nn.BatchNorm2d:
+        if hasattr(m.weight, 'data'):
+            nn.init.normal_(m.weight.data, 1.0, 0.02)
+        if hasattr(m.bias, 'data'):
+            nn.init.constant_(m.bias.data, 0)
+
+
 
 def get_generator():
     '''
