@@ -29,6 +29,7 @@ def weights_init(m):
             if hasattr(m.weight, 'data'):
                 nn.init.normal_(m.weight.data, 1.0, 0.02)
                 nn.init.constant_(m.bias.data, 0)
+                print(classname, " - has weights and biases")
             else:
                 print(classname, " - no data")
         else:

@@ -10,7 +10,7 @@ from torch.nn.utils import spectral_norm
 
 class CondSNDiscriminator(nn.Module):
     def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
-        super(CondBNDiscriminator, self).__init__()
+        super(CondSNDiscriminator, self).__init__()
         self.image_size = image_size
         self.num_classes = num_classes
 
