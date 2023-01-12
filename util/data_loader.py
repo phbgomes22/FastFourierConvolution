@@ -82,7 +82,7 @@ def load_data():
     elif config.dataset_name == Datasets.CARS.value:
         # - For StanfordCars
         print("Loading StanfordCars dataset... ")
-        dataset = StanfordCars(root='../food101_data', split='train', download=True, transform=transform)
+        dataset = StanfordCars(root='../stanfordcars_data', split='train', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
         # - For local images
         print("Loading local dataset... ")
