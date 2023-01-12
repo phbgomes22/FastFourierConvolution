@@ -215,11 +215,12 @@ def train(netG, netD):
             # Update G
             optimizerG.step()
             
-            print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                % (epoch, num_epochs, i, len(dataloader),
-                    errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
             # Output training stats
             if i % 16 == 0:
+                print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
+                % (epoch, num_epochs, i, len(dataloader),
+                    errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+                    
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
