@@ -230,7 +230,7 @@ def train(netG, netD):
                 plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
                 # saves the generator model from the current epoch and batch
                 ## - Removing save file for now
-                torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
+               # torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
                 plt.show()
             
             # Save Losses for plotting later
