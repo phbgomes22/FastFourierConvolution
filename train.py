@@ -53,28 +53,36 @@ config = Config.shared()
 criterion = nn.BCELoss()
 
 # Establish convention for real and fake labels during training
-real_label = 1
-fake_label = 0
+real_label = 1.
+fake_label = 0.
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def weights_init(m):
-    '''
-    Custom weights initialization called on netG and netD
-    '''
-    # if classname.find('Conv') != -1:
-    #     nn.init.normal_(m.weight.data, 0.0, 0.02)
-    if type(m) == nn.Conv2d:
-        nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif type(m) == nn.Linear:
-        nn.init.xavier_uniform_(m.weight)
-    elif type(m) == nn.BatchNorm2d:
-        if hasattr(m.weight, 'data'):
-            nn.init.normal_(m.weight.data, 1.0, 0.02)
-        if hasattr(m.bias, 'data'):
-            nn.init.constant_(m.bias.data, 0)
+# def weights_init(m):
+#     '''
+#     Custom weights initialization called on netG and netD
+#     '''
+#     # if classname.find('Conv') != -1:
+#     #     nn.init.normal_(m.weight.data, 0.0, 0.02)
+#     if type(m) == nn.Conv2d:
+#         nn.init.normal_(m.weight.data, 0.0, 0.02)
+#     elif type(m) == nn.Linear:
+#         nn.init.xavier_uniform_(m.weight)
+#     elif type(m) == nn.BatchNorm2d:
+#         if hasattr(m.weight, 'data'):
+#             nn.init.normal_(m.weight.data, 1.0, 0.02)
+#         if hasattr(m.bias, 'data'):
+#             nn.init.constant_(m.bias.data, 0)
 
+# custom weights initialization called on netG and netD
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
 
 def get_generator():
     '''
@@ -156,15 +164,9 @@ def train(netG, netD):
     dataset, batch_size, workers = load_data()
 
     # Create the dataloader
-    dataloader = MultiEpochsDataLoader(dataset, batch_size=batch_size,
-                                            shuffle=True, num_workers=workers,
-                                            pin_memory=True, persistent_workers=True)
-
-    ## ADDED
-    # data_iter = iter(dataloader)
-    # next_batch = next(data_iter) # start loading the first batch
-    # next_batch = [ _.cuda(non_blocking=True) for _ in next_batch ]  # with pin_memory=True and non_blocking=True, this will copy data to GPU non blockingly
-    ## END ADDED
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                            shuffle=True, num_workers=workers)
+                                            #pin_memory=True, persistent_workers=True)
 
     ## parameters
     beta1 = config.beta1
