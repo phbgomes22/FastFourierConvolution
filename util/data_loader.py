@@ -10,7 +10,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101
+from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars
 from config import Config, Datasets
 
 from .tar_loader import TarImageFolder
@@ -79,6 +79,10 @@ def load_data():
         # - For Food101
         print("Loading Food101 dataset... ")
         dataset = Food101(root='../food101_data', download=True, transform=transform)
+    elif config.dataset_name == Datasets.CARS.value:
+        # - For StanfordCars
+        print("Loading StanfordCars dataset... ")
+        dataset = StanfordCars(root='../food101_data', split='train', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
         # - For local images
         print("Loading local dataset... ")

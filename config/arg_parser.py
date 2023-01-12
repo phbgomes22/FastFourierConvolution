@@ -67,7 +67,8 @@ def read_train_options(args = sys.argv[1:]):
                                  Datasets.CELEBA.value, 
                                  Datasets.MNIST.value,
                                  Datasets.OMNIGLOT.value,
-                                 Datasets.FOOD101.value],
+                                 Datasets.FOOD101.value,
+                                 Datasets.CARS.value],
                         default=Datasets.LOCAL_DATASET.value)
 
     parser.add_argument("--data_path",
