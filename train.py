@@ -32,17 +32,22 @@ def weights_init(m):
     '''
     Custom weights initialization called on netG and netD
     '''
-    # if classname.find('Conv') != -1:
-    #     nn.init.normal_(m.weight.data, 0.0, 0.02)
-    if type(m) == nn.Conv2d:
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif type(m) == nn.Linear:
-        nn.init.xavier_uniform_(m.weight)
-    elif type(m) == nn.BatchNorm2d:
-        if hasattr(m.weight, 'data'):
-            nn.init.normal_(m.weight.data, 1.0, 0.02)
-        if hasattr(m.bias, 'data'):
-            nn.init.constant_(m.bias.data, 0)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+        
+    # if type(m) == nn.Conv2d:
+    #     nn.init.normal_(m.weight.data, 0.0, 0.02)
+    # elif type(m) == nn.Linear:
+    #     nn.init.xavier_uniform_(m.weight)
+    # elif type(m) == nn.BatchNorm2d:
+    #     if hasattr(m.weight, 'data'):
+    #         nn.init.normal_(m.weight.data, 1.0, 0.02)
+    #     if hasattr(m.bias, 'data'):
+    #         nn.init.constant_(m.bias.data, 0)
 
 
 
