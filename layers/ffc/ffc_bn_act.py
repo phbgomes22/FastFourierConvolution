@@ -86,6 +86,7 @@ class FFC_BN_ACT(nn.Module):
 
         ## Add Noise - PG
         x_l = self.noise(x_l, noise=None)
-        x_g = self.noise(x_g, noise=None)
+        if type(x_g) != int:
+            x_g = self.noise(x_g, noise=None)
 
         return x_l, x_g

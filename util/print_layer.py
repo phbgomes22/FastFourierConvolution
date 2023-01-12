@@ -23,7 +23,7 @@ class Print(nn.Module):
                     aux = x[0]
                     print(aux.shape, "global = 0")
                 else:
-                    aux  = torch.cat(list(x), dim=1) # cat was stack before, changing
+                    aux = torch.cat(list(x), dim=1) # cat was stack before, changing
                     aux = aux.view(aux.shape[0], -1, *aux.shape[3:])
                     print(aux.shape)
             else:
