@@ -1,6 +1,6 @@
 import torch.nn as nn
 from torch.nn.utils import spectral_norm
-
+import torch
 
 class SNDiscriminator(nn.Module):
     '''
