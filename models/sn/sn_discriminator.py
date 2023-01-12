@@ -36,4 +36,10 @@ class SNDiscriminator(nn.Module):
         )
 
     def forward(self, input):
+        ## TEST ADDING NOISE HERE
+        ## -- 
+        # mean = 0.
+        # std = 10.
+        # noise = (torch.randn(1, 3, 64, 64) + mean) * std
+        # input = input + noise
         return self.main(input)

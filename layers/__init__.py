@@ -11,3 +11,6 @@ from .snffc.snffc_transpose import *
 
 from .cond.cond_bn import *
 from .cond.ffc_bn_act_cond import *
+
+
+from .noise_injection import *
