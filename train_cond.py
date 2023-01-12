@@ -112,7 +112,7 @@ def get_discriminator():
 
 
 
-def train(netG, netD, dataloader):
+def train(netG, netD):
     '''
     Controls the training loop of the GAN.
     '''
@@ -123,6 +123,14 @@ def train(netG, netD, dataloader):
     nz = config.nz
     model_output = config.model_output
     num_classes = config.num_classes
+
+    ## Loads data for traning based on the config set by the user
+    dataset, batch_size, workers = load_data()
+
+    # Create the dataloader
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                            shuffle=True, num_workers=workers)
+                                            #pin_memory=True, persistent_workers=True)
 
     # Create batch of latent vectors that we will use to visualize
     #  the progression of the generator
@@ -142,8 +150,6 @@ def train(netG, netD, dataloader):
     #
     labels = range(num_classes)
     fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 7)[:64] ) ).float().to(device)
-
-
 
     print("Starting Training Loop...")
     # For each epoch
@@ -218,11 +224,11 @@ def train(netG, netD, dataloader):
             # Output training stats
             if i % 16 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                % (epoch, num_epochs, i, len(dataloader),
-                    errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-
+                    % (epoch, num_epochs, i, len(dataloader),
+                        errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
                 with torch.no_grad():
-                    fake = netG(fixed_noise).detach().cpu()
+                    # Conditional training - sampling
+                    fake = netG(fixed_noise, fixed_labels).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))
@@ -230,7 +236,6 @@ def train(netG, netD, dataloader):
                 # saves the image representing samples from the generator
                 plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
                 # saves the generator model from the current epoch and batch
-                ## - Removing save file for now
                # torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
                 plt.show()
             
@@ -250,9 +255,6 @@ def main():
     ## Reads the parameters send from the user through the terminal call of train.py
     config.read_train_params()
 
-    ## Loads data for traning based on the config set by the user
-    dataloader = load_data()
-
     print("Will create models...")
     ## Creating generator and discriminator
     netG = get_generator()
@@ -261,7 +263,7 @@ def main():
     print("Discriminator created!")
 
     print("Will begin training... ")
-    train(netG, netD, dataloader)
+    train(netG, netD)
 
 
 main()
