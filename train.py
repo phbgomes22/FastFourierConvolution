@@ -38,7 +38,7 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
-        
+
     # if type(m) == nn.Conv2d:
     #     nn.init.normal_(m.weight.data, 0.0, 0.02)
     # elif type(m) == nn.Linear:
@@ -103,7 +103,7 @@ def get_discriminator():
     if config.FFC_DISCRIMINATOR:
         netD = FFCDiscriminator(nc, ndf, debug=DEBUG).to(device)
     else:
-        netD = Discriminator(nc, ndf, ngpu=ngpu).to(device) 
+        netD = SNDiscriminator(nc, ndf, ngpu=ngpu).to(device) 
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
