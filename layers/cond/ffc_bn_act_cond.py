@@ -76,6 +76,7 @@ class FFC_BN_ACT_COND(nn.Module):
         self.print_size = Print(debug=Config.shared().DEBUG)
         
         self.noise = NoiseInjection()
+        
 
     def forward(self, x, labels):
         debug_print(" -- FFC_BN_ACT")
