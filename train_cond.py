@@ -55,7 +55,7 @@ def get_generator():
                                 num_classes= num_classes, image_size=image_size, 
                                 embed_size=embed_size).to(device) 
     else:
-        netG = CondGenerator(nz=nz, nc=nc, ngf=ngf, 
+        netG = Generator(nz=nz, nc=nc, ngf=ngf, 
                                 num_classes= num_classes, image_size=image_size, 
                                 embed_size=embed_size).to(device)
         
@@ -87,7 +87,7 @@ def get_discriminator():
     DEBUG = config.DEBUG
 
     # Create the Discriminator
-    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, image_size=image_size).to(device)
+    netD = Discriminator(nc=nc, ndf=ndf, num_classes=num_classes, image_size=image_size).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -154,7 +154,7 @@ def train(netG, netD):
             ############################
             labels = data[1].to(device)
             one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
-
+        
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -163,13 +163,13 @@ def train(netG, netD):
             # Format batch
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
-            label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
+            label = torch.full((b_size,), real_label, device=device)
             # Conditional Training 
             # Forward pass real batch through D alonside one_hot_labels
-            output = netD(real_cpu, one_hot_labels).view(-1)
+            output = netD(real_cpu).view(-1)
     
             # Calculate loss on all-real batch
-            errD_real = criterion(output, label)
+            errD_real = criterion(output, label.float())
             # Calculate gradients for D in backward pass
             errD_real.backward()
             D_x = output.mean().item()
@@ -179,15 +179,15 @@ def train(netG, netD):
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Conditional Training 
             # Generate fake image batch with G alongside one_hot_labels
-            fake = netG(noise, one_hot_labels)
+            fake = netG(noise)
 
             label.fill_(fake_label)
             # Conditional Training 
             # Classify all fake batch with D  alongside one_hot_labels
-            output = netD(fake.detach(), one_hot_labels).view(-1)
+            output = netD(fake.detach()).view(-1)
             
             # Calculate D's loss on the all-fake batch
-            errD_fake = criterion(output, label)
+            errD_fake = criterion(output, label.float())
             # Calculate the gradients for this batch
             errD_fake.backward()
             D_G_z1 = output.mean().item()
@@ -203,9 +203,9 @@ def train(netG, netD):
             label.fill_(real_label)  # fake labels are real for generator cost
             # Conditional Training 
             # Since we just updated D, perform another forward pass of all-fake batch through D  alongside one_hot_labels
-            output = netD(fake, one_hot_labels).view(-1)
+            output = netD(fake).view(-1)
             # Calculate G's loss based on this output
-            errG = criterion(output, label)
+            errG = criterion(output, label.float())
             # Calculate gradients for G
             errG.backward()
             D_G_z2 = output.mean().item()
@@ -219,7 +219,7 @@ def train(netG, netD):
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
                 with torch.no_grad():
                     # Conditional training - sampling
-                    fake = netG(fixed_noise, fixed_labels).detach().cpu()
+                    fake = netG(fixed_noise).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))
