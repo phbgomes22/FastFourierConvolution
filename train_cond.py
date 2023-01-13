@@ -184,7 +184,7 @@ def train(netG, netD):
 
             ## Train with all-fake batch
             # Generate batch of latent vectors
-            noise = torch.randn(b_size, nz, 1, 1, device=device) #  
+            noise = torch.randn(b_size, nz, device=device) #  
             # Conditional Training 
             # Generate fake image batch with G alongside one_hot_labels
             fake = netG(noise, one_hot_labels)
