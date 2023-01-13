@@ -141,8 +141,8 @@ def train(netG, netD):
 
     #
     labels = range(num_classes)
-#    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 7)[:64] ) ).float().to(device)
-    fixed_labels =  torch.as_tensor( np.repeat(labels, 7)[:64] ).float().to(device)
+    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 7)[:64] ) ).float().to(device)
+    #fixed_labels =  torch.as_tensor( np.repeat(labels, 7)[:64] ).float().to(device)
 
     print("Starting Training Loop...")
     # For each epoch
@@ -220,7 +220,7 @@ def train(netG, netD):
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
                 with torch.no_grad():
                     # Conditional training - sampling
-                    fake = netG(fixed_noise, fixed_labels).detach().cpu()
+                    fake = netG(fixed_noise, torch.argmax(fixed_labels, dim=1)).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))
