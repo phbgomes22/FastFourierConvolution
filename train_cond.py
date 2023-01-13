@@ -160,8 +160,8 @@ def train(netG, netD):
             ## (0) Conditional Training 
             ## Getting labels
             ############################
-            labels = data[1].to(device)
-            one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
+            one_hot_labels = data[1].to(device) # not one hot
+         #   one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
 
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
@@ -242,10 +242,6 @@ def train(netG, netD):
             # Save Losses for plotting later
             G_losses.append(errG.item())
             D_losses.append(errD.item())
-
-
-            if len(D_losses) > 1 and abs(D_losses[-1] - D_losses[-2]) > 20.0:
-                break
             
             iters += 1
 
