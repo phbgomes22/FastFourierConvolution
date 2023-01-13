@@ -159,4 +159,3 @@ class CondDiscriminator(nn.Module):
         output = self.main(x)
 
         return output.view(-1, 1).squeeze(1)
-
