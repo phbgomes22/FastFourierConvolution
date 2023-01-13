@@ -56,7 +56,7 @@ class CondGenerator(nn.Module):
         # latent vector z: N x noise_dim x 1 x 1 
         #embedding = self.ylabel(labels).unsqueeze(2).unsqueeze(3)
  
-        embedding = self.lbl_embed(labels)
+        embedding = self.lbl_embed(labels).unsqueeze(2).unsqueeze(3)
         z = input #self.yz(input)
         x = torch.cat([z, embedding], dim=1)
         x = x.view(input.shape[0], self.nz + self.embed_size, 1, 1) # pq nz * 2 ? pq não nz?
