@@ -18,7 +18,7 @@ class CondGenerator(nn.Module):
         self.nz = nz
         self.main = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d( nz*2 + embed_size, ngf * 8, 4, 1, 0, bias=False),
+            nn.ConvTranspose2d( nz + embed_size, ngf * 8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             # Batch normalization conditioned to class
            # ConditionalBatchNorm2d(ngf * 8, num_classes=num_classes),
@@ -44,22 +44,13 @@ class CondGenerator(nn.Module):
             # state size. (nc) x 64 x 64
         )
         
-        self.ylabel=nn.Sequential(
-            nn.Linear(num_classes, embed_size),
-            nn.ReLU(True)
-        )
-
-        self.yz=nn.Sequential(
-            nn.Linear(nz, nz*2),
-            nn.ReLU(True)
-        )
+        self.label_embedding = nn.Embedding(num_classes, embed_size)
 
     def forward(self, input, labels):
         # latent vector z: N x noise_dim x 1 x 1 
-        embedding = self.ylabel(labels) #.unsqueeze(2).unsqueeze(3)
-        
-        z = self.yz(input)
-        x = torch.cat([z, embedding], dim=1)
-        x = x.view(-1, self.nz*2 + self.embed_size, 1, 1) # input.shape[0]
+        x = input.reshape([input.shape[0], -1, 1, 1])
+        label_embed = self.label_embedding(labels)
+        label_embed = label_embed.reshape([label_embed.shape[0], -1, 1, 1])
+        x = torch.cat((x, label_embed), dim=1)
 
         return self.main(x)
