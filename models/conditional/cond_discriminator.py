@@ -116,49 +116,31 @@ class CondBNDiscriminator(nn.Module):
         
         return output.view(-1, 1).squeeze(1)
 
-
+# https://towardsdatascience.com/using-conditional-deep-convolutional-gans-to-generate-custom-faces-from-text-descriptions-e18cc7b8821
 
 class CondDiscriminator(nn.Module):
     def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
         super(CondDiscriminator, self).__init__()
         self.image_size = image_size
-        self.num_classes = num_classes
+        self.conv1_1 = nn.Conv2d(nc, ndf, 4, 2, 1)
+        self.conv1_2 = nn.Conv2d(num_classes, ndf, 4, 2, 1)
+        self.conv2 = nn.Conv2d(ndf*2, ndf*4, 4, 2, 1)
+        self.conv2_bn = nn.BatchNorm2d(ndf*4)
+        self.conv3 = nn.Conv2d(ndf*4, ndf*8, 4, 2, 1)
+        self.conv3_bn = nn.BatchNorm2d(ndf*8)
+        self.conv4 = nn.Conv2d(ndf*8, ndf*16, 4, 2, 1)
+        self.conv4_bn = nn.BatchNorm2d(ndf*16)
+        self.conv5 = nn.Conv2d(ndf*16, 1, 4, 1, 0)
 
-        self.ylabel=nn.Sequential(
-            nn.Linear(num_classes, image_size*image_size),
-            nn.ReLU(True)
-        )
+        self.act = nn.LeakyReLU(0.2, inplace=True)
 
-        self.main = nn.Sequential(
-            # input is (nc) x 64 x 64
-            nn.Conv2d(nc+1, ndf * 2, 4, 2, 1, bias=False), # +1 due to conditional
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf) x 32 x 32
-            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=True),
-            nn.BatchNorm2d(ndf * 2),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=True),
-            nn.BatchNorm2d(ndf * 4),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(ndf * 8, ndf * 16, 4, 2, 1, bias=True),
-            nn.BatchNorm2d(ndf * 8),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(ndf * 16, 1, 4, 1, 0, bias=True),
-            nn.Sigmoid()
-        )
+    def forward(self, input, label):
+        x = self.act(self.conv1_1(input))
+        y = self.act(self.conv1_2(label))
+        x = torch.cat([x, y], 1)
+        x = self.act(self.conv2_bn(self.conv2(x)))
+        x = self.act(self.conv3_bn(self.conv3(x)))
+        x = self.act(self.conv4_bn(self.conv4(x)))
+        x = torch.sigmoid(self.conv5(x))
+        return x
 
-
-    def forward(self, input, labels):
-        y=self.ylabel(labels)
-        # revert one hot to labels to pass it to conditional batch norm
-        discrete_labels = torch.argmax(labels, dim=1)
-
-        y=y.view(labels.shape[0],1,64,64)
-
-        inp=torch.cat([input,y],1)
-        output = self.main(inp)
-        
-        return output.view(-1, 1).squeeze(1)

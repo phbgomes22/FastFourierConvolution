@@ -99,25 +99,27 @@ class FFCCondGenerator(FFCModel):
                                norm_layer=nn.Identity, 
                                activation_layer=nn.Tanh, upsampling=True)
         
-        self.ylabel=nn.Sequential(
-            nn.Linear(num_classes, embed_size),
-            nn.ReLU(True)
+
+        self.yconv = nn.Sequential(
+            nn.ConvTranspose2d(num_classes, ngf*4, 4, 1, 0),
+            nn.BatchNorm2d(ngf*4),
+            nn.LeakyReLU(0.2)
         )
 
-        self.yz=nn.Sequential(
-            nn.Linear(nz, nz + embed_size),
-            nn.ReLU(True)
-        )
+        self.label_embedding = nn.Embedding(num_classes, embed_size)
+
+
 
     def forward(self, input, labels):
         # latent vector z: N x noise_dim x 1 x 1 
-        embedding = self.ylabel(labels).unsqueeze(2).unsqueeze(3)
- 
-        z = input #self.yz(input)
-        x = torch.cat([z, embedding], dim=1)
-        x = x.view(input.shape[0], self.nz + self.embed_size, 1, 1) # pq nz * 2 ? pq não nz?
+        # x = input.reshape([input.shape[0], -1, 1, 1])
+        # label_embed = self.label_embedding(labels)
+        # label_embed = label_embed.reshape([label_embed.shape[0], -1, 1, 1])
+        # x = torch.cat((x, label_embed), dim=1)
 
         x = self.ffc0(x, labels)
+
+        
         x = self.ffc1(x, labels)
         x = self.ffc2(x, labels)
         x = self.ffc3(x, labels)
