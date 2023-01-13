@@ -95,7 +95,7 @@ def get_discriminator():
     DEBUG = config.DEBUG
 
     # Create the Discriminator
-    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, image_size=image_size).to(device)
+    netD = CondBNDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, image_size=image_size).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -184,7 +184,7 @@ def train(netG, netD):
 
             ## Train with all-fake batch
             # Generate batch of latent vectors
-            noise = torch.randn(batch_size, nz,device=device)
+            noise = torch.randn(b_size, nz,device=device)
             # Conditional Training 
             # Generate fake image batch with G alongside one_hot_labels
             fake = netG(noise,breed)
