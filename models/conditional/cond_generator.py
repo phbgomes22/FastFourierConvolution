@@ -19,7 +19,7 @@ class CondGenerator(nn.Module):
         self.nz = nz
         self.main = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d( nz + embed_size, ngf * 8, 4, 1, 0, bias=False),
+            nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             nn.ReLU(True),
             # state size. (ngf*8) x 4 x 4
@@ -58,4 +58,4 @@ class CondGenerator(nn.Module):
         x = torch.cat([z, embedding], dim=1)
         x = x.view(input.shape[0], self.nz + self.embed_size, 1, 1) # pq nz * 2 ? pq não nz?
 
-        return self.main(x)
+        return self.main(input)
