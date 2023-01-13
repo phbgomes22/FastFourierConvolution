@@ -55,7 +55,9 @@ def get_generator():
                                 num_classes= num_classes, image_size=image_size, 
                                 embed_size=embed_size).to(device) 
     else:
-        netG = Generator(nz, nc, ngf).to(device)
+        netG = CondGenerator(nz=nz, nc=nc, ngf=ngf, 
+                        num_classes= num_classes, image_size=image_size, 
+                        embed_size=embed_size).to(device)
         
 
     # Handle multi-gpu if desired
@@ -177,7 +179,7 @@ def train(netG, netD):
             noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Conditional Training 
             # Generate fake image batch with G alongside one_hot_labels
-            fake = netG(noise)
+            fake = netG(noise, one_hot_labels)
 
             label.fill_(fake_label)
             # Conditional Training 
@@ -217,7 +219,7 @@ def train(netG, netD):
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
                 with torch.no_grad():
                     # Conditional training - sampling
-                    fake = netG(fixed_noise).detach().cpu()
+                    fake = netG(fixed_noise, fixed_labels).detach().cpu()
                 curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                 image_to_show = np.transpose(curr_fake, (1,2,0))
                 plt.figure(figsize=(5,5))
