@@ -55,8 +55,7 @@ def get_generator():
                                 num_classes= num_classes, image_size=image_size, 
                                 embed_size=embed_size).to(device) 
     else:
-        netG = Generator(nz=nz, nc=nc, ngf=ngf, 
-                                num_classes= num_classes, image_size=image_size, 
+        netG = Generator(nz=nz, nc=nc, ngf=ngf, image_size=image_size, 
                                 embed_size=embed_size).to(device)
         
 
@@ -87,7 +86,7 @@ def get_discriminator():
     DEBUG = config.DEBUG
 
     # Create the Discriminator
-    netD = Discriminator(nc=nc, ndf=ndf, num_classes=num_classes, image_size=image_size).to(device)
+    netD = Discriminator(nc=nc, ndf=ndf, image_size=image_size).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
