@@ -134,7 +134,7 @@ def train(netG, netD):
 
     # Create batch of latent vectors that we will use to visualize
     #  the progression of the generator
-    fixed_noise = torch.randn(64, nz, device=device) # 1, 1,
+    fixed_noise = torch.randn(64, nz, 1, 1, device=device) # 1, 1,
 
     # Setup Adam optimizers for both G and D
     optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
@@ -160,9 +160,9 @@ def train(netG, netD):
             ## (0) Conditional Training 
             ## Getting labels
             ############################
-            labels = data[1].to(device) # not one hot
-            breed = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
-            
+            labels = data[1].to(device)
+            one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
+
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
@@ -172,10 +172,10 @@ def train(netG, netD):
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
             label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
-      
             # Conditional Training 
             # Forward pass real batch through D alonside one_hot_labels
-            output = netD(real_cpu,breed)
+            output = netD(real_cpu, one_hot_labels).view(-1)
+    
             # Calculate loss on all-real batch
             errD_real = criterion(output, label)
             # Calculate gradients for D in backward pass
@@ -184,14 +184,16 @@ def train(netG, netD):
 
             ## Train with all-fake batch
             # Generate batch of latent vectors
-            noise = torch.randn(b_size, nz,device=device)
+            noise = torch.randn(b_size, nz, 1, 1, device=device)
             # Conditional Training 
             # Generate fake image batch with G alongside one_hot_labels
-            fake = netG(noise,breed)
+            fake = netG(noise, one_hot_labels)
+
             label.fill_(fake_label)
             # Conditional Training 
             # Classify all fake batch with D  alongside one_hot_labels
-            output = netD(fake.detach(),breed)
+            output = netD(fake.detach(), one_hot_labels).view(-1)
+            
             # Calculate D's loss on the all-fake batch
             errD_fake = criterion(output, label)
             # Calculate the gradients for this batch
@@ -209,7 +211,7 @@ def train(netG, netD):
             label.fill_(real_label)  # fake labels are real for generator cost
             # Conditional Training 
             # Since we just updated D, perform another forward pass of all-fake batch through D  alongside one_hot_labels
-            output = netD(fake,breed)
+            output = netD(fake, one_hot_labels).view(-1)
             # Calculate G's loss based on this output
             errG = criterion(output, label)
             # Calculate gradients for G

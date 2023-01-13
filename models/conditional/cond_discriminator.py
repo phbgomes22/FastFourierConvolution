@@ -152,7 +152,7 @@ class CondDiscriminator(nn.Module):
         )
 
     def forward(self, input, labels):
-        y=self.ylabel(labels)
+        y=self.ylabel(labels).unsqueeze(2).unsqueeze(3)
         y=y.view(-1, 1, self.ndf, self.ndf)
         x=torch.cat([input,y],1)
 
