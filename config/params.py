@@ -98,7 +98,7 @@ class Config:
     num_classes = 10
 
     # generator embedding - hyperparameter
-    gen_embed = 100
+    gen_embed = 1000
 
 
     def check_and_fill_path(self, pth: str):

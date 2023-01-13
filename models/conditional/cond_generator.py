@@ -18,7 +18,7 @@ class CondGenerator(nn.Module):
         self.nz = nz
         self.main = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d( nz + embed_size, ngf * 8, 4, 1, 0, bias=False),
+            nn.ConvTranspose2d( nz*2 + embed_size, ngf * 8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             # Batch normalization conditioned to class
            # ConditionalBatchNorm2d(ngf * 8, num_classes=num_classes),
