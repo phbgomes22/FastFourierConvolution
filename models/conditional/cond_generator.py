@@ -57,7 +57,7 @@ class CondGenerator(nn.Module):
     def forward(self, input, labels):
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.ylabel(labels) #.unsqueeze(2).unsqueeze(3)
-        print(input.shape)
+        
         z = self.yz(input)
         x = torch.cat([z, embedding], dim=1)
         x = x.view(-1, self.nz*2 + self.embed_size, 1, 1) # input.shape[0]
