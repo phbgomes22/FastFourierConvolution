@@ -49,9 +49,6 @@ class CondSNDiscriminator(nn.Module):
         return output.view(-1, 1).squeeze(1)
 
 
-
-
-
 class CondBNDiscriminator(nn.Module):
     def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
         super(CondBNDiscriminator, self).__init__()
@@ -121,18 +118,16 @@ class CondBNDiscriminator(nn.Module):
 class CondDiscriminator(nn.Module):
     def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
         super(CondDiscriminator, self).__init__()
-        self.num_classes = num_classes
         self.image_size = image_size
-        self.ndf = ndf
 
         self.ylabel=nn.Sequential(
-            nn.Linear(num_classes,ndf*ndf*1),
+            nn.Linear(num_classes, image_size*image_size),
             nn.ReLU(True)
         )
 
         self.main = nn.Sequential(
             # input is (nc) x 64 x 64
-            nn.Conv2d(nc + 1, ndf, 4, 2, 1, bias=False),
+            nn.Conv2d(nc+1, ndf, 4, 2, 1, bias=False), # +1 due to conditional
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf) x 32 x 32
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
@@ -151,11 +146,12 @@ class CondDiscriminator(nn.Module):
             nn.Sigmoid()
         )
 
+
     def forward(self, input, labels):
-        y=self.ylabel(labels).unsqueeze(2).unsqueeze(3)
-        y=y.view(-1, 1, self.ndf, self.ndf)
-        x=torch.cat([input,y],1)
+        y=self.ylabel(labels)
+        y=y.view(labels.shape[0],1,64,64)
 
-        output = self.main(x)
-
+        inp=torch.cat([input,y],1)
+        output = self.main(inp)
+        
         return output.view(-1, 1).squeeze(1)
