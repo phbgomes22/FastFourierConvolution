@@ -76,7 +76,7 @@ class FFCCondBNGenerator(FFCModel):
 class FFCCondGenerator(FFCModel):
 
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
-        super(FFCCondGenerator, self).__init__()
+        super(FFCCondGenerator, self).__init__(inplanes=ngf * 8, debug=False)
         self.image_size = image_size
         self.embed_size = embed_size
         self.num_classes = num_classes
