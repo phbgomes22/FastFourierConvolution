@@ -102,8 +102,6 @@ class CondCvDiscriminator(nn.Module):
         )
 
 
-
-
     def forward(self, input, labels):
         ## embedding and convolution of classes
         embedding=self.label_embed(labels)

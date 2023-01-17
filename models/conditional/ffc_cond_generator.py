@@ -73,7 +73,7 @@ class FFCCondBNGenerator(FFCModel):
 
 
 
-class FFCCondGenerator(nn.Module):
+class FFCCondGenerator(FFCModel):
 
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
         super(FFCCondGenerator, self).__init__()
