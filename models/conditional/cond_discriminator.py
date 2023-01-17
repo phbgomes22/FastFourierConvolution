@@ -146,12 +146,21 @@ class CondDiscriminator(nn.Module):
             nn.Sigmoid()
         )
 
+        '''
+        Embedding layers returns a 2d array with the embed of the class, like a look-up table.
+        This way, the class embed works as a new channel.
+        '''
+        self.lbl_embed = nn.Embedding(num_classes, image_size*image_size)
+
 
     def forward(self, input, labels):
-        y=self.ylabel(labels)
-        y=y.view(labels.shape[0],1,64,64)
+        embedding=self.lbl_embed(labels)
 
-        inp=torch.cat([input,y],1)
+        embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size)
+
+        # concatenates the embedding with the number of channels (dimension 0)
+        inp=torch.cat([input, embedding],1)
+
         output = self.main(inp)
         
-        return output.view(-1, 1).squeeze(1)
+        return output#.view(-1, 1).squeeze(1)

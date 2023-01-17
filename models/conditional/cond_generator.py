@@ -16,6 +16,7 @@ class CondGenerator(nn.Module):
         super(CondGenerator, self).__init__()
         self.image_size = image_size
         self.embed_size = embed_size
+        self.num_classes = num_classes
         self.nz = nz
         self.main = nn.Sequential(
             # input is Z, going into a convolution
@@ -54,11 +55,10 @@ class CondGenerator(nn.Module):
 
     def forward(self, input, labels):
         # latent vector z: N x noise_dim x 1 x 1 
-        #embedding = self.ylabel(labels).unsqueeze(2).unsqueeze(3)
- 
-        embedding = self.lbl_embed(labels).unsqueeze(2).unsqueeze(3)
-        z = input #self.yz(input)
-        x = torch.cat([z, embedding], dim=1)
-        x = x.view(input.shape[0], self.nz + self.embed_size, 1, 1) # pq nz * 2 ? pq não nz?
+        
+        c = self.lbl_embed(labels).unsqueeze(2).unsqueeze(3)
+
+        x = torch.cat([input, c], dim=1)
+       # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
         return self.main(x)
