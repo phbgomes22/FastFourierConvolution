@@ -111,6 +111,5 @@ class CondCvDiscriminator(nn.Module):
         inp=torch.cat([input, embedding],1)
 
         output = self.main(inp)
-        print(output.shape)
         
         return output#.view(-1, 1).squeeze(1)

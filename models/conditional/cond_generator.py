@@ -110,13 +110,15 @@ class CondCvGenerator(nn.Module):
         ## conv for the embedding
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
-        embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size) # labels.shape[0]
+       # embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size) # labels.shape[0]
         embedding = self.label_conv(embedding)
 
         ## convolution of the noise entry
         input = self.input_conv(input)
+        print("---")
         print(input.shape)
         print(embedding.shape)
+        print("---")
         x = torch.cat([input, embedding], dim=1)
        # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
