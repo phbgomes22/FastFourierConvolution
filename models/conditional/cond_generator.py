@@ -111,7 +111,7 @@ class CondCvGenerator(nn.Module):
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
         embedding = embedding.view(-1, 1, self.image_size, self.image_size) # labels.shape[0]
-        embedding = self.label_convs(embedding)
+        embedding = self.label_conv(embedding)
 
         ## convolution of the noise entry
         input = self.input_conv(input)
