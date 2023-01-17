@@ -68,6 +68,7 @@ class CondCvDiscriminator(nn.Module):
         self.label_embed = nn.Embedding(num_classes, image_size*image_size)
 
         self.label_convs = nn.Sequential(
+         # input is (nc) x 64 x 64
             nn.Conv2d(1, ndf, 4, 2, 1),
             nn.LeakyReLU(0.2, inplace=True)
         )
@@ -87,8 +88,11 @@ class CondCvDiscriminator(nn.Module):
             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 8),
             nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(ndf * 8, ndf * 16, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 16),
+            nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+            nn.Conv2d(ndf * 16, 1, 4, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
