@@ -55,7 +55,7 @@ def get_generator():
                                 num_classes= num_classes, image_size=image_size, 
                                 embed_size=embed_size).to(device) 
     else:
-        netG = CondGenerator(nz=nz, nc=nc, ngf=ngf, 
+        netG = CondConvGenerator(nz=nz, nc=nc, ngf=ngf, 
                         num_classes= num_classes, image_size=image_size, 
                         embed_size=embed_size).to(device)
         
