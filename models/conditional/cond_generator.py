@@ -76,7 +76,7 @@ class CondCvGenerator(nn.Module):
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(1, ngf*4, 4, 2, 1),
+            nn.ConvTranspose2d(num_classes, ngf*4, 4, 2, 1),
             nn.BatchNorm2d(ngf*4),
             nn.LeakyReLU(0.2, inplace=True)
         )
