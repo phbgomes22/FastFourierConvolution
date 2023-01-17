@@ -9,7 +9,6 @@ from layers import *
 
 
 # Generator Code
-# Generator Code
 class CondGenerator(nn.Module):
 
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
@@ -59,6 +58,65 @@ class CondGenerator(nn.Module):
         c = self.lbl_embed(labels).unsqueeze(2).unsqueeze(3)
 
         x = torch.cat([input, c], dim=1)
+       # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
+
+        return self.main(x)
+
+
+
+class CondConvGenerator(nn.Module):
+
+    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
+        super(CondConvGenerator, self).__init__()
+        self.image_size = image_size
+        self.embed_size = embed_size
+        self.num_classes = num_classes
+        self.nz = nz
+
+        self.label_embed = nn.Embedding(num_classes, embed_size)
+
+        self.label_conv = nn.Sequential(
+            nn.Conv2d(1, ngf*4, 4, 2, 1),
+            nn.BatchNorm2d(ngf*4),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+        self.input_conv = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.Conv2d(nz, ngf*4, 4, 2, 1),
+            nn.BatchNorm2d(ngf*4),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+
+        self.main = nn.Sequential(
+            # state size. (ngf*8) x 4 x 4
+            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 4),
+            nn.ReLU(True),
+            # state size. (ngf*4) x 8 x 8
+            nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 2),
+            nn.ReLU(True),
+            # state size. (ngf*2) x 16 x 16
+            nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(True),
+            # state size. (ngf) x 32 x 32
+            nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
+            nn.Tanh()
+            # state size. (nc) x 64 x 64
+        )
+
+    def forward(self, input, labels):
+        ## conv for the embedding
+        # latent vector z: N x noise_dim x 1 x 1 
+        embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
+        embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size)
+        embedding = self.label_convs(embedding)
+
+        ## convolution of the noise entry
+        input = self.input_conv(input)
+
+        x = torch.cat([input, embedding], dim=1)
        # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
         return self.main(x)
