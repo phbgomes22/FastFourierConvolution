@@ -115,10 +115,7 @@ class CondCvGenerator(nn.Module):
 
         ## convolution of the noise entry
         input = self.input_conv(input)
-        print("---")
-        print(input.shape)
-        print(embedding.shape)
-        print("---")
+
         x = torch.cat([input, embedding], dim=1)
        # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
