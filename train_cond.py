@@ -167,7 +167,7 @@ def train(netG, netD):
             label = torch.full((b_size,), real_label, device=device)
             # Conditional Training 
             # Forward pass real batch through D alonside one_hot_labels
-            output = netD(real_cpu).view(-1)
+            output = netD(real_cpu, labels).view(-1)
     
             # Calculate loss on all-real batch
             errD_real = criterion(output, label.float())
@@ -185,7 +185,7 @@ def train(netG, netD):
             label.fill_(fake_label)
             # Conditional Training 
             # Classify all fake batch with D  alongside one_hot_labels
-            output = netD(fake.detach()).view(-1)
+            output = netD(fake.detach(), labels).view(-1)
             
             # Calculate D's loss on the all-fake batch
             errD_fake = criterion(output, label.float())
@@ -204,7 +204,7 @@ def train(netG, netD):
             label.fill_(real_label)  # fake labels are real for generator cost
             # Conditional Training 
             # Since we just updated D, perform another forward pass of all-fake batch through D  alongside one_hot_labels
-            output = netD(fake).view(-1)
+            output = netD(fake, labels).view(-1)
             # Calculate G's loss based on this output
             errG = criterion(output, label.float())
             # Calculate gradients for G
