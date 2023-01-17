@@ -14,3 +14,5 @@ from .cond.ffc_bn_act_cond import *
 
 
 from .noise_injection import *
+from .resizer import *
+from .print_layer import *

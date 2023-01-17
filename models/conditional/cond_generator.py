@@ -63,6 +63,7 @@ class CondGenerator(nn.Module):
         return self.main(x)
 
 
+# https://github.com/znxlwm/pytorch-MNIST-CelebA-cGAN-cDCGAN/blob/master/pytorch_MNIST_cDCGAN.py
 
 class CondCvGenerator(nn.Module):
 

@@ -11,6 +11,7 @@ from config import Config
 from .snffc import *
 from .snffc_transpose import *
 from torch.nn.utils import spectral_norm
+from ..print_layer import *
 
 
 class FFC_SN_ACT(nn.Module):

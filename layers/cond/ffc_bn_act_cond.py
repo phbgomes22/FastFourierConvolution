@@ -9,6 +9,7 @@ from config import Config
 from ..ffc.ffc import *
 from ..ffc.ffc_transpose import *
 from ..noise_injection import *
+from ..print_layer import *
 
 
 

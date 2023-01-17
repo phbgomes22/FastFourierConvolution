@@ -5,6 +5,7 @@ Adaptations: Pedro Gomes
 
 import torch.nn as nn
 from util import *
+from layers import *
 
 
 class FFCModel(nn.Module):

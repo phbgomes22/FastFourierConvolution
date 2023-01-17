@@ -7,6 +7,7 @@ from util import *
 from .snspectral_transform import SNSpectralTransform
 from config import Config
 from torch.nn.utils import spectral_norm
+from ..print_layer import *
 
 
 class SNFFCTranspose(nn.Module):
