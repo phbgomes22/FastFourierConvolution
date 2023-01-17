@@ -24,8 +24,7 @@ class FFCModel(nn.Module):
         self.dilation = 1
         self.debug = debug
 
-        self.print_size = nn.Sequential(Print(debug=self.debug))
-        
+        self.print_size = Print(debug=self.debug)
         self.resizer = Resizer()
     
     def forward(self, x):

@@ -5,6 +5,7 @@ Author: Pedro Gomes
 import torch.nn as nn
 from util import *
 from layers import *
+import math
 
 
 # https://towardsdatascience.com/using-conditional-deep-convolutional-gans-to-generate-custom-faces-from-text-descriptions-e18cc7b8821
@@ -78,6 +79,10 @@ class CondCvDiscriminator(nn.Module):
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), # +1 due to conditional
             nn.LeakyReLU(0.2, inplace=True),
         )
+
+        # layers = []
+        # for itr in math.log2(image_size):
+            
 
         self.main = nn.Sequential(
             # state size. (ndf*2) x 16 x 16
