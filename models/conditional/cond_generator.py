@@ -73,7 +73,7 @@ class CondCvGenerator(nn.Module):
         self.num_classes = num_classes
         self.nz = nz
 
-        self.label_embed = nn.Embedding(num_classes, embed_size)
+        self.label_embed = nn.Embedding(num_classes, self.image_size * self.image_size)
 
         self.label_conv = nn.Sequential(
             nn.Conv2d(1, ngf*4, 4, 2, 1),
@@ -110,7 +110,7 @@ class CondCvGenerator(nn.Module):
         ## conv for the embedding
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
-        embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size)
+        embedding = embedding.view(-1, 1, self.image_size, self.image_size) # labels.shape[0]
         embedding = self.label_convs(embedding)
 
         ## convolution of the noise entry
