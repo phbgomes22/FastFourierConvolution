@@ -60,7 +60,7 @@ class Config:
     num_epochs = 400
 
     # Learning rate for optimizers
-    lr = 0.0015#0.0005
+    lr = 0.0002#0.0005
 
     # Beta1 hyperparam for Adam optimizers
     beta1 = 0.5
