@@ -56,9 +56,9 @@ class CondDiscriminator(nn.Module):
 
 
 
-class CondConvDiscriminator(nn.Module):
+class CondCvDiscriminator(nn.Module):
     def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
-        super(CondConvDiscriminator, self).__init__()
+        super(CondCvDiscriminator, self).__init__()
         self.image_size = image_size
 
         '''

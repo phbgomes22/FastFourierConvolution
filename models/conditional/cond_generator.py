@@ -64,10 +64,10 @@ class CondGenerator(nn.Module):
 
 
 
-class CondConvGenerator(nn.Module):
+class CondCvGenerator(nn.Module):
 
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
-        super(CondConvGenerator, self).__init__()
+        super(CondCvGenerator, self).__init__()
         self.image_size = image_size
         self.embed_size = embed_size
         self.num_classes = num_classes
