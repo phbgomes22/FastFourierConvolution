@@ -76,13 +76,13 @@ class CondCvGenerator(nn.Module):
         self.label_embed = nn.Embedding(num_classes, self.image_size * self.image_size)
 
         self.label_conv = nn.Sequential(
-            nn.Conv2d(1, ngf*4, 4, 2, 1),
+            nn.ConvTranspose2d(1, ngf*4, 4, 2, 1),
             nn.BatchNorm2d(ngf*4),
             nn.LeakyReLU(0.2, inplace=True)
         )
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.Conv2d(nz, ngf*4, 4, 2, 1),
+            nn.ConvTranspose2d(nz, ngf*4, 4, 2, 1),
             nn.BatchNorm2d(ngf*4),
             nn.LeakyReLU(0.2, inplace=True)
         )
