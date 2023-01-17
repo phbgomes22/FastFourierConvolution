@@ -108,9 +108,6 @@ class CondCvDiscriminator(nn.Module):
         ## embedding and convolution of 
         input = self.input_conv(input)
 
-        print(input.shape)
-        print(embedding.shape)
-
         # concatenates the embedding with the number of channels (dimension 0)
         inp=torch.cat([input, embedding],1)
 
