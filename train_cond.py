@@ -214,7 +214,7 @@ def train(netG, netD):
             optimizerG.step()
             
             # Output training stats
-            if i % 16 == 0:
+            if i % 16 == 0 and epoch%4 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
@@ -228,7 +228,7 @@ def train(netG, netD):
                 # saves the image representing samples from the generator
                 plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
                 # saves the generator model from the current epoch and batch
-               # torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
+                torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
                 plt.show()
             
             # Save Losses for plotting later

@@ -72,7 +72,7 @@ class FFCCondBNGenerator(FFCModel):
 
 
 
-
+# - This is the one bringing good results!
 class FFCCondGenerator(FFCModel):
 
     def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
