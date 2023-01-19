@@ -52,12 +52,12 @@ class CondCvDiscriminator(nn.Module):
                             kernel_size=4, stride=2, padding=1, bias=bias)
             bn = nn.BatchNorm2d(num_features=in_ch*2)
             act = nn.LeakyReLU(0.2, inplace=True)
-            layers.append(*[noise, conv, bn, act])
+            layers.extend([noise, conv, bn, act])
         else:
             conv = nn.Conv2d(in_channels=in_ch, out_channels=1, 
                              kernel_size=4, stride=1, padding=0, bias=bias)
             act = nn.Sigmoid()
-            layers.append(*[conv, act])
+            layers.extend([conv, act])
 
         return nn.Sequential(*layers)
 
