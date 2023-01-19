@@ -23,7 +23,6 @@ class CondCvDiscriminator(nn.Module):
         self.label_embed = nn.Embedding(num_classes, image_size*image_size)
 
         self.label_convs = nn.Sequential(
-         # input is (nc) x 64 x 64
             nn.Conv2d(1, ndf, 4, 2, 1),
             nn.LeakyReLU(0.2, inplace=True)
         )
@@ -34,41 +33,31 @@ class CondCvDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
         )
 
-        # layers = []
-        # for itr in math.log2(image_size):
-            
-
         self.main = nn.Sequential(
-            # state size. (ndf*2) x 16 x 16
-            GaussianNoise(), ## Add Gaussian Noise to discriminator too
-            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 4),
-            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*2) x 32 x 32
+            self.downsample(in_ch=ndf*2),
+            # state size. (ndf*4) x 16 x 16
+            self.downsample(in_ch=ndf*4),
             # state size. (ndf*4) x 8 x 8
-            GaussianNoise(), ## Add Gaussian Noise to discriminator too
-            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 8),
-            nn.LeakyReLU(0.2, inplace=True),
-            GaussianNoise(), ## Add Gaussian Noise to discriminator too
-            nn.Conv2d(ndf * 8, ndf * 16, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 16),
-            nn.LeakyReLU(0.2, inplace=True),
+            self.downsample(in_ch=ndf*8),
             # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(ndf * 16, 1, 4, 1, 0, bias=False),
-            nn.Sigmoid()
+            self.downsample(in_ch=ndf*16, last_layer=True)
         )
 
-    def downsample(self, in_ch: int, out_ch: int, last_layer: bool = False, bias: bool = False):
+    def downsample(self, in_ch: int, last_layer: bool = False, bias: bool = False):
         layers = []
-
         if not last_layer:
             noise = GaussianNoise()
-            conv = nn.Conv2d(in_channels=in_ch, out_channels=out_ch,
+            conv = nn.Conv2d(in_channels=in_ch, out_channels=in_ch*2,
                             kernel_size=4, stride=2, padding=1, bias=bias)
-            bn = nn.BatchNorm2d(num_features=out_ch)
+            bn = nn.BatchNorm2d(num_features=in_ch*2)
             act = nn.LeakyReLU(0.2, inplace=True)
             layers.append(*[noise, conv, bn, act])
-
+        else:
+            conv = nn.Conv2d(in_channels=in_ch, out_channels=1, 
+                             kernel_size=4, stride=1, padding=0, bias=bias)
+            act = nn.Sigmoid()
+            layers.append(*[conv, act])
 
         return nn.Sequential(*layers)
 
@@ -90,52 +79,3 @@ class CondCvDiscriminator(nn.Module):
         return output#.view(-1, 1).squeeze(1)
 
 
-
-
-
-# https://towardsdatascience.com/using-conditional-deep-convolutional-gans-to-generate-custom-faces-from-text-descriptions-e18cc7b8821
-
-# class CondDiscriminator(nn.Module):
-#     def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
-#         super(CondDiscriminator, self).__init__()
-#         self.image_size = image_size
-
-#         self.main = nn.Sequential(
-#             # input is (nc) x 64 x 64
-#             nn.Conv2d(nc+1, ndf, 4, 2, 1, bias=False), # +1 due to conditional
-#             nn.LeakyReLU(0.2, inplace=True),
-#             # state size. (ndf) x 32 x 32
-#             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
-#             nn.BatchNorm2d(ndf * 2),
-#             nn.LeakyReLU(0.2, inplace=True),
-#             # state size. (ndf*2) x 16 x 16
-#             nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
-#             nn.BatchNorm2d(ndf * 4),
-#             nn.LeakyReLU(0.2, inplace=True),
-#             # state size. (ndf*4) x 8 x 8
-#             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
-#             nn.BatchNorm2d(ndf * 8),
-#             nn.LeakyReLU(0.2, inplace=True),
-#             # state size. (ndf*8) x 4 x 4
-#             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
-#             nn.Sigmoid()
-#         )
-
-#         '''
-#         Embedding layers returns a 2d array with the embed of the class, like a look-up table.
-#         This way, the class embed works as a new channel.
-#         '''
-#         self.lbl_embed = nn.Embedding(num_classes, image_size*image_size)
-
-
-#     def forward(self, input, labels):
-#         embedding=self.lbl_embed(labels)
-
-#         embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size)
-
-#         # concatenates the embedding with the number of channels (dimension 0)
-#         inp=torch.cat([input, embedding],1)
-
-#         output = self.main(inp)
-        
-#         return output#.view(-1, 1).squeeze(1)
