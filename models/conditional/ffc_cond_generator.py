@@ -70,10 +70,10 @@ class FFCCondGenerator(FFCModel):
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
         embedding = embedding.view(labels.shape[0], -1, 1, 1) # labels.shape[0]
         embedding = self.label_conv(embedding)
-
+        self.print_size(embedding)
         ## convolution of the noise entry
         input = self.input_conv(input)
-
+        self.print_size(embedding)
         ## joins input noise with embedding labels
         x = torch.cat([input, embedding], dim=1)
 
