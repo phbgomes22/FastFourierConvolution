@@ -45,8 +45,8 @@ class CondCvDiscriminator(nn.Module):
 
         # adds the hidden layers
         for itr in range(1, number_convs):
-            mult = math.pow(2, itr) # 2^iter
-            print(mult, ndf, ndf*mult)
+            mult = int(math.pow(2, itr)) # 2^iter
+            
             layers.append(
                 self.downsample(in_ch=ndf*mult)
             )

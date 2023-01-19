@@ -46,7 +46,7 @@ class FFCCondGenerator(FFCModel):
 
         # adds the hidden layers
         for itr in range(number_convs, 0, -1):
-            mult = math.pow(2, itr) # 2^iter
+            mult = int(math.pow(2, itr)) # 2^iter
             g_in = 0 if itr == number_convs else 0.5
             layers.append(
                 FFC_BN_ACT(ngf*mult, ngf*(mult//2), 4, g_in, 0.5, 2, 1, 
