@@ -229,7 +229,7 @@ def train(netG, netD):
                         fake = netG(fixed_noise, torch.argmax(fixed_labels, dim=1)).detach().cpu()
                     curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
                     image_to_show = np.transpose(curr_fake, (1,2,0))
-                    plt.figure(figsize=(5,5))
+                    plt.figure(figsize=(10,10))
                     plt.imshow(image_to_show)
                     # saves the image representing samples from the generator
                     plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
