@@ -22,11 +22,18 @@ class CondDiscriminator(nn.Module):
         '''
         self.label_embed = nn.Embedding(num_classes, self.ndf*self.ndf)
 
+        '''
+        why - 2? the first convolution has 1 padding and stride 2 
+        ie: it moves from a 64x64 dim to a 32x32 dim
+        so we would subtract -1, the extra -1 is for the last layer.
+        '''
+        self.number_convs = int(math.log2(ndf)) - 2
+
         self.label_convs = nn.Sequential(
             nn.Conv2d(1, ndf, 4, 2, 1),
             nn.LeakyReLU(0.2, inplace=True)
         )
-        
+
         self.input_conv = nn.Sequential(
             # input is (nc) x 64 x 64
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), # +1 due to conditional
@@ -37,22 +44,15 @@ class CondDiscriminator(nn.Module):
 
     def create_layers(self, ndf: int):
         layers = []
-        '''
-        why - 2? the first convolution has 1 padding and stride 2 
-        ie: it moves from a 64x64 dim to a 32x32 dim
-        so we would subtract -1, the extra -1 is for the last layer.
-        '''
-        number_convs = int(math.log2(ndf)) - 2
-
         # adds the hidden layers
-        for itr in range(1, number_convs):
+        for itr in range(1, self.number_convs):
             mult = int(math.pow(2, itr)) # 2^iter
             layers.append(
                 self.downsample(in_ch=ndf*mult)
             )
 
         # adds the last layer
-        mult = int(math.pow(2, number_convs))
+        mult = int(math.pow(2, self.number_convs))
         layers.append(
             self.downsample(in_ch=ndf*mult, last_layer=True)
         )

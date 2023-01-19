@@ -22,14 +22,20 @@ class FFCCondGenerator(FFCModel):
 
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
+        # why - 3? 
+        # the first convolution has no padding and stride 1 
+        # -ie: it moves from a 1x1 dim to a 4x4 dim
+        # so we would subtract -2, the extra -1 is for the last layer.
+        self.number_convs = int(math.log2(ngf)) - 3
+
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, ngf*4, 4, 1, 0),
+            nn.ConvTranspose2d(num_classes, ngf*self.number_convs, 4, 1, 0),
             nn.BatchNorm2d(ngf*4),
             nn.LeakyReLU(0.2, inplace=True)
         )
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(nz, ngf*4, 4, 1, 0),
+            nn.ConvTranspose2d(nz, ngf*self.number_convs, 4, 1, 0),
             nn.BatchNorm2d(ngf*4),
             nn.LeakyReLU(0.2, inplace=True)
         )
@@ -38,16 +44,11 @@ class FFCCondGenerator(FFCModel):
 
     def create_layers(self, nc: int, ngf: int):
         layers = []
-        # why - 3? 
-        # the first convolution has no padding and stride 1 
-        # -ie: it moves from a 1x1 dim to a 4x4 dim
-        # so we would subtract -2, the extra -1 is for the last layer.
-        number_convs = int(math.log2(ngf)) - 3
 
         # adds the hidden layers
-        for itr in range(number_convs, 0, -1):
+        for itr in range(self.number_convs, 0, -1):
             mult = int(math.pow(2, itr)) # 2^iter
-            g_in = 0 if itr == number_convs else 0.5
+            g_in = 0 if itr == self.number_convs else 0.5
             layers.append(
                 FFC_BN_ACT(ngf*mult, ngf*(mult//2), 4, g_in, 0.5, 2, 1, 
                                activation_layer=nn.LeakyReLU, 
