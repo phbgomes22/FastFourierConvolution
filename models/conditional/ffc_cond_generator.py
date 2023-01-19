@@ -30,13 +30,13 @@ class FFCCondGenerator(FFCModel):
 
         self.label_conv = nn.Sequential(
             nn.ConvTranspose2d(num_classes, ngf*self.number_convs, 4, 1, 0),
-            nn.BatchNorm2d(ngf*4),
+            nn.BatchNorm2d(ngf*self.number_convs),
             nn.LeakyReLU(0.2, inplace=True)
         )
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
             nn.ConvTranspose2d(nz, ngf*self.number_convs, 4, 1, 0),
-            nn.BatchNorm2d(ngf*4),
+            nn.BatchNorm2d(ngf*self.number_convs),
             nn.LeakyReLU(0.2, inplace=True)
         )
 
