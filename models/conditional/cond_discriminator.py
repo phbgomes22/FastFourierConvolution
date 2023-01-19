@@ -17,7 +17,8 @@ class CondCvDiscriminator(nn.Module):
         self.image_size = image_size
 
         '''
-        Embedding layers returns a 2d array with the embed of the class, like a look-up table.
+        Embedding layers returns a 2d array with the embed of the class, 
+        like a look-up table.
         This way, the class embed works as a new channel.
         '''
         self.label_embed = nn.Embedding(num_classes, image_size*image_size)
@@ -37,10 +38,11 @@ class CondCvDiscriminator(nn.Module):
 
     def create_layers(self, ndf: int):
         layers = []
-        # why - 2? 
-        # the first convolution has 1 padding and stride 2 
-        # -ie: it moves from a 64x64 dim to a 32x32 dim
-        # so we would subtract -1, the extra -1 is for the last layer.
+        '''
+        why - 2? the first convolution has 1 padding and stride 2 
+        ie: it moves from a 64x64 dim to a 32x32 dim
+        so we would subtract -1, the extra -1 is for the last layer.
+        '''
         number_convs = int(math.log2(ndf)) - 2
 
         # adds the hidden layers
