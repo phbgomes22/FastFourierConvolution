@@ -52,7 +52,7 @@ class CondCvDiscriminator(nn.Module):
             )
 
         # adds the last layer
-        mult = math.pow(2, number_convs)
+        mult = int(math.pow(2, number_convs))
         layers.append(
             self.downsample(in_ch=ndf*mult, last_layer=True)
         )
