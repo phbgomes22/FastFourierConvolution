@@ -86,12 +86,12 @@ def get_discriminator():
     ngpu = config.ngpu
     ndf = config.ndf
     nc = config.nc
-    image_size = config.image_size
+    num_epochs = config.num_epochs
     num_classes = config.num_classes
     DEBUG = config.DEBUG
 
     # Create the Discriminator
-    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, uses_sn=True).to(device)
+    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=True).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):

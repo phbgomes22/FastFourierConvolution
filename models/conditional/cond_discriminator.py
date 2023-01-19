@@ -11,10 +11,11 @@ from torch.nn.utils import spectral_norm
 
 ## - This is the one bringing good results!
 class CondDiscriminator(nn.Module):
-    def __init__(self, nc: int, ndf: int, num_classes: int, uses_sn: bool = False):
+    def __init__(self, nc: int, ndf: int, num_classes: int, num_epochs: int, uses_sn: bool = False):
         super(CondDiscriminator, self).__init__()
         self.ndf = ndf
         self.uses_sn = uses_sn
+        self.num_epochs = num_epochs
         '''
         Embedding layers returns a 2d array with the embed of the class, 
         like a look-up table.
