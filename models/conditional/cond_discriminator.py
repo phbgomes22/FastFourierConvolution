@@ -40,6 +40,12 @@ class CondDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
         )
 
+        ## Initial std value
+        self.noise_stddev = 0.1
+        
+        ## Noise decay hyperparameter
+        self.noise_decay = 0.01
+
         self.main = self.create_layers(ndf)
 
     def create_layers(self, ndf: int):
@@ -62,7 +68,6 @@ class CondDiscriminator(nn.Module):
     def downsample(self, in_ch: int, last_layer: bool = False, bias: bool = False):
         layers = []
         if not last_layer:
-            noise = GaussianNoise()
             conv = nn.Conv2d(in_channels=in_ch, out_channels=in_ch*2,
                             kernel_size=4, stride=2, padding=1, bias=bias)
             bn = nn.BatchNorm2d(num_features=in_ch*2)
@@ -73,7 +78,7 @@ class CondDiscriminator(nn.Module):
                 bn = nn.Identity()
 
             act = nn.LeakyReLU(0.2, inplace=True)
-            layers.extend([noise, conv, bn, act])
+            layers.extend([conv, bn, act])
         else:
             conv = nn.Conv2d(in_channels=in_ch, out_channels=1, 
                              kernel_size=4, stride=1, padding=0, bias=bias)
@@ -84,14 +89,19 @@ class CondDiscriminator(nn.Module):
 
         return nn.Sequential(*layers)
 
+    def get_noise_decay(self, epoch: int):
+        return self.noise_decay ** (epoch / self.num_epochs)
 
-    def forward(self, input, labels):
+    def forward(self, input, labels, epoch: int):
         ## embedding and convolution of classes
         embedding=self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
         embedding = self.label_convs(embedding)
 
-        ## embedding and convolution of 
+        ## add noise to input of discriminator
+        noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
+        input = input + noise
+        ## run the input through the first convolution
         input = self.input_conv(input)
 
         # concatenates the embedding with the number of channels (dimension 0)
