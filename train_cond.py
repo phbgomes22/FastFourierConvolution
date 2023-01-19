@@ -17,6 +17,9 @@ criterion = nn.BCELoss()
 real_label = 1
 fake_label = 0
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 def weights_init(m):
     '''
     Custom weights initialization called on netG and netD
@@ -67,6 +70,8 @@ def get_generator():
     #  to mean=0, stdev=0.2.
     netG.apply(weights_init)
 
+    params = count_parameters(netG)
+    print("- Parameters on generator: ", params)
     return netG
 
 
@@ -97,7 +102,9 @@ def get_discriminator():
     netD.apply(weights_init)
 
     # Print the model
-    # print(netD)
+    
+    params = count_parameters(netD)
+    print("- Parameters on discriminator: ", params)
     return netD
 
 
@@ -212,22 +219,23 @@ def train(netG, netD):
             optimizerG.step()
             
             # Output training stats
-            if i % 16 == 0 and epoch%4 == 0:
+            if i % 16 == 0:
                 print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
                     % (epoch, num_epochs, i, len(dataloader),
                         errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-                with torch.no_grad():
-                    # Conditional training - sampling
-                    fake = netG(fixed_noise, torch.argmax(fixed_labels, dim=1)).detach().cpu()
-                curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
-                image_to_show = np.transpose(curr_fake, (1,2,0))
-                plt.figure(figsize=(5,5))
-                plt.imshow(image_to_show)
-                # saves the image representing samples from the generator
-                plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
-                # saves the generator model from the current epoch and batch
-                torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
-                plt.show()
+                if i % 32 == 0 and epoch%2 == 0:
+                    with torch.no_grad():
+                        # Conditional training - sampling
+                        fake = netG(fixed_noise, torch.argmax(fixed_labels, dim=1)).detach().cpu()
+                    curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
+                    image_to_show = np.transpose(curr_fake, (1,2,0))
+                    plt.figure(figsize=(5,5))
+                    plt.imshow(image_to_show)
+                    # saves the image representing samples from the generator
+                    plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
+                    # saves the generator model from the current epoch and batch
+                    torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
+                    plt.show()
             
             # Save Losses for plotting later
             G_losses.append(errG.item())
