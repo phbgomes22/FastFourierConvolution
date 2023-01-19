@@ -95,7 +95,7 @@ class CondBNDiscriminator(nn.Module):
         # revert one hot to labels to pass it to conditional batch norm
         discrete_labels = torch.argmax(labels, dim=1)
 
-        y=y.view(labels.shape[0],1,64,64)
+        y=y.view(labels.shape[0], 1, self.image_size, self.image_size)
 
         inp=torch.cat([input,y],1)
         output = self.main(inp)

@@ -13,7 +13,7 @@ class Discriminator(nn.Module):
     def __init__(self, nc: int, ndf: int, ngpu: int = 1):
         '''
         `nc`: number of color channels (1 for grayscale, 3 for colored images),
-        `ndf`: size of feature maps in the discriminator - same as the image siz (64),
+        `ndf`: size of feature maps in the discriminator - same as the image size,
         `ngpu`: number of available gpus.
         '''
         super(Discriminator, self).__init__()

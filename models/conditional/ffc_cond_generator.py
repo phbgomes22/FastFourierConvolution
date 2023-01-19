@@ -35,26 +35,6 @@ class FFCCondGenerator(FFCModel):
         )
 
         self.main = self.create_layers(nc=nc, ngf=ngf)
-        
-        # nn.Sequential(
-        #     # state size. (ngf*8) x 4 x 4
-        #     FFC_BN_ACT(ngf*8, ngf*4, 4, 0, 0.5, 2, 1, 
-        #                        activation_layer=nn.LeakyReLU, 
-        #                        upsampling=True),
-        #     # state size. (ngf*4) x 8 x 8
-        #     FFC_BN_ACT(ngf*4, ngf*2, 4, 0.5, 0.5, 2, 1, 
-        #                        activation_layer=nn.LeakyReLU, 
-        #                        upsampling=True),
-        #     # state size. (ngf*2) x 16 x 16
-        #     FFC_BN_ACT(ngf*2, ngf*1, 4, 0.5, 0.5, 2, 1, 
-        #                        activation_layer=nn.LeakyReLU, 
-        #                        upsampling=True),
-        #     # state size. (ngf) x 32 x 32
-        #     FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, 2, 1, 
-        #                        norm_layer=nn.Identity, 
-        #                        activation_layer=nn.Tanh, upsampling=True)
-        #     # state size. (nc) x 64 x 64
-        # )
 
     def create_layers(self, nc: int, ngf: int):
         layers = []
@@ -64,13 +44,10 @@ class FFCCondGenerator(FFCModel):
         # so we would subtract -2, the extra -1 is for the last layer.
         number_convs = int(math.log2(ngf)) - 3
 
-
         # adds the hidden layers
         for itr in range(number_convs, 0, -1):
             mult = math.pow(2, itr) # 2^iter
-
             g_in = 0 if itr == number_convs else 0.5
-
             layers.append(
                 FFC_BN_ACT(ngf*mult, ngf*(mult//2), 4, g_in, 0.5, 2, 1, 
                                activation_layer=nn.LeakyReLU, 

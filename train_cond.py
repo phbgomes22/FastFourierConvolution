@@ -114,6 +114,7 @@ def train(netG, netD):
     nz = config.nz
     model_output = config.model_output
     num_classes = config.num_classes
+    image_size = config.image_size
 
     ## Loads data for traning based on the config set by the user
     dataset, batch_size, workers = load_data()
@@ -125,7 +126,7 @@ def train(netG, netD):
 
     # Create batch of latent vectors that we will use to visualize
     #  the progression of the generator
-    fixed_noise = torch.randn(64, nz, 1, 1, device=device) # 1, 1,
+    fixed_noise = torch.randn(image_size, nz, 1, 1, device=device) # 1, 1,
 
     # Setup Adam optimizers for both G and D
     optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
@@ -141,7 +142,6 @@ def train(netG, netD):
     #
     labels = range(num_classes)
     fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 7)[:64] ) ).float().to(device)
-    #fixed_labels =  torch.as_tensor( np.repeat(labels, 7)[:64] ).float().to(device)
 
     print("Starting Training Loop...")
     # For each epoch
@@ -153,7 +153,6 @@ def train(netG, netD):
             ## Getting labels
             ############################
             labels = data[1].to(device)
-            one_hot_labels = torch.nn.functional.one_hot(labels, num_classes=num_classes).float()
         
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
