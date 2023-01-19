@@ -62,7 +62,7 @@ class FFCCondGenerator(FFCModel):
         # the first convolution has no padding and stride 1 
         # -ie: it moves from a 1x1 dim to a 4x4 dim
         # so we would subtract -2, the extra -1 is for the last layer.
-        number_convs = math.log2(ngf) - 3
+        number_convs = int(math.log2(ngf)) - 3
 
         for itr in range(number_convs, 0, -1):
             mult = math.pow(2, itr) # 2^iter
