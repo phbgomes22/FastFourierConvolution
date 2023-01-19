@@ -64,6 +64,8 @@ class FFCCondGenerator(FFCModel):
         # so we would subtract -2, the extra -1 is for the last layer.
         number_convs = int(math.log2(ngf)) - 3
 
+
+        # adds the hidden layers
         for itr in range(number_convs, 0, -1):
             mult = math.pow(2, itr) # 2^iter
 
@@ -74,6 +76,7 @@ class FFCCondGenerator(FFCModel):
                                activation_layer=nn.LeakyReLU, 
                                upsampling=True),
             )
+        # adds the last layer
         layers.append(
             FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, 2, 1, 
                                norm_layer=nn.Identity, 

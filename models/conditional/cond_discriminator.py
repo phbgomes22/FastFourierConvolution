@@ -33,16 +33,30 @@ class CondCvDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
         )
 
-        self.main = nn.Sequential(
-            # state size. (ndf*2) x 32 x 32
-            self.downsample(in_ch=ndf*2),
-            # state size. (ndf*4) x 16 x 16
-            self.downsample(in_ch=ndf*4),
-            # state size. (ndf*4) x 8 x 8
-            self.downsample(in_ch=ndf*8),
-            # state size. (ndf*8) x 4 x 4
-            self.downsample(in_ch=ndf*16, last_layer=True)
+        self.main = self.create_layers(ndf)
+
+    def create_layers(self, ndf: int):
+        layers = []
+        # why - 2? 
+        # the first convolution has 1 padding and stride 2 
+        # -ie: it moves from a 64x64 dim to a 32x32 dim
+        # so we would subtract -1, the extra -1 is for the last layer.
+        number_convs = int(math.log2(ndf)) - 2
+
+        # adds the hidden layers
+        for itr in range(1, number_convs):
+            mult = math.pow(2, itr) # 2^iter
+            layers.append(
+                self.downsample(in_ch=ndf*mult)
+            )
+
+        # adds the last layer
+        mult = math.pow(2, number_convs)
+        layers.append(
+            self.downsample(in_ch=ndf*mult, last_layer=True)
         )
+
+        return nn.Sequential(*layers)
 
     def downsample(self, in_ch: int, last_layer: bool = False, bias: bool = False):
         layers = []
