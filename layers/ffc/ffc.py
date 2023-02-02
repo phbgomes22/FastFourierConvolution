@@ -6,6 +6,7 @@ Adaptations: Pedro Gomes
 import torch.nn as nn
 from util import *
 from .spectral_transform import SpectralTransform
+from ..print_layer import *
 
 
 class FFC(nn.Module):

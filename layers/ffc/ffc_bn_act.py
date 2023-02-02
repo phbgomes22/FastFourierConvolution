@@ -76,7 +76,7 @@ class FFC_BN_ACT(nn.Module):
         self.noise = NoiseInjection() if upsampling else nn.Identity()
 
     def forward(self, x):
-     #   debug_print(" -- FFC_BN_ACT")
+        debug_print(" -- FFC_BN_ACT")
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
@@ -84,7 +84,7 @@ class FFC_BN_ACT(nn.Module):
         self.print_size(x_l)
 
         x_g = self.act_g(self.bn_g(x_g))
-    #   debug_print(" -- Fim FFC_BN_ACT")
+        debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG
         x_l = self.noise(x_l, noise=None)
