@@ -56,7 +56,7 @@ class FFCCondGenerator(FFCModel):
             )
         # - testing last ffc convolution with full image size 
         layers.append(
-            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU)
+            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, upsampling=True)
         )
         # adds the last layer
         layers.append(
@@ -85,6 +85,7 @@ class FFCCondGenerator(FFCModel):
         ## main convolutions with ffc layer
         x = self.main(x)
         x = self.resizer(x)
+
         self.print_size(x)
 
         debug_print("** END FFC_COND_GENERATOR")
