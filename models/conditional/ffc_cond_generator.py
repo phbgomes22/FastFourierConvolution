@@ -54,9 +54,12 @@ class FFCCondGenerator(FFCModel):
                                activation_layer=nn.LeakyReLU, 
                                upsampling=True),
             )
+        # - testing last ffc convolution with full image size 
+        layers.append(
+            FFC_BN_ACT(ngf, ngf, 3, 0.5, 0.5, stride=1, padding=1, activation_layer=nn.LeakyReLU)
+        )
         # adds the last layer
         layers.append(
-            FFC_BN_ACT(ngf, ngf, 3, 0.5, 0.5, stride=1, padding=1, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, 2, 1, 
                                norm_layer=nn.Identity, 
                                activation_layer=nn.Tanh, upsampling=True)
