@@ -90,8 +90,10 @@ class CondDiscriminator(nn.Module):
 
         return nn.Sequential(*layers)
 
+
     def get_noise_decay(self, epoch: int):
         return self.noise_decay ** (epoch / self.num_epochs)
+
 
     def forward(self, input, labels, epoch: int):
         ## embedding and convolution of classes

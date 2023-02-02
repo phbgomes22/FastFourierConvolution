@@ -60,7 +60,7 @@ class FFCCondGenerator(FFCModel):
         )
         # adds the last layer
         layers.append(
-            FFC_BN_ACT(ngf*1, nc, 3, 0.5, 0, stride=1, padding=1, 
+            FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, stride=1, padding=1, 
                                norm_layer=nn.Identity, 
                                activation_layer=nn.Tanh, upsampling=True)
         )
@@ -69,6 +69,7 @@ class FFCCondGenerator(FFCModel):
 
 
     def forward(self, input, labels):
+        debug_print("** FFC_COND_GENERATOR")
         ## conv for the embedding
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
@@ -84,7 +85,9 @@ class FFCCondGenerator(FFCModel):
         ## main convolutions with ffc layer
         x = self.main(x)
         x = self.resizer(x)
+        self.print_size(x)
 
+        debug_print("** END FFC_COND_GENERATOR")
         return x
 
 
