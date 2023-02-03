@@ -1,10 +1,11 @@
 
-import matplotlib as plt
+#import matplotlib.pyplot as plt
+from .data_loader import *
 import numpy as np
 
 
 
-def save_training(G_losses, D_losses):
+def save_training_plot(G_losses, D_losses, epoch: int, model_output: str):
     plt.figure(figsize=(20,10))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(G_losses,label="G")
@@ -12,6 +13,7 @@ def save_training(G_losses, D_losses):
     plt.xlabel("iterations")
     plt.ylabel("Loss")
     plt.legend()
+    plt.savefig(model_output + "image" + str(epoch) + "epochs.jpg")
     plt.show()
 
 
