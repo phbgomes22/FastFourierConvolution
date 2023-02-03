@@ -148,7 +148,7 @@ def train(netG, netD):
 
     #
     labels = range(num_classes)
-    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 7)[:64] ) ).float().to(device)
+    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 8)[:64] ) ).float().to(device)
 
     print("Starting Training Loop...")
     # For each epoch
@@ -228,20 +228,18 @@ def train(netG, netD):
                         # Conditional training - sampling
                         fake = netG(fixed_noise, torch.argmax(fixed_labels, dim=1)).detach().cpu()
                     curr_fake = vutils.make_grid(fake, padding=2, normalize=True)
-                    image_to_show = np.transpose(curr_fake, (1,2,0))
-                    plt.figure(figsize=(10,10))
-                    plt.imshow(image_to_show)
-                    # saves the image representing samples from the generator
-                    plt.savefig(model_output + "image" + str(epoch) + "_" + str(i) + ".jpg")
+                    # save an image with samples of the generator model output
+                    save_grid_images(curr_fake, epoch, i, model_output)
+
                     # saves the generator model from the current epoch and batch
                     torch.save(netG.state_dict(), model_output + "generator"+ str(epoch) + "_" + str(i))
-                    plt.show()
             
             # Save Losses for plotting later
             G_losses.append(errG.item())
             D_losses.append(errD.item())
             
             iters += 1
+    save_training_plot(G_losses=G_losses, D_losses=D_losses, epoch=num_epochs, model_output=model_output)
 
 
 def main():
