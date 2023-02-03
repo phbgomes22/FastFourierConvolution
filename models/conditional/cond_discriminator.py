@@ -97,7 +97,7 @@ class CondDiscriminator(nn.Module):
 
     def forward(self, input, labels, epoch: int):
         ## embedding and convolution of classes
-        embedding=self.label_embed(labels)
+        embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
         embedding = self.label_convs(embedding)
 
