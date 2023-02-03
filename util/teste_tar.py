@@ -2,7 +2,7 @@ import torch
 import tar_loader
 import torchvision.transforms as transforms
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import torchvision.utils as vutils
 
 
