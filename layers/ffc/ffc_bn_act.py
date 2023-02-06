@@ -73,7 +73,7 @@ class FFC_BN_ACT(nn.Module):
         self.print_size = Print(debug=Config.shared().DEBUG)
 
         ## Add Noise - PG
-        self.noise = nn.Identity()# NoiseInjection() if upsampling else nn.Identity()
+        self.noise = NoiseInjection() if upsampling else nn.Identity()
 
     def forward(self, x):
         debug_print(" -- FFC_BN_ACT")
