@@ -102,8 +102,8 @@ class CondDiscriminator(nn.Module):
         embedding = self.label_convs(embedding)
 
         ## add noise to input of discriminator
-        noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
-        input = input + noise
+       # noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
+      #  input = input + noise
         ## run the input through the first convolution
         input = self.input_conv(input)
 

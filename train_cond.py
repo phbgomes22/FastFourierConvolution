@@ -91,7 +91,7 @@ def get_discriminator():
     DEBUG = config.DEBUG
 
     # Create the Discriminator
-    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=True).to(device)
+    netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=False).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -239,6 +239,8 @@ def train(netG, netD):
             D_losses.append(errD.item())
             
             iters += 1
+    
+    print("Training Loop Ended!")
     save_training_plot(G_losses=G_losses, D_losses=D_losses, epoch=num_epochs, model_output=model_output)
 
 
