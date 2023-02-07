@@ -13,12 +13,13 @@ import math
 # - This is the one bringing good results!
 class FFCCondGenerator(FFCModel):
 
-    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int):
+    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int, uses_noise: bool = False):
         super(FFCCondGenerator, self).__init__(inplanes=ngf * 8, debug=False)
         self.embed_size = embed_size
         self.num_classes = num_classes
         self.nz = nz
         self.ngf = ngf
+        self.uses_noise = uses_noise
 
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
@@ -56,13 +57,14 @@ class FFCCondGenerator(FFCModel):
             )
         # - testing last ffc convolution with full image size 
         layers.append(
-            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, upsampling=True)
-        )
+            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, upsampling=True, uses_noise=self.uses_noise) # 3, 1, 1, upsampling=False
+        ) 
         # adds the last layer
         layers.append(
             FFC_BN_ACT(ngf*1, nc, 3, 0.5, 0, stride=1, padding=1, 
                                norm_layer=nn.Identity, 
-                               activation_layer=nn.Tanh, upsampling=True)
+                               activation_layer=nn.Tanh,
+                               uses_noise=self.uses_noise) #4, 2, 1, upsampling=True
         )
 
         return nn.Sequential(*layers)

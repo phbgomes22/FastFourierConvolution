@@ -11,7 +11,7 @@ from torch.nn.utils import spectral_norm
 
 ## - This is the one bringing good results!
 class CondDiscriminator(nn.Module):
-    def __init__(self, nc: int, ndf: int, num_classes: int, num_epochs: int, uses_sn: bool = False):
+    def __init__(self, nc: int, ndf: int, num_classes: int, num_epochs: int, uses_sn: bool = False, uses_noise: bool = False):
         super(CondDiscriminator, self).__init__()
         self.ndf = ndf
         self.uses_sn = uses_sn
@@ -40,6 +40,9 @@ class CondDiscriminator(nn.Module):
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), # +1 due to conditional
             nn.LeakyReLU(0.2, inplace=True),
         )
+
+        ## States if Cond Discriminator uses noise
+        self.uses_noise = uses_noise
 
         ## Initial std value
         self.noise_stddev = 0.1
@@ -101,9 +104,11 @@ class CondDiscriminator(nn.Module):
         embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
         embedding = self.label_convs(embedding)
 
-        ## add noise to input of discriminator
-        noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
-        input = input + noise
+        if self.uses_noise:
+            ## add noise to input of discriminator
+            noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
+            input = input + noise
+            
         ## run the input through the first convolution
         input = self.input_conv(input)
 
