@@ -5,6 +5,7 @@ Author: Pedro Gomes
 import torch.nn as nn
 from util import *
 from layers import *
+import math
 
 
 
@@ -88,24 +89,25 @@ class CondCvGenerator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         )
 
-        self.main = nn.Sequential(
-            # state size. (ngf*8) x 4 x 4
-            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf * 4),
-            nn.ReLU(True),
-            # state size. (ngf*4) x 8 x 8
-            nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf * 2),
-            nn.ReLU(True),
-            # state size. (ngf*2) x 16 x 16
-            nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf),
-            nn.ReLU(True),
-            # state size. (ngf) x 32 x 32
-            nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
-            nn.Tanh()
-            # state size. (nc) x 64 x 64
-        )
+        self.main = self.create_layers(nc=nc, ngf=ngf) 
+
+    def create_layers(self, nc: int, ngf: int):
+        layers = []
+
+        # adds the hidden layers
+        for itr in range(self.number_convs, 0, -1):
+            mult = int(math.pow(2, itr)) # 2^iter
+            
+            layers.append( nn.ConvTranspose2d(ngf*mult, ngf*(mult//2), 4, 2, 1, bias=False) )
+            layers.append( nn.BatchNorm2d(ngf*(mult//2)) )
+            layers.append( nn.ReLU(True) )
+
+        # - testing last ffc convolution with full image size 
+        layers.append( nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False) ) 
+        # adds the last layer
+        layers.append( nn.Tanh() )
+
+        return nn.Sequential(*layers)
 
     def forward(self, input, labels):
         ## conv for the embedding
