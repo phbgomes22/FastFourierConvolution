@@ -31,7 +31,8 @@ class FFC_BN_ACT(nn.Module):
                  kernel_size, ratio_gin, ratio_gout,
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
                  norm_layer=nn.BatchNorm2d, activation_layer=nn.Identity,
-                 enable_lfu=True, upsampling=False, out_padding=0):
+                 enable_lfu=True, upsampling=False, out_padding=0,
+                 uses_noise: bool = False):
         '''
         The parameter `upsampling` controls whether the FFC module or the FFCTransposed module will be used. 
         The FFC works for downsampling, while FFCTransposed, for upsampling.
@@ -73,7 +74,7 @@ class FFC_BN_ACT(nn.Module):
         self.print_size = Print(debug=Config.shared().DEBUG)
 
         ## Add Noise - PG
-        self.noise = NoiseInjection() if upsampling else nn.Identity()
+        self.noise = NoiseInjection() if uses_noise else nn.Identity()
 
     def forward(self, x):
         debug_print(" -- FFC_BN_ACT")
