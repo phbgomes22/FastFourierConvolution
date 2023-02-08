@@ -29,15 +29,18 @@ class FFCCondGenerator(FFCModel):
         # so we would subtract -2, the extra -1 is for the last layer.
         self.number_convs = int(math.log2(ngf)) - 3
 
+        # initial convolutions are concatenated leaving ch + ch = 2*ch in beginning of main(x)
+        mult = int(math.pow(2, self.number_convs - 1))
+
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, ngf*self.number_convs, 4, 1, 0),
-            nn.BatchNorm2d(ngf*self.number_convs),
+            nn.ConvTranspose2d(num_classes, ngf*mult, 4, 1, 0),
+            nn.BatchNorm2d(ngf*mult),
             nn.LeakyReLU(0.2, inplace=True)
         )
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(nz, ngf*self.number_convs, 4, 1, 0),
-            nn.BatchNorm2d(ngf*self.number_convs),
+            nn.ConvTranspose2d(nz, ngf*mult, 4, 1, 0),
+            nn.BatchNorm2d(ngf*mult),
             nn.LeakyReLU(0.2, inplace=True)
         )
 
