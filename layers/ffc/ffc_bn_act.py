@@ -44,7 +44,7 @@ class FFC_BN_ACT(nn.Module):
         if upsampling:
             self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding, attention)
+                       groups, bias, enable_lfu, out_padding, attention=attention)
         else:
             self.ffc = FFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,

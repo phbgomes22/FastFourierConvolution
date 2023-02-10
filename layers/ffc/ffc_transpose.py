@@ -22,7 +22,7 @@ class FFCTranspose(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
                  dilation: int = 1, groups: int = 1, bias: bool = False, 
-                 enable_lfu: bool = True, attention: bool = False, out_padding: int = 0):
+                 enable_lfu: bool = True, out_padding: int = 0, attention: bool = False):
         '''
         in_channels: number of channels that the FFCTranspose receives,
         out_channels: number of channes that the FFCTranspose returns in the output tensor,

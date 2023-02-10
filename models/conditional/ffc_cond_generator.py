@@ -67,7 +67,7 @@ class FFCCondGenerator(FFCModel):
             FFC_BN_ACT(ngf*1, nc, 3, 0.5, 0, stride=1, padding=1, 
                                norm_layer=nn.Identity, 
                                activation_layer=nn.Tanh,
-                               uses_noise=self.uses_noise,) #4, 2, 1, upsampling=True
+                               uses_noise=self.uses_noise) #4, 2, 1, upsampling=True
         )
 
         return nn.Sequential(*layers)
