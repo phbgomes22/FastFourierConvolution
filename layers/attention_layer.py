@@ -61,4 +61,4 @@ class Self_Attn(nn.Module):
         out = out.view(m_batchsize,C,width,height)
         
         out = self.gamma*out + x
-        return out,attention
+        return out #,attention
