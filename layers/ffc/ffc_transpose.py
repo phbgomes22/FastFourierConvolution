@@ -60,8 +60,11 @@ class FFCTranspose(nn.Module):
         # for the formation of the outputted global signal
         self.convl2g = nn.Sequential( self.convtransp2d(condition, in_cl, out_cg, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation),
+                            ## Testing local attention like NL-FFC
+                              # SpatialAttn(out_cg, True)
+                            ## Testing attention like SAGAN
+                              Self_Attn(out_cg, 'relu') )
 
-                              SpatialAttn(out_cg, True) )
 
        
         condition = in_cg == 0 or out_cl == 0
