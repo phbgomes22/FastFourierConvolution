@@ -22,7 +22,7 @@ class FFCTranspose(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
                  dilation: int = 1, groups: int = 1, bias: bool = False, 
-                 enable_lfu: bool = True, out_padding: int = 0):
+                 enable_lfu: bool = True, attention: bool = False, out_padding: int = 0):
         '''
         in_channels: number of channels that the FFCTranspose receives,
         out_channels: number of channes that the FFCTranspose returns in the output tensor,
@@ -55,15 +55,15 @@ class FFCTranspose(nn.Module):
         self.convl2l = self.convtransp2d(condition, in_cl, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
+
+
         condition = in_cl == 0 or out_cg == 0
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
+        attention_layer = Self_Attn(out_cg, 'relu')  if attention else nn.Identity()
         self.convl2g = nn.Sequential( self.convtransp2d(condition, in_cl, out_cg, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation),
-                            ## Testing local attention like NL-FFC
-                              # SpatialAttn(out_cg, True)
-                            ## Testing attention like SAGAN
-                              Self_Attn(out_cg, 'relu') )
+                              attention_layer )
 
 
        

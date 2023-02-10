@@ -32,7 +32,7 @@ class FFC_BN_ACT(nn.Module):
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
                  norm_layer=nn.BatchNorm2d, activation_layer=nn.Identity,
                  enable_lfu=True, upsampling=False, out_padding=0,
-                 uses_noise: bool = False):
+                 uses_noise: bool = False, attention: bool = False):
         '''
         The parameter `upsampling` controls whether the FFC module or the FFCTransposed module will be used. 
         The FFC works for downsampling, while FFCTransposed, for upsampling.
@@ -44,7 +44,7 @@ class FFC_BN_ACT(nn.Module):
         if upsampling:
             self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding)
+                       groups, bias, enable_lfu, out_padding, attention)
         else:
             self.ffc = FFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,

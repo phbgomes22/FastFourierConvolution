@@ -27,10 +27,7 @@ class CondCvGenerator(nn.Module):
         # so we would subtract -2, the extra -1 is for the last layer.
         self.number_convs = int(math.log2(ngf)) - 3
 
-
         mult = int(math.pow(2, self.number_convs - 1))
-
-        debug_print(self.number_convs, ngf, mult)
 
         self.label_conv = nn.Sequential(
             nn.ConvTranspose2d(num_classes, ngf*mult, 4, 1, 0),
