@@ -7,6 +7,7 @@ import torch.nn as nn
 from util import *
 from .spectral_transform import SpectralTransform
 from ..print_layer import *
+from ..attention_layer import *
 
 
 class FFC(nn.Module):
@@ -22,7 +23,9 @@ class FFC(nn.Module):
     '''
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0,
-                 dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True):
+                 dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True,
+                 attention: bool = False):
+
         super(FFC, self).__init__()
 
         assert stride == 1 or stride == 2, "Stride should be 1 or 2."
@@ -53,8 +56,12 @@ class FFC(nn.Module):
         module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.Conv2d
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = module(in_cl, out_cg, kernel_size,
-                              stride, padding, dilation, groups, bias)
+
+        attention_layer = Self_Attn(out_cg, 'relu')  if attention else nn.Identity()
+        self.convl2g = nn.Sequential(
+                            module(in_cl, out_cg, kernel_size,
+                              stride, padding, dilation, groups, bias),
+                              attention_layer)
 
         module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.Conv2d
         # this is the convolution that processes the global signal and contributes 

@@ -1,40 +1,105 @@
+'''
+Author: Pedro Gomes
+'''
+
 import torch.nn as nn
 from util import *
 from layers import *
+from ..ffcmodel import FFCModel
+import math
 from torch.nn.utils import spectral_norm
 
 
-class CondSNDiscriminator(nn.Module):
-    def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
-        super(CondSNDiscriminator, self).__init__()
-        self.image_size = image_size
-        self.num_classes = num_classes
+## - This is the one bringing good results!
+class FFCCondDiscriminator(FFCModel):
+    def __init__(self, nc: int, ndf: int, num_classes: int, 
+                num_epochs: int, uses_sn: bool = False, uses_noise: bool = False):
+        super(FFCCondDiscriminator, self).__init__()
+        self.ndf = ndf
+        self.uses_sn = uses_sn
+        self.num_epochs = num_epochs
+        '''
+        Embedding layers returns a 2d array with the embed of the class, 
+        like a look-up table.
+        This way, the class embed works as a new channel.
+        '''
+        self.label_embed = nn.Embedding(num_classes, self.ndf*self.ndf)
 
-        self.lbl_embed = nn.Embedding(num_classes, image_size*image_size)
+        '''
+        why - 2? the first convolution has 1 padding and stride 2 
+        ie: it moves from a 64x64 dim to a 32x32 dim
+        so we would subtract -1, the extra -1 is for the last layer.
+        '''
+        self.number_convs = int(math.log2(ndf)) - 2
 
-        self.main = nn.Sequential(
-            # input is (nc) x 64 x 64
-            spectral_norm(nn.Conv2d(nc + 1, ndf * 2, 4, 2, 1, bias=False)), # +1 due to conditional
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf) x 32 x 32
-            spectral_norm(nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=True)),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*2) x 16 x 16
-            spectral_norm(nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=True)),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*4) x 8 x 8
-            spectral_norm(nn.Conv2d(ndf * 8, ndf * 16, 4, 2, 1, bias=True)),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*8) x 4 x 4
-            spectral_norm(nn.Conv2d(ndf * 16, 1, 4, 1, 0, bias=True)),
-            nn.Sigmoid()
+        self.label_convs = nn.Sequential(
+            nn.Conv2d(1, ndf, 4, 2, 1),
+            nn.LeakyReLU(0.2, inplace=True)
         )
 
+        self.input_conv = nn.Sequential(
+            # input is (nc) x 64 x 64
+            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), # +1 due to conditional
+            nn.LeakyReLU(0.2, inplace=True),
+        )
 
-    def forward(self, input, labels):
-        embedding=self.lbl_embed(labels)
+        ## States if Cond Discriminator uses noise
+        self.uses_noise = uses_noise
 
-        embedding = embedding.view(labels.shape[0], 1, self.image_size, self.image_size)
+        ## Initial std value
+        self.noise_stddev = 0.1
+        
+        ## Noise decay hyperparameter
+        self.noise_decay = 0.01
+
+        self.main = self.create_layers(ndf)
+
+
+    def create_layers(self, ndf: int):
+        layers = []
+
+        norm_layer = spectral_norm if self.uses_sn else nn.BatchNorm2d
+
+        # adds the hidden layers
+        for itr in range(1, self.number_convs):
+            mult = int(math.pow(2, itr)) # 2^iter
+            g_in = 0 if itr == self.number_convs else 0.5
+
+            layers.append(
+                FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
+                ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False,
+                norm_layer=norm_layer, activation_layer=nn.LeakyReLU)
+            )
+
+        # adds the last layer
+        mult = int(math.pow(2, self.number_convs))
+        layers.append(
+            FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False,
+                norm_layer=norm_layer, activation_layer=nn.Sigmoid)
+
+        )
+
+        return nn.Sequential(*layers)
+
+
+    def get_noise_decay(self, epoch: int):
+        return self.noise_decay ** (epoch / self.num_epochs)
+
+
+    def forward(self, input, labels, epoch: int):
+        ## embedding and convolution of classes
+        embedding = self.label_embed(labels)
+        embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
+        embedding = self.label_convs(embedding)
+
+        if self.uses_noise:
+            ## add noise to input of discriminator
+            noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
+            input = input + noise
+            
+        ## run the input through the first convolution
+        input = self.input_conv(input)
 
         # concatenates the embedding with the number of channels (dimension 0)
         inp=torch.cat([input, embedding],1)
@@ -42,69 +107,3 @@ class CondSNDiscriminator(nn.Module):
         output = self.main(inp)
         
         return output
-
-
-
-class CondBNDiscriminator(nn.Module):
-    def __init__(self, nc: int, ndf: int, num_classes: int, image_size: int):
-        super(CondBNDiscriminator, self).__init__()
-        self.image_size = image_size
-        self.num_classes = num_classes
-
-        self.ylabel=nn.Sequential(
-            nn.Linear(num_classes, image_size*image_size),
-            nn.ReLU(True)
-        )
-
-        self.main = nn.Sequential(
-            # input is (nc) x 64 x 64
-            nn.Conv2d(nc+1, ndf * 2, 4, 2, 1, bias=False), # +1 due to conditional
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf) x 32 x 32
-            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=True),
-        )
-           # nn.BatchNorm2d(ndf * 2),
-        self.cbn1 = ConditionalBatchNorm2d(ndf * 4, num_classes=num_classes)
-        self.main2 = nn.Sequential(
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=True)
-        )
-           # nn.BatchNorm2d(ndf * 4),
-        self.cbn2 = ConditionalBatchNorm2d(ndf * 8, num_classes=num_classes)
-
-        self.main3 = nn.Sequential(
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(ndf * 8, ndf * 16, 4, 2, 1, bias=True)
-        )
-            #nn.BatchNorm2d(ndf * 8),
-            # Batch normalization conditioned to class
-        self.cbn3 = ConditionalBatchNorm2d(ndf * 16, num_classes=num_classes)
-
-        self.main4 = nn.Sequential(
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(ndf * 16, 1, 4, 1, 0, bias=True),
-            nn.Sigmoid()
-        )
-
-
-    def forward(self, input, labels):
-        y=self.ylabel(labels)
-        # revert one hot to labels to pass it to conditional batch norm
-        discrete_labels = torch.argmax(labels, dim=1)
-
-        y=y.view(labels.shape[0], 1, self.image_size, self.image_size)
-
-        inp=torch.cat([input,y],1)
-        output = self.main(inp)
-        
-        output = self.cbn1(output, discrete_labels)
-        output = self.main2(output)
-        output = self.cbn2(output, discrete_labels)
-        output = self.main3(output)
-        output = self.cbn3(output, discrete_labels)
-        output = self.main4(output)
-        
-        return output.view(-1, 1).squeeze(1)
