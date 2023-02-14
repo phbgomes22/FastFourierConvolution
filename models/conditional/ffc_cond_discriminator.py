@@ -61,7 +61,7 @@ class FFCCondDiscriminator(FFCModel):
         # adds the hidden layers
         for itr in range(1, self.number_convs):
             mult = int(math.pow(2, itr)) # 2^iter
-            g_in = 0 if itr == 1 else 0.5
+            g_in = 0 #if itr == 1 else 0.5
             debug_print("in_channels: ", ndf*mult)
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
@@ -73,7 +73,7 @@ class FFCCondDiscriminator(FFCModel):
         mult = int(math.pow(2, self.number_convs))
         layers.append(
             FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
+                ratio_gin=0.0, ratio_gout=0, stride=1, padding=0, bias=False, 
                 uses_sn=self.uses_sn, activation_layer=nn.Sigmoid)
         )
 
