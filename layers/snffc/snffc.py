@@ -6,7 +6,7 @@ Adaptations: Pedro Gomes
 import torch.nn as nn
 from util import *
 from torch.nn.utils import spectral_norm
-from ..ffc import *
+from ..ffc.ffc import *
 
 ## Not Used
 class SN_FFC(nn.Module):
