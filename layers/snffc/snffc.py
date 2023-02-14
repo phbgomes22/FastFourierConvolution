@@ -16,7 +16,7 @@ class SNFFC(FFC):
                  dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True,
                  attention: bool = False):
 
-        FFC.__init__(self, in_channels, out_channels, kernel_size, ratio_gin, ratio_gout, stride,
+        super(FFC, self).__init__(self, in_channels, out_channels, kernel_size, ratio_gin, ratio_gout, stride,
                     padding, dilation, groups, bias, enable_lfu, attention)
 
         
