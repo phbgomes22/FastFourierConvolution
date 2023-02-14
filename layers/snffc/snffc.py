@@ -107,7 +107,7 @@ class SNFFC(FFC):
         FFC.__init__(self, in_channels, out_channels, kernel_size, ratio_gin, ratio_gout, stride,
                     padding, dilation, groups, bias, enable_lfu, attention)
 
-        # self.convl2l = spectral_norm(self.convl2l)
+        self.convl2l = spectral_norm(self.convl2l)
         # self.convg2l = spectral_norm(self.convg2l)
         # self.convl2g = spectral_norm(self.convl2g)
 
