@@ -17,6 +17,7 @@ class FFCCondDiscriminator(FFCModel):
         super(FFCCondDiscriminator, self).__init__( debug=False)
         self.ndf = ndf
         self.num_epochs = num_epochs
+        self.uses_sn = uses_sn
         '''
         Embedding layers returns a 2d array with the embed of the class, 
         like a look-up table.
