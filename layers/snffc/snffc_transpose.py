@@ -4,7 +4,7 @@ Authors: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from .snspectral_transform import SNSpectralTransform
+from ..ffc.spectral_transform import *
 from config import Config
 from torch.nn.utils import spectral_norm
 from ..print_layer import *
@@ -69,7 +69,7 @@ class SNFFCTranspose(nn.Module):
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
         # defines the module as the Spectral Transform unless the channels output are zero
-        module = nn.Identity if in_cg == 0 or out_cg == 0 else SNSpectralTransform
+        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
