@@ -53,11 +53,11 @@ class FFC(nn.Module):
         self.convl2l = module(in_cl, out_cl, kernel_size,
                               stride, padding, dilation, groups, bias)
 
+
+        self.attention_layer = Self_Attn(out_cg, 'relu')  if attention else nn.Identity()
         module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.Conv2d
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-
-        self.attention_layer = Self_Attn(out_cg, 'relu')  if attention else nn.Identity()
         self.convl2g = module(in_cl, out_cg, kernel_size,
                               stride, padding, dilation, groups, bias)
 

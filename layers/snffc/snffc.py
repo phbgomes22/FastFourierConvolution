@@ -107,9 +107,15 @@ class SNFFC(FFC):
         FFC.__init__(self, in_channels, out_channels, kernel_size, ratio_gin, ratio_gout, stride,
                     padding, dilation, groups, bias, enable_lfu, attention)
 
+        
         self.convl2l = spectral_norm(self.convl2l)
         self.convg2l = spectral_norm(self.convg2l)
-        self.convl2g = spectral_norm(self.convl2g)
+        
+        for layer in self.convl2g.children():
+            print(layer)
+            if isinstance(layer, nn.Conv2d):
+                layer = spectral_norm(layer)
+       # self.convl2g = spectral_norm(self.convl2g)
 
     def forward(self, x):
         x_l, x_g = x if type(x) is tuple else (x, 0)
