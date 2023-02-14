@@ -29,18 +29,19 @@ class SNFFC(FFC):
         # -- changing convg2g
         if not isinstance(self.convg2g, nn.Identity):
             # Create a new convg2g layer that is a copy of the old one
-            new_convg2g = type(self.convg2g)(self.in_cg, self.out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
+           # new_convg2g = type(self.convg2g)(self.in_cg, self.out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
 
             # Replace the BatchNorm2d layer with Identity
             for name, module in self.convg2g.named_children():
                 if isinstance(module, nn.Conv2d):
                     print("adicionando spectral norm em ", name)
-                    new_convg2g.add_module(name, spectral_norm(module))
-                else:
-                    new_convg2g.add_module(name, module)
+                    self.convg2g._modules[name] = spectral_norm(module)
+                #     new_convg2g.add_module(name, spectral_norm(module))
+                # else:
+                #     new_convg2g.add_module(name, module)
 
             # Set the new convg2g layer
-            self.convg2g = new_convg2g
+            # self.convg2g = new_convg2g
 
 
     def forward(self, x):
