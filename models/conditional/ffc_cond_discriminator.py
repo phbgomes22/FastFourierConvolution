@@ -65,7 +65,7 @@ class FFCCondDiscriminator(FFCModel):
             debug_print("in_channels: ", ndf*mult)
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
-                ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=g_in, ratio_gout=0.0, stride=2, padding=1, bias=False, 
                 uses_sn=self.uses_sn, activation_layer=nn.LeakyReLU)
             )
 
