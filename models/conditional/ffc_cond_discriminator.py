@@ -62,7 +62,7 @@ class FFCCondDiscriminator(FFCModel):
         for itr in range(1, self.number_convs):
             mult = int(math.pow(2, itr)) # 2^iter
             g_in = 0 if itr == self.number_convs else 0.5
-
+            debug_print("in_channels: ", ndf*mult)
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
                 ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False, activation_layer=nn.LeakyReLU)
@@ -97,6 +97,7 @@ class FFCCondDiscriminator(FFCModel):
         ## run the input through the first convolution
         input = self.input_conv(input)
 
+        self.print_size(input)
         # concatenates the embedding with the number of channels (dimension 0)
         inp=torch.cat([input, embedding],1)
 
