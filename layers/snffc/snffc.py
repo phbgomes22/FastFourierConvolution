@@ -29,7 +29,7 @@ class SNFFC(FFC):
         # -- changing convg2g
         if not isinstance(self.convg2g, nn.Identity):
             # Create a new convg2g layer that is a copy of the old one
-            new_convg2g = type(self.convg2g)(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
+            new_convg2g = type(self.convg2g)(self.in_cg, self.out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
 
             # Replace the BatchNorm2d layer with Identity
             for name, module in self.convg2g.named_children():

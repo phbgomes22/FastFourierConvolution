@@ -38,8 +38,10 @@ class FFC(nn.Module):
         # calculate the number of input and output channels based on the ratio (alpha) 
         # of the local and global signals 
         in_cg = int(in_channels * ratio_gin)
+        self.in_cg = in_cg
         in_cl = in_channels - in_cg
         out_cg = int(out_channels * ratio_gout)
+        self.out_cg = out_cg
         out_cl = out_channels - out_cg
 
         self.ratio_gin = ratio_gin
