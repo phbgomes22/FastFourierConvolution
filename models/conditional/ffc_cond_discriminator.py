@@ -58,8 +58,6 @@ class FFCCondDiscriminator(FFCModel):
     def create_layers(self, ndf: int):
         layers = []
 
-        norm_layer = spectral_norm if self.uses_sn else nn.BatchNorm2d
-
         # adds the hidden layers
         for itr in range(1, self.number_convs):
             mult = int(math.pow(2, itr)) # 2^iter
@@ -67,17 +65,14 @@ class FFCCondDiscriminator(FFCModel):
 
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
-                ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False,
-                norm_layer=norm_layer, activation_layer=nn.LeakyReLU)
+                ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False, activation_layer=nn.LeakyReLU)
             )
 
         # adds the last layer
         mult = int(math.pow(2, self.number_convs))
         layers.append(
             FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False,
-                norm_layer=norm_layer, activation_layer=nn.Sigmoid)
-
+                ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, activation_layer=nn.Sigmoid)
         )
 
         return nn.Sequential(*layers)

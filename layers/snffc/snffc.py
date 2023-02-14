@@ -34,18 +34,10 @@ class SNFFC(FFC):
             # Replace the BatchNorm2d layer with Identity
             for name, module in self.convg2g.named_children():
                 if isinstance(module, nn.Conv2d):
-                    print("adicionando spectral norm em ", name)
-                    print(module)
-                    print(type(module))
                     new_module = spectral_norm(module)
                     self.convg2g._modules[name] = module
-                #     new_convg2g.add_module(name, spectral_norm(module))
-                # else:
-                #     new_convg2g.add_module(name, module)
-
-            # Set the new convg2g layer
-            # self.convg2g = new_convg2g
-
+                    
+        print("SNFFC criada!")
 
     def forward(self, x):
         x_l, x_g = x if type(x) is tuple else (x, 0)
