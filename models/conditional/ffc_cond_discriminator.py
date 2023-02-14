@@ -14,7 +14,7 @@ from torch.nn.utils import spectral_norm
 class FFCCondDiscriminator(FFCModel):
     def __init__(self, nc: int, ndf: int, num_classes: int, 
                 num_epochs: int, uses_sn: bool = False, uses_noise: bool = False):
-        super(FFCCondDiscriminator, self).__init__()
+        super(FFCCondDiscriminator, self).__init__( debug=False)
         self.ndf = ndf
         self.uses_sn = uses_sn
         self.num_epochs = num_epochs
