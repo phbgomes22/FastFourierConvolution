@@ -108,8 +108,8 @@ class SNFFC(FFC):
                     padding, dilation, groups, bias, enable_lfu, attention)
 
         self.convl2l = spectral_norm(self.convl2l)
-        # self.convg2l = spectral_norm(self.convg2l)
-        # self.convl2g = spectral_norm(self.convl2g)
+        self.convg2l = spectral_norm(self.convg2l)
+        #  self.convl2g = spectral_norm(self.convl2g)
 
     def forward(self, x):
         x_l, x_g = x if type(x) is tuple else (x, 0)
