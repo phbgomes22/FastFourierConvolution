@@ -93,14 +93,15 @@ class FFCCondDiscriminator(FFCModel):
             noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
             input = input + noise
             
-        debug_print(input)
+        self.print_size(input)
         ## run the input through the first convolution
         input = self.input_conv(input)
 
         # concatenates the embedding with the number of channels (dimension 0)
         inp=torch.cat([input, embedding],1)
 
-        debug_print(inp)
+        self.print_size(inp)
         output = self.main(inp)
+        self.print_size(output)
         
         return output

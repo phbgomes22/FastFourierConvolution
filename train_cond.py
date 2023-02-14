@@ -96,7 +96,6 @@ def get_discriminator():
         netD = FFCCondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=True, uses_noise=True).to(device)
     else:
         netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=True, uses_noise=True).to(device)
-    print(netD)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
