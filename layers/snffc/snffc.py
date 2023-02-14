@@ -35,6 +35,8 @@ class SNFFC(FFC):
             for name, module in self.convg2g.named_children():
                 if isinstance(module, nn.Conv2d):
                     print("adicionando spectral norm em ", name)
+                    print(module)
+                    print(type(module))
                     self.convg2g._modules[name] = spectral_norm(module)
                 #     new_convg2g.add_module(name, spectral_norm(module))
                 # else:
