@@ -50,6 +50,8 @@ class CondDiscriminator(nn.Module):
         ## Noise decay hyperparameter
         self.noise_decay = 0.01
 
+        self.print_size = Print(debug=Config.shared().DEBUG)
+
         self.main = self.create_layers(ndf)
 
     def create_layers(self, ndf: int):
