@@ -68,15 +68,15 @@ class FFC_BN_ACT(nn.Module):
         lact = nn.Identity if ratio_gout == 1 else activation_layer
         gact = nn.Identity if ratio_gout == 0 else activation_layer
 
-        if lact is nn.Tanh or lact is nn.Sigmoid:
+        if isinstance(lact, nn.LeakyReLU):
+            self.act_l = lact(0.2, inplace=True)
+        else:
             self.act_l = lact() # was inplace=True, had to change due to new Tanh function
-        else:
-            self.act_l = lact(inplace=True)
 
-        if gact is nn.Tanh or gact is nn.Sigmoid:
-            self.act_g = gact() # was inplace=True, had to change due to new Tanh function
+        if isinstance(gact, nn.LeakyReLU):
+            self.act_g = gact(0.2, inplace=True)
         else:
-            self.act_g = gact(inplace=True)
+            self.act_g = gact() # was inplace=True, had to change due to new Tanh function
 
         self.print_size = Print(debug=Config.shared().DEBUG)
 
