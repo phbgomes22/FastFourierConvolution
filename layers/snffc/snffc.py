@@ -5,10 +5,11 @@ Adaptations: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from .snspectral_transform import SNSpectralTransform
 from torch.nn.utils import spectral_norm
+from ..ffc import *
 
-class SNFFC(nn.Module):
+## Not Used
+class SN_FFC(nn.Module):
     '''
     The SNFFC Layer
 
@@ -89,6 +90,24 @@ class SNFFC(nn.Module):
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l) + self.convg2g(x_g)
+
+        # returns both signals as a tuple
+        return out_xl, out_xg
+
+
+
+## Creating through inherintance
+class SNFFC(FFC):
+    def forward(self, x):
+                x_l, x_g = x if type(x) is tuple else (x, 0)
+        out_xl, out_xg = 0, 0
+
+        if self.ratio_gout != 1:
+            # creates the output local signal passing the right signals to the right convolutions
+            out_xl = spectral_norm(self.convl2l(x_l)) + spectral_norm(self.convg2l(x_g))
+        if self.ratio_gout != 0:
+            # creates the output global signal passing the right signals to the right convolutions
+            out_xg = spectral_norm(self.convl2g(x_l)) + self.convg2g(x_g)
 
         # returns both signals as a tuple
         return out_xl, out_xg

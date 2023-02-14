@@ -10,6 +10,7 @@ from .ffc import *
 from .ffc_transpose import *
 from ..noise_injection import *
 from ..print_layer import *
+from ..snffc import *
 
 
 
@@ -46,7 +47,7 @@ class FFC_BN_ACT(nn.Module):
                        ratio_gin, ratio_gout, stride, padding, dilation,
                        groups, bias, enable_lfu, out_padding, attention=attention)
         else:
-            self.ffc = FFC(in_channels, out_channels, kernel_size,
+            self.ffc = SNFFC(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
                        groups, bias, enable_lfu, attention=attention)
 
