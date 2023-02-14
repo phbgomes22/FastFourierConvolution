@@ -111,12 +111,20 @@ class SNFFC(FFC):
         self.convl2l = spectral_norm(self.convl2l)
         self.convg2l = spectral_norm(self.convg2l)
         
-        print(self.convg2g.children())
-        for name, layer in self.convg2g.named_modules():
-            print(name)
 
         self.convl2g = spectral_norm(self.convl2g) if isinstance(self.convl2g, nn.Conv2d) else self.convl2g
-    
+
+        # -- changing convg2g
+        # Create a new convg2g layer that is a copy of the old one
+        new_convg2g = nn.Sequential(*self.convg2g)
+
+        # Replace the BatchNorm2d layer with Identity
+        for i, layer in enumerate(new_convg2g):
+            if isinstance(layer, nn.Conv2d):
+                new_convg2g[i] = spectral_norm(layer)
+
+        # Set the new convg2g layer
+        self.convg2g = new_convg2g
 
     def forward(self, x):
         x_l, x_g = x if type(x) is tuple else (x, 0)
