@@ -56,7 +56,7 @@ def get_generator():
     if config.FFC_GENERATOR:
         netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
                                 embed_size=embed_size, uses_noise=True).to(device) 
-        print(netG)
+        
     else:
         netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 
                         num_classes= num_classes, image_size=image_size, 
@@ -96,7 +96,7 @@ def get_discriminator():
         netD = FFCCondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=True, uses_noise=True).to(device)
     else:
         netD = CondDiscriminator(nc=nc, ndf=ndf, num_classes=num_classes, num_epochs=num_epochs, uses_sn=False, uses_noise=False).to(device)
-
+    print(netD)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):

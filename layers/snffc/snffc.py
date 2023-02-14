@@ -29,12 +29,14 @@ class SNFFC(FFC):
         # -- changing convg2g
         if not isinstance(self.convg2g, nn.Identity):
             # Create a new convg2g layer that is a copy of the old one
-            new_convg2g = nn.Sequential(*self.convg2g)
+            new_convg2g = type(self.convg2g)()
 
             # Replace the BatchNorm2d layer with Identity
-            for i, layer in enumerate(new_convg2g):
-                if isinstance(layer, nn.Conv2d):
-                    new_convg2g[i] = spectral_norm(layer)
+            for name, module in self.convg2g.named_children():
+                if isinstance(module, nn.BatchNorm2d):
+                    new_convg2g.add_module(name, spectral_norm(module))
+                else:
+                    new_convg2g.add_module(name, module)
 
             # Set the new convg2g layer
             self.convg2g = new_convg2g
