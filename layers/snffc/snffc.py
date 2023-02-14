@@ -37,7 +37,8 @@ class SNFFC(FFC):
                     print("adicionando spectral norm em ", name)
                     print(module)
                     print(type(module))
-                    self.convg2g._modules[name] = spectral_norm(module)
+                    new_module = spectral_norm(module)
+                    self.convg2g._modules[name] = module
                 #     new_convg2g.add_module(name, spectral_norm(module))
                 # else:
                 #     new_convg2g.add_module(name, module)
