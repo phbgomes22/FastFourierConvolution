@@ -99,7 +99,7 @@ class SN_FFC(nn.Module):
 ## Creating through inherintance
 class SNFFC(FFC):
     def forward(self, x):
-                x_l, x_g = x if type(x) is tuple else (x, 0)
+        x_l, x_g = x if type(x) is tuple else (x, 0)
         out_xl, out_xg = 0, 0
 
         if self.ratio_gout != 1:
