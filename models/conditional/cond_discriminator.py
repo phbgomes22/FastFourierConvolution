@@ -112,10 +112,15 @@ class CondDiscriminator(nn.Module):
         ## run the input through the first convolution
         input = self.input_conv(input)
 
+        self.print_size(input)
+
         # concatenates the embedding with the number of channels (dimension 0)
         inp=torch.cat([input, embedding],1)
 
+        self.print_size(inp)
         output = self.main(inp)
+
+        self.print_size(output)
         
         return output
 
