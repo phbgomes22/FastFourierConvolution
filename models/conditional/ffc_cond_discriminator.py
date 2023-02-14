@@ -104,7 +104,7 @@ class FFCCondDiscriminator(FFCModel):
         self.print_size(inp)
         output = self.main(inp)
         self.print_size(output)
-        x = self.resizer(x)
+        x = self.resizer(output)
         self.print_size(output)
 
         return output
