@@ -10,7 +10,7 @@ from .ffc import *
 from .ffc_transpose import *
 from ..noise_injection import *
 from ..print_layer import *
-from ..snffc import *
+from ..snffc.snffc import *
 
 
 
