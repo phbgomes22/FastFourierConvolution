@@ -70,18 +70,11 @@ class FFCCondDiscriminator(FFCModel):
             )
 
         # adds the last layer
-        mult = int(math.pow(2, self.number_convs))
-
-        conv = nn.Conv2d(in_channels=ndf*mult, out_channels=1, 
-                             kernel_size=4, stride=1, padding=0, bias=False)
-
-        act = nn.Sigmoid()
-        layers.extend([self.resizer, conv, act])
-        # layers.append(
-        #     FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
-        #         ratio_gin=0.0, ratio_gout=0, stride=1, padding=0, bias=False, 
-        #         uses_sn=self.uses_sn, activation_layer=nn.Sigmoid)
-        # )
+        layers.append(
+            FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
+                ratio_gin=0.0, ratio_gout=0, stride=1, padding=0, bias=False, 
+                uses_sn=self.uses_sn, norm_layer=nn.Identity, activation_layer=nn.Sigmoid)
+        )
 
         return nn.Sequential(*layers)
 
@@ -109,6 +102,6 @@ class FFCCondDiscriminator(FFCModel):
 
         output = self.main(inp)
         
-      #  output = self.resizer(output)
+        output = self.resizer(output)
 
         return output
