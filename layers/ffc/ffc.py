@@ -49,7 +49,7 @@ class FFC(nn.Module):
         module = nn.Identity if in_cl == 0 or out_cl == 0 else nn.Conv2d
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
-
+        
         self.convl2l = module(in_cl, out_cl, kernel_size,
                               stride, padding, dilation, groups, bias)
 
@@ -84,12 +84,12 @@ class FFC(nn.Module):
         x_l, x_g = x if type(x) is tuple else (x, 0)
         out_xl, out_xg = 0, 0
 
-        #if self.ratio_gout != 1:
+        if self.ratio_gout != 1:
             # creates the output local signal passing the right signals to the right convolutions
-        out_xl = self.convl2l(x_l) #+ self.convg2l(x_g)
-      #  if self.ratio_gout != 0:
-           # # creates the output global signal passing the right signals to the right convolutions
-           # out_xg = self.convl2g(x_l) + self.convg2g(x_g)
+            out_xl = self.convl2l(x_l) + self.convg2l(x_g)
+        if self.ratio_gout != 0:
+            # creates the output global signal passing the right signals to the right convolutions
+            out_xg = self.convl2g(x_l) + self.convg2g(x_g)
 
         # returns both signals as a tuple
         return out_xl, out_xg
