@@ -88,10 +88,10 @@ class FFC(nn.Module):
 
         if self.ratio_gout != 1:
             # creates the output local signal passing the right signals to the right convolutions
-            out_xl = self.convl2l(x_l) + self.convg2l(x_g)
+            out_xl = self.convl2l(x_l) #+ self.convg2l(x_g)
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
-            out_xg = self.convl2g(x_l) + self.convg2g(x_g)
+           # out_xg = self.convl2g(x_l) + self.convg2g(x_g)
 
         # returns both signals as a tuple
         return out_xl, out_xg
