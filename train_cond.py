@@ -107,7 +107,7 @@ def get_discriminator():
     netD.apply(weights_init)
 
     # Print the model
-    summary(netD, [(nc, ndf, ndf), (1,), 10])
+    summary(netD, [(nc, ndf, ndf), (1,), (10,)])
     
     params = count_parameters(netD)
     print("- Parameters on discriminator: ", params)
