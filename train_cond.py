@@ -4,6 +4,7 @@ import torch.optim as optim
 from config import Config
 from util import *
 from models import *
+from torchsummary import summary
 
 
 device = get_device()
@@ -106,6 +107,7 @@ def get_discriminator():
     netD.apply(weights_init)
 
     # Print the model
+    summary(netD, (nc, ndf, ndf))
     
     params = count_parameters(netD)
     print("- Parameters on discriminator: ", params)
