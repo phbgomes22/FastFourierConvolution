@@ -63,19 +63,32 @@ class FFCCondDiscriminator(FFCModel):
             mult = int(math.pow(2, itr)) # 2^iter
             g_in = 0 #if itr == 1 else 0.5
             debug_print("in_channels: ", ndf*mult)
-            layers.append(
-                FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
-                ratio_gin=g_in, ratio_gout=0.0, stride=2, padding=1, bias=False, 
-                uses_sn=self.uses_sn, activation_layer=nn.LeakyReLU)
-            )
+            # layers.append(
+            #     FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
+            #     ratio_gin=g_in, ratio_gout=0.0, stride=2, padding=1, bias=False, 
+            #     uses_sn=self.uses_sn, activation_layer=nn.LeakyReLU)
+            # )
+            conv = nn.Conv2d(in_channels=ndf*mult, out_channels=ndf*mult*2,
+                            kernel_size=4, stride=2, padding=1, bias=False)
+            bn = nn.BatchNorm2d(num_features=ndf*mult*2)
+            # if we are using spectral normalization, removes batch norm
+            # and adds spectral normalization instead
+            act = nn.LeakyReLU(0.2, inplace=True)
+            layers.extend([conv, bn, act])
 
         # adds the last layer
         mult = int(math.pow(2, self.number_convs))
-        layers.append(
-            FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
-                ratio_gin=0.0, ratio_gout=0, stride=1, padding=0, bias=False, 
-                uses_sn=self.uses_sn, activation_layer=nn.Sigmoid)
-        )
+
+        conv = nn.Conv2d(in_channels=ndf*mult, out_channels=1, 
+                             kernel_size=4, stride=1, padding=0, bias=False)
+
+        act = nn.Sigmoid()
+        layers.extend([conv, act])
+        # layers.append(
+        #     FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
+        #         ratio_gin=0.0, ratio_gout=0, stride=1, padding=0, bias=False, 
+        #         uses_sn=self.uses_sn, activation_layer=nn.Sigmoid)
+        # )
 
         return nn.Sequential(*layers)
 
