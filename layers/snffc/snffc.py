@@ -22,8 +22,6 @@ class SNFFC(FFC):
         
         self.convl2l = spectral_norm(self.convl2l)
         self.convg2l = spectral_norm(self.convg2l) if isinstance(self.convg2l, nn.Conv2d) else self.convg2l
-        
-
         self.convl2g = spectral_norm(self.convl2g) if isinstance(self.convl2g, nn.Conv2d) else self.convl2g
 
         # -- changing convg2g
