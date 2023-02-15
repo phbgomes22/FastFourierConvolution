@@ -68,6 +68,7 @@ class FFC_BN_ACT(nn.Module):
         lact = nn.Identity if ratio_gout == 1 else activation_layer
         gact = nn.Identity if ratio_gout == 0 else activation_layer
 
+        print(type(lact))
         if isinstance(lact, nn.LeakyReLU):
             self.act_l = lact(0.2, inplace=True)
             print("Leaky")
