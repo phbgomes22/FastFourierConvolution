@@ -56,6 +56,7 @@ class FFC_BN_ACT(nn.Module):
                 self.ffc = FFC(in_channels, out_channels, kernel_size,
                         ratio_gin, ratio_gout, stride, padding, dilation,
                         groups, bias, enable_lfu, attention=attention)
+                print("Using regular FFC")
 
         # create the BatchNormalization layers
         lnorm = nn.Identity if ratio_gout == 1 else norm_layer
