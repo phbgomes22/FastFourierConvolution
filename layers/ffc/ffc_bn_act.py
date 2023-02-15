@@ -83,6 +83,7 @@ class FFC_BN_ACT(nn.Module):
         ## Add Noise - PG
         self.noise = NoiseInjection() if uses_noise else nn.Identity()
 
+
     def forward(self, x):
         debug_print(" -- FFC_BN_ACT")
         x_l, x_g = self.ffc(x)
