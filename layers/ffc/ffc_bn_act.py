@@ -69,14 +69,14 @@ class FFC_BN_ACT(nn.Module):
         gact = nn.Identity if ratio_gout == 0 else activation_layer
 
         print(type(lact))
-        if type(lact) = nn.LeakyReLU:
+        if type(lact) == nn.LeakyReLU:
             self.act_l = lact(0.2, inplace=True)
             print("Leaky")
         else:
             self.act_l = lact() # was inplace=True, had to change due to new Tanh function
             print("Not Leaky")
 
-        if type(gact) = nn.LeakyReLU:
+        if type(gact) == nn.LeakyReLU:
             self.act_g = gact(0.2, inplace=True)
             print("Leaky")
         else:
