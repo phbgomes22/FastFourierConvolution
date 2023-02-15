@@ -70,11 +70,13 @@ class FFC_BN_ACT(nn.Module):
 
         if isinstance(lact, nn.LeakyReLU):
             self.act_l = lact(0.2, inplace=True)
+            print("Leaky")
         else:
             self.act_l = lact() # was inplace=True, had to change due to new Tanh function
 
         if isinstance(gact, nn.LeakyReLU):
             self.act_g = gact(0.2, inplace=True)
+            print("Leaky")
         else:
             self.act_g = gact() # was inplace=True, had to change due to new Tanh function
 
