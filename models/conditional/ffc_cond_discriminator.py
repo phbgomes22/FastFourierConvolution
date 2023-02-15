@@ -70,6 +70,9 @@ class FFCCondDiscriminator(FFCModel):
             )
 
         # adds the last layer
+        mult = int(math.pow(2, self.number_convs))
+
+         # adds the last layer
         layers.append(
             FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
                 ratio_gin=0.0, ratio_gout=0, stride=1, padding=0, bias=False, 
