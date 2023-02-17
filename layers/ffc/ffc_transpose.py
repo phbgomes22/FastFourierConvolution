@@ -76,7 +76,7 @@ class FFCTranspose(nn.Module):
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
-        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu),
+        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
             # Upsample with convolution
         self.convg2gup = nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
