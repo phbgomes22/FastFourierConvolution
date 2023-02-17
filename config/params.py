@@ -122,6 +122,7 @@ class Config:
         '''
         opts = read_test_options()
 
+        self.num_classes = opts.num_classes
         self.model_path = opts.model_path
         self.samples = opts.number
         self.sample_output = self.check_and_fill_path(opts.output)

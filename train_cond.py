@@ -47,7 +47,6 @@ def get_generator():
     ngpu = config.ngpu
     nz = config.nz
     nc = config.nc
-    image_size = config.image_size
     num_classes = config.num_classes
     embed_size = config.gen_embed
 
@@ -60,7 +59,7 @@ def get_generator():
         
     else:
         netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 
-                        num_classes= num_classes, image_size=image_size, 
+                        num_classes= num_classes, 
                         embed_size=embed_size).to(device)
         
 
@@ -127,7 +126,6 @@ def train(netG, netD):
     nz = config.nz
     model_output = config.model_output
     num_classes = config.num_classes
-    image_size = config.image_size
 
     ## Loads data for traning based on the config set by the user
     dataset, batch_size, workers = load_data()

@@ -39,6 +39,11 @@ def read_test_options(args = sys.argv[1:]):
                         choices=["greyscale", "colorized"],
                         default="colorized")
 
+    parser.add_argument("-c", "--num_classes",
+                    help = "Number of classes for conditional tarining",
+                    type=int,
+                    default=-1)
+
     opts = parser.parse_args(args)
 
     return opts

@@ -12,9 +12,8 @@ import math
 
 class CondCvGenerator(nn.Module):
 
-    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, image_size: int, embed_size: int):
+    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int):
         super(CondCvGenerator, self).__init__()
-        self.image_size = image_size
         self.embed_size = embed_size
         self.num_classes = num_classes
         self.nz = nz
