@@ -15,4 +15,4 @@ class NoiseInjection(nn.Module):
     def forward(self, x, noise=None):
         if noise is None:
             noise = torch.randn(x.size(0), 1, x.size(2), x.size(3), device=x.device)
-        return x + self.weight * noise
+        return x + noise #self.weight * 
