@@ -47,10 +47,12 @@ class FFCCondDiscriminator(FFCModel):
         self.uses_noise = uses_noise
 
         ## Initial std value
-        self.noise_stddev = 1.0
+        self.noise_stddev = 0.05
         
         ## Noise decay hyperparameter
-        self.noise_decay = 0.001
+        self.noise_decay = 0.01
+
+        self.gaus_noise = GaussianNoise(0.05)
 
         self.main = self.create_layers(ndf)
 
@@ -95,8 +97,8 @@ class FFCCondDiscriminator(FFCModel):
 
         if self.uses_noise:
             ## add noise to input of discriminator
-            noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
-            input = input + noise
+           ## noise = torch.randn_like(input) * self.noise_stddev * self.get_noise_decay(epoch)
+            input = self.gaus_noise(input) #input + noise
             
         ## run the input through the first convolution
         input = self.input_conv(input)
