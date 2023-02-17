@@ -48,7 +48,7 @@ class FFC_BN_ACT(nn.Module):
             transposed = SNFFCTranspose if uses_sn else FFCTranspose
             self.ffc = transposed(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding, attention=attention)
+                       groups, bias, enable_lfu, out_padding=out_padding, attention=attention)
         else:
             regular = SNFFC if uses_sn else FFC
             self.ffc = regular(in_channels, out_channels, kernel_size,
