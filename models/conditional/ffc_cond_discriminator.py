@@ -50,7 +50,7 @@ class FFCCondDiscriminator(FFCModel):
         self.noise_stddev = 0.1
         
         ## Noise decay hyperparameter
-        self.noise_decay = 0.01
+        self.noise_decay = 0.001
 
         self.main = self.create_layers(ndf)
 

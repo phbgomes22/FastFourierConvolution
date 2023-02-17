@@ -55,7 +55,7 @@ def get_generator():
     netG = None
     if config.FFC_GENERATOR:
         netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
-                                embed_size=embed_size, uses_noise=True).to(device) 
+                                embed_size=embed_size, uses_sn=True, uses_noise=True).to(device) 
         
     else:
         netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 

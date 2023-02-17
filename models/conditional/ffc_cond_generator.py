@@ -13,13 +13,14 @@ import math
 # - This is the one bringing good results!
 class FFCCondGenerator(FFCModel):
 
-    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int, uses_noise: bool = False):
+    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int, uses_sn: bool = False, uses_noise: bool = False):
         super(FFCCondGenerator, self).__init__(debug=False)
         self.embed_size = embed_size
         self.num_classes = num_classes
         self.nz = nz
         self.ngf = ngf
         self.uses_noise = uses_noise
+        self.uses_sn = uses_sn
 
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
@@ -61,14 +62,13 @@ class FFCCondGenerator(FFCModel):
         # - testing last ffc convolution with full image size 
         layers.append(
             FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, 
-                      upsampling=True, uses_noise=self.uses_noise, attention=True) 
+                      upsampling=True, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
         ) 
         # adds the last layer
         layers.append(
             FFC_BN_ACT(ngf*1, nc, 3, 0.5, 0, stride=1, padding=1, 
-                               norm_layer=nn.Identity, 
-                               activation_layer=nn.Tanh,
-                               uses_noise=self.uses_noise, attention=True) 
+                       norm_layer=nn.Identity, activation_layer=nn.Tanh,
+                       uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
         )
 
         return nn.Sequential(*layers)
@@ -82,9 +82,11 @@ class FFCCondGenerator(FFCModel):
         embedding = embedding.view(labels.shape[0], -1, 1, 1) # labels.shape[0]
         embedding = self.label_conv(embedding)
         self.print_size(embedding)
+        
         ## convolution of the noise entry
         input = self.input_conv(input)
         self.print_size(embedding)
+
         ## joins input noise with embedding labels
         x = torch.cat([input, embedding], dim=1)
 

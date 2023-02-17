@@ -42,21 +42,18 @@ class FFC_BN_ACT(nn.Module):
 
         # Creates the FFC layer, that will process the signal 
         # (divided into local and global and apply the convolutions and Fast Fourier)
+
         if upsampling:
-            self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
+            transposed = SNFFCTransposed if uses_sn else FFCTransposed
+            self.ffc = transposed(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
                        groups, bias, enable_lfu, out_padding, attention=attention)
         else:
-            if uses_sn:
-                self.ffc = SNFFC(in_channels, out_channels, kernel_size,
+            regular = SNFFC if uses_sn else FFC
+            self.ffc = regular(in_channels, out_channels, kernel_size,
                         ratio_gin, ratio_gout, stride, padding, dilation,
                         groups, bias, enable_lfu, attention=attention)
-                print("Using Spectral Normalization")
-            else:
-                self.ffc = FFC(in_channels, out_channels, kernel_size,
-                        ratio_gin, ratio_gout, stride, padding, dilation,
-                        groups, bias, enable_lfu, attention=attention)
-                print("Using regular FFC")
+             
 
         # create the BatchNormalization layers
         lnorm = nn.Identity if ratio_gout == 1 else norm_layer
