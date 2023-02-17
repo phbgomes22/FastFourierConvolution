@@ -28,7 +28,5 @@ class NoiseInjection(nn.Module):
             noise = x.new_empty(batch, 1, height, width).normal_()
 
         noise_to_add = self.weight * noise
-        if (x > 1).any() or (x < 0).any():
-            print("The tensor has values above 1 or below 0")
 
-        return x #+ noise_to_add
+        return x + noise_to_add

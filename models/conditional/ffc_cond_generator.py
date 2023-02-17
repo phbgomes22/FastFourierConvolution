@@ -97,5 +97,6 @@ class FFCCondGenerator(FFCModel):
         self.print_size(x)
 
         debug_print("** END FFC_COND_GENERATOR")
+
         return x
 
