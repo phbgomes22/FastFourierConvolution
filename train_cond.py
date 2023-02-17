@@ -104,9 +104,6 @@ def get_discriminator():
     # Apply the weights_init function to randomly initialize all weights
     #  to mean=0, stdev=0.2.
     netD.apply(weights_init)
-
-    # Print the model
-    print(netD)
     
     params = count_parameters(netD)
     print("- Parameters on discriminator: ", params)
