@@ -24,24 +24,11 @@ class SNFFC(FFC):
         self.convg2l = spectral_norm(self.convg2l) if isinstance(self.convg2l, nn.Conv2d) else self.convg2l
         self.convl2g = spectral_norm(self.convl2g) if isinstance(self.convl2g, nn.Conv2d) else self.convl2g
 
-        # -- changing convg2g
+        self.convg2gup = spectral_norm(self.convg2gup)
+        # -- changing convg2g   
         if not isinstance(self.convg2g, nn.Identity):
             # Replace the BatchNorm2d layer with Identity
             for name, module in self.convg2g.named_children():
                 if isinstance(module, nn.Conv2d):
                     new_module = spectral_norm(module)
                     self.convg2g._modules[name] = module
-
-    def forward(self, x):
-        x_l, x_g = x if type(x) is tuple else (x, 0)
-        out_xl, out_xg = 0, 0
-
-        if self.ratio_gout != 1:
-            # creates the output local signal passing the right signals to the right convolutions
-            out_xl = self.convl2l(x_l) + self.convg2l(x_g)
-        if self.ratio_gout != 0:
-            # creates the output global signal passing the right signals to the right convolutions
-            out_xg = self.convl2g(x_l) + self.convg2g(x_g)
-
-        # returns both signals as a tuple
-        return out_xl, out_xg
