@@ -49,6 +49,7 @@ def test_cond():
 
     for i in range(num_classes):
         labels[i*num_per_class : (i+1)*num_per_class] = i
+    labels = labels.to(device)
 
     ## generate the samples
     with torch.no_grad():
