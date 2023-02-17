@@ -6,7 +6,6 @@ from .ffc.ffc_bn_act import *
 from .ffc.ffc_transpose import *
 
 from .snffc.snffc import *
-from .snffc.ffc_sn_act import *
 from .snffc.snffc_transpose import *
 
 from .cond.cond_bn import *
