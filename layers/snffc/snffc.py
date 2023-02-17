@@ -24,7 +24,6 @@ class SNFFC(FFC):
         self.convg2l = spectral_norm(self.convg2l) if isinstance(self.convg2l, nn.Conv2d) else self.convg2l
         self.convl2g = spectral_norm(self.convl2g) if isinstance(self.convl2g, nn.Conv2d) else self.convl2g
 
-        self.convg2gup = spectral_norm(self.convg2gup)
         # -- changing convg2g   
         if not isinstance(self.convg2g, nn.Identity):
             # Replace the BatchNorm2d layer with Identity
