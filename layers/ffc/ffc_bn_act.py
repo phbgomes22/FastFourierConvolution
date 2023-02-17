@@ -44,7 +44,7 @@ class FFC_BN_ACT(nn.Module):
         # (divided into local and global and apply the convolutions and Fast Fourier)
 
         if upsampling:
-            transposed = SNFFCTransposed if uses_sn else FFCTransposed
+            transposed = SNFFCTranspose if uses_sn else FFCTranspose
             self.ffc = transposed(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
                        groups, bias, enable_lfu, out_padding, attention=attention)

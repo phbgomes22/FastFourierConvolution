@@ -8,7 +8,7 @@ from torch.nn.utils import spectral_norm
 from ..ffc.ffc_transpose import *
 
 ## Creating through inherintance
-class SNFFCTransposed(FFCTranspose):
+class SNFFCTranspose(FFCTranspose):
 
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
