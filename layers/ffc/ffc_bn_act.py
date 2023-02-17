@@ -11,6 +11,7 @@ from .ffc_transpose import *
 from ..noise_injection import *
 from ..print_layer import *
 from ..snffc.snffc import *
+from ..snffc.snffc_transpose import *
 
 
 
