@@ -61,15 +61,10 @@ class FFCTranspose(nn.Module):
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
         attention_layer =  nn.Identity() #Self_Attn(out_cg, 'relu')  if attention else
-        self.convl2g = nn.Sequential( 
-                            self.convtransp2d(condition, in_cl, out_cg, kernel_size,
+        self.convl2g = self.convtransp2d(condition, in_cl, out_cg, kernel_size,
                                 stride, padding, output_padding=out_padding, groups=groups, 
-                                bias=bias, dilation=dilation),
-                            attention_layer 
-                        )
+                                bias=bias, dilation=dilation)
 
-
-       
         condition = in_cg == 0 or out_cl == 0
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
