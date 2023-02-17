@@ -10,7 +10,7 @@ import torch.nn as nn
 class NoiseInjection(nn.Module):
     def __init__(self, channels):
         super(NoiseInjection, self).__init__()
-        self.weight = nn.Parameter(torch.zeros(1, channels, 1, 1))
+        self.weight = nn.Identity()#nn.Parameter(torch.zeros(1, channels, 1, 1))
 
     def forward(self, x, noise=None):
         if noise is None:
