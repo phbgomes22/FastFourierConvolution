@@ -73,7 +73,9 @@ class FFC_BN_ACT(nn.Module):
         self.print_size = Print(debug=Config.shared().DEBUG)
 
         ## Add Noise - PG
-        self.noise = NoiseInjection() if uses_noise else nn.Identity()
+        self.noise_l = NoiseInjection() if uses_noise else nn.Identity()
+        ## Add Noise - PG
+        self.noise_g = NoiseInjection() if uses_noise else nn.Identity()
 
 
     def forward(self, x):
@@ -88,8 +90,8 @@ class FFC_BN_ACT(nn.Module):
         debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG
-        x_l = self.noise(x_l)
+        x_l = self.noise_l(x_l)
         if type(x_g) != int:
-            x_g = self.noise(x_g)
+            x_g = self.noise_g(x_g)
 
         return x_l, x_g

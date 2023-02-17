@@ -66,7 +66,7 @@ class FFCCondDiscriminator(FFCModel):
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
                 ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False, 
-                uses_noise=False, uses_sn=self.uses_sn, activation_layer=nn.LeakyReLU)
+                uses_noise=True, uses_sn=self.uses_sn, activation_layer=nn.LeakyReLU)
             )
 
         # adds the last layer
@@ -76,7 +76,7 @@ class FFCCondDiscriminator(FFCModel):
         layers.append(
             FFC_BN_ACT(in_channels=ndf*mult, out_channels=1, kernel_size=4,
                 ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
-                uses_noise=False, uses_sn=self.uses_sn, norm_layer=nn.Identity, 
+                uses_noise=True, uses_sn=self.uses_sn, norm_layer=nn.Identity, 
                 activation_layer=nn.Sigmoid)
         )
 

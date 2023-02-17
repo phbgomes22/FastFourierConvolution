@@ -8,13 +8,11 @@ import torch.nn as nn
 ## https://discuss.pytorch.org/t/add-noise-to-layer-output/127876
 
 class NoiseInjection(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        self.weight = nn.Parameter(torch.zeros(1), requires_grad=True)
+    def __init__(self, channels):
+        super(NoiseInjection, self).__init__()
+        self.weight = nn.Parameter(torch.zeros(1, channels, 1, 1))
 
     def forward(self, x, noise=None):
         if noise is None:
-            batch, _, height, width = x.shape
-            noise = x.new_empty(batch, 1, height, width).normal_()
+            noise = torch.randn(x.size(0), 1, x.size(2), x.size(3), device=x.device)
         return x + self.weight * noise
