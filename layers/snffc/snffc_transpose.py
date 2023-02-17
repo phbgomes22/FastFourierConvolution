@@ -16,7 +16,7 @@ class SNFFCTranspose(FFCTranspose):
                  enable_lfu: bool = True, out_padding: int = 0, attention: bool = False):
 
         FFCTranspose.__init__(self, in_channels, out_channels, kernel_size, ratio_gin, ratio_gout, stride,
-                    padding, dilation, groups, bias, enable_lfu, attention)
+                    padding, dilation, groups, bias, enable_lfu, out_padding, attention)
 
         self.convl2l = spectral_norm(self.convl2l)
         self.convg2l = spectral_norm(self.convg2l) if isinstance(self.convg2l, nn.Conv2d) else self.convg2l
