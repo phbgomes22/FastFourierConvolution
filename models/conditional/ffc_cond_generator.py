@@ -59,23 +59,16 @@ class FFCCondGenerator(FFCModel):
                                activation_layer=nn.LeakyReLU, 
                                upsampling=True),
             )
-        # # - testing last ffc convolution with full image size 
-        # layers.append(
-        #     FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, 
-        #               upsampling=True, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
-        # ) 
-        # adds the last layer
-        # layers.append(
-        #     FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, stride=2, padding=1,  #3, 0.5, 0, stride=1, padding=1
-        #                norm_layer=nn.Identity, activation_layer=nn.Tanh, upsampling=True,
-        #                uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=False) 
-        # )
-
+        # - testing last ffc convolution with full image size 
         layers.append(
-            FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, 2, 1, 
-                               norm_layer=nn.Identity, 
-                               activation_layer=nn.Tanh, upsampling=True, 
-                               uses_noise=self.uses_noise, uses_sn=self.uses_sn)
+            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, 
+                      upsampling=True, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
+        ) 
+        # adds the last layer
+        layers.append(
+            FFC_BN_ACT(ngf*1, nc, 3, 0.5, 0, stride=1, padding=1, 
+                       norm_layer=nn.Identity, activation_layer=nn.Tanh,
+                       uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
         )
 
         return nn.Sequential(*layers)
