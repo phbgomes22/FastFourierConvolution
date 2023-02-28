@@ -10,6 +10,7 @@ class Datasets(Enum):
     CELEBA = "CelebA"
     OMNIGLOT = "OMNIGLOT"
     FOOD101 = "FOOD101"
+    FLOWERS = "FLOWERS"
     CARS = "CARS"
     SVHN = "SVHN"
     LOCAL_DATASET = "LOCAL_DATASET"
