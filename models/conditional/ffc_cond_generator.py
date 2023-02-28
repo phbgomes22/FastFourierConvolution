@@ -65,10 +65,17 @@ class FFCCondGenerator(FFCModel):
         #               upsampling=True, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
         # ) 
         # adds the last layer
+        # layers.append(
+        #     FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, stride=2, padding=1,  #3, 0.5, 0, stride=1, padding=1
+        #                norm_layer=nn.Identity, activation_layer=nn.Tanh, upsampling=True,
+        #                uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=False) 
+        # )
+
         layers.append(
-            FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, stride=2, padding=1,  #3, 0.5, 0, stride=1, padding=1
-                       norm_layer=nn.Identity, activation_layer=nn.Tanh, upsampling=True,
-                       uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
+            FFC_BN_ACT(ngf*1, nc, 4, 0.5, 0, 2, 1, 
+                               norm_layer=nn.Identity, 
+                               activation_layer=nn.Tanh, upsampling=True, 
+                               uses_noise=self.uses_noise, uses_sn=self.uses_sn)
         )
 
         return nn.Sequential(*layers)
