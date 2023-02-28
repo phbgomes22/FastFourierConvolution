@@ -60,10 +60,16 @@ class FFCCondDiscriminator(FFCModel):
     def create_layers(self, ndf: int):
         layers = []
 
+        # # - testing last ffc convolution with full image size 
+        # layers.append(
+        #     FFC_BN_ACT(ndf*2, ndf*2, 4, 0.0, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, 
+        #               upsampling=False, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=False) 
+        # ) 
+
         # adds the hidden layers
         for itr in range(1, self.number_convs):
             mult = int(math.pow(2, itr)) # 2^iter
-            g_in = 0 if itr == 1 else 0.5
+            g_in = 0.0 if itr == 1 else 0.5
             debug_print("in_channels: ", ndf*mult)
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
