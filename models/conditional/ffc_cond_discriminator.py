@@ -35,13 +35,13 @@ class FFCCondDiscriminator(FFCModel):
 
         self.label_convs = nn.Sequential(
             nn.Conv2d(1, ndf, 4, 2, 1),
-            nn.LeakyReLU(0.2, inplace=True)
+            nn.GELU()
         )
 
         self.input_conv = nn.Sequential(
             # input is (nc) x 64 x 64
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), # +1 due to conditional
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
         )
 
         ## States if Cond Discriminator uses noise
@@ -75,7 +75,7 @@ class FFCCondDiscriminator(FFCModel):
             layers.append(
                 FFC_BN_ACT(in_channels=ndf*mult, out_channels=ndf*mult*2, kernel_size=4,
                 ratio_gin=g_in, ratio_gout=0.5, stride=2, padding=1, bias=False, 
-                uses_noise=False, uses_sn=self.uses_sn, activation_layer=nn.LeakyReLU)
+                uses_noise=False, uses_sn=self.uses_sn, activation_layer=nn.GELU)
             )
 
         # adds the last layer

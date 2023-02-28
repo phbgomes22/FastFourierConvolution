@@ -9,7 +9,6 @@ from ..ffcmodel import FFCModel
 import math
 
 
-
 # - This is the one bringing good results!
 class FFCCondGenerator(FFCModel):
 
@@ -36,13 +35,13 @@ class FFCCondGenerator(FFCModel):
         self.label_conv = nn.Sequential(
             nn.ConvTranspose2d(num_classes, ngf*mult, 4, 1, 0),
             nn.BatchNorm2d(ngf*mult),
-            nn.LeakyReLU(0.2, inplace=True)
+            nn.GELU()
         )
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
             nn.ConvTranspose2d(nz, ngf*mult, 4, 1, 0),
             nn.BatchNorm2d(ngf*mult),
-            nn.LeakyReLU(0.2, inplace=True)
+            nn.GELU()
         )
 
         self.main = self.create_layers(nc=nc, ngf=ngf)
@@ -56,12 +55,12 @@ class FFCCondGenerator(FFCModel):
             g_in = 0 if itr == self.number_convs else 0.5
             layers.append(
                 FFC_BN_ACT(ngf*mult, ngf*(mult//2), 4, g_in, 0.5, 2, 1, 
-                               activation_layer=nn.LeakyReLU, 
+                               activation_layer=nn.GELU, 
                                upsampling=True),
             )
         # - testing last ffc convolution with full image size 
         layers.append(
-            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, 
+            FFC_BN_ACT(ngf, ngf, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
                       upsampling=True, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=True) 
         ) 
         # adds the last layer
