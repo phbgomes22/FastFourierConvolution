@@ -98,7 +98,8 @@ class FFCCondDiscriminator(FFCModel):
 
     def forward(self, input, labels, epoch: int):
         ## embedding and convolution of classes
-
+        ## allows a subset of classes in the dataset
+        labels = torch.remainder(labels, self.num_classes)
         debug_print(labels)
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
