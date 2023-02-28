@@ -76,6 +76,9 @@ class FFCCondGenerator(FFCModel):
 
     def forward(self, input, labels):
         debug_print("** FFC_COND_GENERATOR")
+
+        debug_print(labels)
+        
         ## conv for the embedding
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)

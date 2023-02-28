@@ -17,6 +17,7 @@ class FFCCondDiscriminator(FFCModel):
         super(FFCCondDiscriminator, self).__init__( debug=False)
         self.ndf = ndf
         self.num_epochs = num_epochs
+        self.num_classes = num_classes
         self.uses_sn = uses_sn
         '''
         Embedding layers returns a 2d array with the embed of the class, 
@@ -97,6 +98,8 @@ class FFCCondDiscriminator(FFCModel):
 
     def forward(self, input, labels, epoch: int):
         ## embedding and convolution of classes
+
+        debug_print(labels)
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
         embedding = self.label_convs(embedding)
