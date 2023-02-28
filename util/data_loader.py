@@ -87,6 +87,10 @@ def load_data():
         # - For SVHN
         print("Loading SVHN dataset... ")
         dataset = SVHN(root='./svhn_data', split='train', download=True, transform=transform)
+    elif config.dataset_name == Datasets.FLOWERS.value:
+        # - For SVHN
+        print("Loading Flowers102 dataset... ")
+        dataset = SVHN(root='./flowers102_data', split='train', download=True, transform=transform)
     elif config.dataset_name == Datasets.LOCAL_DATASET.value:
         # - For local images
         print("Loading local dataset... ")
