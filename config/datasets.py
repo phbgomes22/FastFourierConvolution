@@ -17,11 +17,10 @@ class Datasets(Enum):
     LOCAL_DATASET = "LOCAL_DATASET"
     LOCAL_TAR = "TAR"
 
-
     @classmethod
     def has_value(cls, value):
         return value in cls._value2member_map_ 
 
     @classmethod
     def is_grayscale(cls, value):
-        return value in [Datasets.OMNIGLOT.value, Datasets.MNIST.value]
+        return value in [Datasets.OMNIGLOT.value, Datasets.MNIST.value, Datasets.FMNIST.value]
