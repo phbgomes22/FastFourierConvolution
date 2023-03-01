@@ -71,7 +71,7 @@ def load_data():
         # - For MNIST 
         print("Loading MNIST dataset... ")
         dataset = MNIST(root='../mnist_data', train=True, download=True, transform=transform)
-    elif config.dataset_name == Datasets.MNIST.value:
+    elif config.dataset_name == Datasets.FMNIST.value:
         # - For MNIST 
         print("Loading FashionMNIST dataset... ")
         dataset = FashionMNIST(root='../fashion_mnist_data', train=True, download=True, transform=transform)
@@ -103,6 +103,10 @@ def load_data():
         # - For local tar images
         print("Loading local Tar dataset... ")
         dataset = TarImageFolder(config.dataroot, transform=transform)
+    else:
+        print("[Error] No dataset selected in data_loader!")
+        raise ValueError('[Error] No dataset selected in data_loader!')
+
 
     print("Will create dataloader...")
 
