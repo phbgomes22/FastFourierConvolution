@@ -126,7 +126,7 @@ class Config:
         self.model_path = opts.model_path
         self.samples = opts.number
         self.sample_output = self.check_and_fill_path(opts.output)
-        self.nc = 1 if opts.color == 'greyscale' else 3
+        self.nc = 1 if opts.color == 'grayscale' else 3
 
         self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
@@ -155,7 +155,7 @@ class Config:
         if self.dataroot.endswith('.tar'):
             self.dataset_name = Datasets.LOCAL_TAR.value
 
-        self.nc = 1 if opts.color == 'greyscale' else 3
+        self.nc = 1 if opts.color == 'grayscale' else 3
 
         self.batch_size = opts.batch_size
 

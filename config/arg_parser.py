@@ -36,7 +36,7 @@ def read_test_options(args = sys.argv[1:]):
 
     parser.add_argument("--color",
                         help="Choose the color scheme for the images to be generating",
-                        choices=["greyscale", "colorized"],
+                        choices=["grayscale", "colorized"],
                         default="colorized")
 
     parser.add_argument("-c", "--num_classes",
@@ -89,7 +89,7 @@ def read_train_options(args = sys.argv[1:]):
 
     parser.add_argument("--color",
                         help="Choose the color scheme for the images to be generating",
-                        choices=["greyscale", "colorized"],
+                        choices=["grayscale", "colorized"],
                         default="colorized")
 
     parser.add_argument("-o", "--output",

@@ -44,7 +44,7 @@ Below, the list of possible arguments for the script. To get the full list of po
 | --dataset | Choose the dataset you will use - leave it empty for local dataset with default folder in `../data/` | MNIST / CIFAR10 / CelebA / OMNIGLOT |
 | --data_path | The path of the training data. Only need to specify it if `--dataset` is not used | The path of the local dataset |
 | --debug | Choose if running with debug prints or not | - |
-| --color | Choose the color scheme for the images to be generating | greyscale / colorized |
+| --color | Choose the color scheme for the images to be generating | grayscale / colorized |
 | -o / --output | The path to the output to store the trained models. Default is `../output/` | The path of the output |
 | -e / --epochs | Number of iterations for the training. Default is 400. | Any positive integer value |
 | -b / --batch_size | ize of the batch size for the training. Default is 128. | Any positive integer value |
