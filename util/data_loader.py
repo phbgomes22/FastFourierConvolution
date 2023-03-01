@@ -10,7 +10,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102
+from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102, FashionMNIST
 from config import Config, Datasets
 
 from .tar_loader import TarImageFolder
@@ -71,6 +71,10 @@ def load_data():
         # - For MNIST 
         print("Loading MNIST dataset... ")
         dataset = MNIST(root='../mnist_data', train=True, download=True, transform=transform)
+    elif config.dataset_name == Datasets.MNIST.value:
+        # - For MNIST 
+        print("Loading FashionMNIST dataset... ")
+        dataset = FashionMNIST(root='../fashion_mnist_data', train=True, download=True, transform=transform)
     elif config.dataset_name == Datasets.OMNIGLOT.value:
         # - For Omniglot 
         print("Loading OMNIGLOT dataset... ")

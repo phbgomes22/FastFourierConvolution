@@ -71,6 +71,7 @@ def read_train_options(args = sys.argv[1:]):
                         choices=[Datasets.CIFAR10.value,
                                  Datasets.CELEBA.value, 
                                  Datasets.MNIST.value,
+                                 Datasets.FMNIST.value,
                                  Datasets.OMNIGLOT.value,
                                  Datasets.FOOD101.value,
                                  Datasets.CARS.value,

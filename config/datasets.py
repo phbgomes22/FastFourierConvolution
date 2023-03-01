@@ -6,6 +6,7 @@ from enum import Enum
 
 class Datasets(Enum):
     MNIST = "MNIST"
+    FMNIST = "FMNIST"
     CIFAR10 = "CIFAR10"
     CELEBA = "CelebA"
     OMNIGLOT = "OMNIGLOT"
