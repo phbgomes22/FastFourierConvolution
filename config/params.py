@@ -135,11 +135,6 @@ class Config:
         assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
         self.dataset_name = opts.dataset
 
-        # if the dataset chosen is local, then it must be provided the dataroot for the local dataset
-        self.dataroot = opts.data_path
-        if self.dataroot.endswith('.tar'):
-            self.dataset_name = Datasets.LOCAL_TAR.value
-
 
     def read_test_params(self):
         '''
