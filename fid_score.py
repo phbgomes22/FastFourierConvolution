@@ -9,7 +9,7 @@ device = get_device()
 
 def main():
     ## Reads the parameters send from the user through the terminal call of test.py
-    config.read_metrics_options()
+    config.read_metrics_params()
 
     test()
 
