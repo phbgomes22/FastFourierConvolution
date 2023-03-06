@@ -39,7 +39,7 @@ def test():
 
 
     metrics = torch_fidelity.calculate_metrics(
-                input1=torch_fidelity.GenerativeModelModuleWrapper(G, nz, "normal", num_classes),
+                input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
                 input1_model_num_samples=number_samples,
                 input2='cifar10-train',
                 isc=True,
