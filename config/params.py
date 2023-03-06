@@ -116,12 +116,12 @@ class Config:
         return new_pth
 
 
-    def read_fid_params(self):
+    def read_metrics_params(self):
         '''
         Uses the `arg_parser.py` functions to parse the configuration from the user
         and update the Config shared instance.
         '''
-        opts = read_test_options()
+        opts = read_metrics_options()
 
         self.num_classes = opts.num_classes
         self.model_path = opts.model_path
@@ -139,7 +139,7 @@ class Config:
         self.dataroot = opts.data_path
         if self.dataroot.endswith('.tar'):
             self.dataset_name = Datasets.LOCAL_TAR.value
-            
+
 
     def read_test_params(self):
         '''
