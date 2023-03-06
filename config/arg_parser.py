@@ -7,6 +7,58 @@ import sys
 from .datasets import Datasets
 
     
+def read_metrics_options(args = sys.argv[1:]):
+    '''
+    Responsible for setting the possible parameters for `test.py` and returning the parsed values
+    '''
+    parser = argparse.ArgumentParser(description="The parsing commands list.")
+
+    parser.add_argument("--model_path",
+                        help="The path to the pre-trained model weights",
+                        required=True)
+
+    parser.add_argument("-o", "--output",
+                        help="The path for the output files",
+                        type=str,
+                        default="../generated_samples/")
+
+    parser.add_argument("-n", "--number",
+                        help = "Number of samples that the generator will create",
+                        type=int,
+                        default=1000)
+
+    parser.add_argument("-g", "--generator",
+                         help="Choose the type of generator you used when training the model", 
+                         choices=["ffc", "vanilla"],
+                         default='ffc')
+
+    parser.add_argument("--color",
+                        help="Choose the color scheme for the images to be generating",
+                        choices=["grayscale", "colorized"],
+                        default="colorized")
+
+    parser.add_argument("-c", "--num_classes",
+                    help = "Number of classes for conditional tarining",
+                    type=int,
+                    default=-1)
+
+    parser.add_argument("--dataset",
+                    help="Choose the dataset you will use - default is local dataset in folder ../data/",
+                    choices=[Datasets.CIFAR10.value,
+                                Datasets.CELEBA.value, 
+                                Datasets.MNIST.value,
+                                Datasets.FMNIST.value,
+                                Datasets.OMNIGLOT.value,
+                                Datasets.FOOD101.value,
+                                Datasets.CARS.value,
+                                Datasets.SVHN.value,
+                                Datasets.FLOWERS.value],
+                    default=Datasets.LOCAL_DATASET.value)
+
+    opts = parser.parse_args(args)
+
+    return opts
+
 
 
 def read_test_options(args = sys.argv[1:]):

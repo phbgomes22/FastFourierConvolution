@@ -115,6 +115,32 @@ class Config:
 
         return new_pth
 
+
+    def read_fid_params(self):
+        '''
+        Uses the `arg_parser.py` functions to parse the configuration from the user
+        and update the Config shared instance.
+        '''
+        opts = read_test_options()
+
+        self.num_classes = opts.num_classes
+        self.model_path = opts.model_path
+        self.samples = opts.number
+        self.sample_output = self.check_and_fill_path(opts.output)
+        self.nc = 1 if opts.color == 'grayscale' else 3
+
+        self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
+
+
+        assert Datasets.has_value(opts.dataset), "Dataset requested is not a valid dataset"
+        self.dataset_name = opts.dataset
+
+        # if the dataset chosen is local, then it must be provided the dataroot for the local dataset
+        self.dataroot = opts.data_path
+        if self.dataroot.endswith('.tar'):
+            self.dataset_name = Datasets.LOCAL_TAR.value
+            
+
     def read_test_params(self):
         '''
         Uses the `arg_parser.py` functions to parse the configuration from the user
