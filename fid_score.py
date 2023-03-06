@@ -34,12 +34,12 @@ def test():
                 isc=True,
                 fid=True,
                 kid=True,
-                ppl=False,
+                ppl=True,
                 ppl_epsilon=1e-2,
                 ppl_sample_similarity_resize=64,
             )
 
-    with open('fid' + str(model_path) + str(number_samples) + '.txt', 'w+') as f:
+    with open('../fid' + str(model_path) + str(number_samples) + '.txt', 'w+') as f:
         for k, v in metrics.items():
             f.write('metrics/' + str(k) + "_" + str(v))
 
