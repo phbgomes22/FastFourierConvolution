@@ -10,7 +10,6 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102, FashionMNIST
 from config import Config, Datasets
 
@@ -111,15 +110,6 @@ def load_data():
     else:
         print("[Error] No dataset selected in data_loader!")
         raise ValueError('[Error] No dataset selected in data_loader!')
-
-
-    print(type(dataset[0]))
-    assert isinstance(dataset, Dataset), "Dataset created is not an instance of Dataset"
-    assert torch.is_tensor(dataset[0]), "Dataset created does not contain tensors"
-
-    print("Will create dataloader...")
-
-    print("Dataloader created.")
 
     # device = get_device()
 
