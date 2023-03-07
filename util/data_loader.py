@@ -47,12 +47,14 @@ def load_data():
             transforms.Normalize((0.5,), (0.5,))
         )
         if config.nc == 3:
+            print("Converting Grayscale to RGB...")
             list_transforms.append( transforms.Grayscale(num_output_channels=3) )
     else:
         list_transforms.append(
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         )
         if config.nc == 1:
+            print("Converting RGB to Grayscale...")
             list_transforms.append( transforms.Grayscale() )
 
 
