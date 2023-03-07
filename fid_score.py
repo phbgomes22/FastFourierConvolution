@@ -13,7 +13,7 @@ class DropLabelsDataset(Dataset):
     def __getitem__(self, index):
         item = self.ds[index]
         assert type(item) in (tuple, list)
-        return item[0]
+        return item[0].to(torch.uint8)
 
     def __len__(self):
         return len(self.ds)
