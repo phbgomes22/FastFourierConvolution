@@ -46,6 +46,8 @@ def load_data():
         list_transforms.append(
             transforms.Normalize((0.5,), (0.5,))
         )
+        if config.nc == 3:
+            list_transforms.append( transforms.Grayscale(num_output_channels=3) )
     else:
         list_transforms.append(
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))

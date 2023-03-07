@@ -18,6 +18,7 @@ class FFCCondGenerator(FFCModel):
         self.num_classes = num_classes
         self.nz = nz
         self.ngf = ngf
+        self.nc = nc
         self.uses_noise = uses_noise
         self.uses_sn = uses_sn
         self.training = training
@@ -90,6 +91,27 @@ class FFCCondGenerator(FFCModel):
             new_input = input.unsqueeze(-1).unsqueeze(-1)
             return new_input
 
+    def reshape_output(self, output):
+        '''
+        Reshape output for FID calculations.
+
+        This function should not alter the behavior of the training routine.
+        '''
+        if not self.training:
+            if self.nc == 1:
+                ## gets the number of ones in the repeat
+                size_ones = (1,) * len(output.shape) - 3
+                ## repeat the color value, and leave the rest the same
+                end_of_repeat = (self.nc, 1, 1) 
+                ## transforms grayscale to RGB by making it r==g==b
+                output = output.repeat(*size_ones + end_of_repeat)
+
+            output = (255 * (output.clamp(-1, 1) * 0.5 + 0.5))
+            output = output.to(torch.uint8)
+
+
+        return output
+
 
     def forward(self, input, labels):
 
@@ -122,9 +144,7 @@ class FFCCondGenerator(FFCModel):
 
         debug_print("** END FFC_COND_GENERATOR")
 
-        if not self.training:
-            x = (255 * (x.clamp(-1, 1) * 0.5 + 0.5))
-            x = x.to(torch.uint8)
+        x = self.reshape_output(x)
 
         return x
 
