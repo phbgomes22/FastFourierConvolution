@@ -14,7 +14,7 @@ class DropLabelsDataset(Dataset):
         item = self.ds[index]
         assert type(item) in (tuple, list)
         returned_item = item[0].to(torch.uint8)
-        print(returned_item.shape)
+      
         return returned_item
 
     def __len__(self):
