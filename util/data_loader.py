@@ -39,23 +39,26 @@ def load_data():
     list_transforms = [
         transforms.Resize(image_size),
         transforms.CenterCrop(image_size),
-        transforms.ToTensor(),
     ]
 
     if Datasets.is_grayscale(config.dataset_name):
-        list_transforms.append(
-            transforms.Normalize((0.5,), (0.5,))
-        )
         if config.nc == 3:
             print("Converting Grayscale to RGB...")
             list_transforms.append( transforms.Grayscale(num_output_channels=3) )
-    else:
+
         list_transforms.append(
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            transform.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))
         )
+    else:
         if config.nc == 1:
             print("Converting RGB to Grayscale...")
             list_transforms.append( transforms.Grayscale() )
+            
+        list_transforms.append(
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        )
 
 
     #list_transforms.append(transforms.ToTensor())
