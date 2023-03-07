@@ -113,6 +113,7 @@ def load_data():
         raise ValueError('[Error] No dataset selected in data_loader!')
 
 
+    print(type(dataset[0]))
     assert isinstance(dataset, Dataset), "Dataset created is not an instance of Dataset"
     assert torch.is_tensor(dataset[0]), "Dataset created does not contain tensors"
 
