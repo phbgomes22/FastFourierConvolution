@@ -118,6 +118,8 @@ class CondCvGenerator(nn.Module):
         x = torch.cat([input, embedding], dim=1)
        # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
+        x = self.main(x)
+
         x = self.reshape_output(x)
 
-        return self.main(x)
+        return x
