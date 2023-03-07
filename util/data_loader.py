@@ -10,7 +10,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torch.utils.data import import Dataset
+from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102, FashionMNIST
 from config import Config, Datasets
 
