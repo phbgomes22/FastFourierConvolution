@@ -56,6 +56,8 @@ def load_data():
             list_transforms.append( transforms.Grayscale() )
 
 
+    transform.append(transforms.ToTensor())
+
     transform = transforms.Compose(list_transforms)
 
     dataset = None 
@@ -109,6 +111,9 @@ def load_data():
         print("[Error] No dataset selected in data_loader!")
         raise ValueError('[Error] No dataset selected in data_loader!')
 
+
+    assert isinstance(dataset, Dataset)
+    assert torch.is_tensor(dataset[0])
 
     print("Will create dataloader...")
 
