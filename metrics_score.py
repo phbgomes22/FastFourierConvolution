@@ -36,11 +36,13 @@ def test():
     num_classes = config.num_classes
     embed_size = config.gen_embed
 
+    file_name = ""
 
     print("Loading dataset...")
     ## Loads data for traning based on the config set by the user
     dataset, _, _ = load_data()
 
+    file_name += config.dataset_name
     metrics_dataset = DropLabelsDataset(dataset)
 
     print("Calculating metrics...")
@@ -48,14 +50,15 @@ def test():
 
     ## Creating generator
     netG = None
-    
     if config.FFC_GENERATOR:
         netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
                                     embed_size=embed_size, uses_noise=True, training=False).to(device) 
+        file_name += "_fgan_"
     else:
         netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 
                         num_classes= num_classes, 
                         embed_size=embed_size, training=False).to(device)
+        file_name += "_vanilla_"
 
     metrics = torch_fidelity.calculate_metrics(
                 input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
@@ -70,9 +73,9 @@ def test():
             )
 
     print("Storing metrics...")
-    with open('../fid' + str(model_path) + str(number_samples) + '.txt', 'w+') as f:
+    with open('../metrics/metrics_' + file_name + '.txt', 'w+') as f:
         for k, v in metrics.items():
-            f.write('metrics/' + str(k) + "_" + str(v))
+            f.write(str(model_path) + " " + str(k) + " " + str(v))
 
     print("Done!")
 
