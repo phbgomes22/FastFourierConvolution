@@ -47,14 +47,14 @@ def load_data():
             list_transforms.append( transforms.Grayscale(num_output_channels=3) )
 
         list_transforms.append(
-            transform.ToTensor(),
+            transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         )
     else:
         if config.nc == 1:
             print("Converting RGB to Grayscale...")
             list_transforms.append( transforms.Grayscale() )
-            
+
         list_transforms.append(
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
