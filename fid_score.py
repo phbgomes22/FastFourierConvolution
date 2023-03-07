@@ -6,6 +6,17 @@ from util import *
 config = Config.shared()
 device = get_device()
 
+class DropLabelsDataset(Dataset):
+    def __init__(self, ds):
+        self.ds = ds
+
+    def __getitem__(self, index):
+        item = self.ds[index]
+        assert type(item) in (tuple, list)
+        return item[0]
+
+    def __len__(self):
+        return len(self.ds)
 
 def main():
     ## Reads the parameters send from the user through the terminal call of test.py
@@ -26,8 +37,9 @@ def test():
 
     print("Loading dataset...")
     ## Loads data for traning based on the config set by the user
-    dataset, batch_size, workers = load_data()
+    dataset, _, _ = load_data()
 
+    metrics_dataset = DropLabelsDataset(dataset)
 
     print("Calculating metrics...")
 
@@ -38,7 +50,7 @@ def test():
     metrics = torch_fidelity.calculate_metrics(
                 input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
                 input1_model_num_samples=number_samples,
-                input2=dataset,
+                input2=metrics_dataset,
                 isc=True,
                 fid=True,
                 kid=True,
