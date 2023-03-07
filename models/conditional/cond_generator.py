@@ -12,11 +12,13 @@ import math
 
 class CondCvGenerator(nn.Module):
 
-    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int):
+    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int, training: bool = True):
         super(CondCvGenerator, self).__init__()
         self.embed_size = embed_size
         self.num_classes = num_classes
         self.nz = nz
+        self.training = training
+        self.nc = nc
 
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
@@ -117,5 +119,5 @@ class CondCvGenerator(nn.Module):
        # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
         x = self.reshape_output(x)
-        
+
         return self.main(x)
