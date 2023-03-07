@@ -45,9 +45,17 @@ def test():
 
     print("Calculating metrics...")
 
-    netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
-                                    embed_size=embed_size, uses_noise=True, training=False).to(device) 
 
+    ## Creating generator
+    netG = None
+    
+    if config.FFC_GENERATOR:
+        netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
+                                    embed_size=embed_size, uses_noise=True, training=False).to(device) 
+    else:
+        netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 
+                        num_classes= num_classes, 
+                        embed_size=embed_size, training=False).to(device)
 
     metrics = torch_fidelity.calculate_metrics(
                 input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
@@ -56,7 +64,7 @@ def test():
                 isc=True,
                 fid=True,
                 kid=True,
-                ppl=True,
+                ppl=False,
                 ppl_epsilon=1e-2,
                 ppl_sample_similarity_resize=32,
             )

@@ -60,7 +60,50 @@ class CondCvGenerator(nn.Module):
 
         return nn.Sequential(*layers)
 
+    
+    def assert_input(self, input):
+        '''
+         Check if the last dimensions of the noise tensor have width and height valued 1/
+         If not, unsqueeze the tensor to add them.
+
+         This was added due to the torch-fidelity framework to calculate FID, that gives to the 
+         Generator a noise input of shape (batch_size, nz), while training gives the Generator
+         a noise of shape (batch_size, nz, 1, 1). 
+         
+         This function should not alter the behavior of the training routine.
+        '''
+        if input[..., -2:, -1:].eq(1).all():
+            return input
+        else:
+            new_input = input.unsqueeze(-1).unsqueeze(-1)
+            return new_input
+
+
+    def reshape_output(self, output):
+        '''
+        Reshape output for FID calculations.
+
+        This function should not alter the behavior of the training routine.
+        '''
+        if not self.training:
+            if self.nc == 1:
+                ## gets the number of ones in the repeat
+                size_ones = (1,) * len(output.shape) - 3
+                ## repeat the color value, and leave the rest the same
+                end_of_repeat = (self.nc, 1, 1) 
+                ## transforms grayscale to RGB by making it r==g==b
+                output = output.repeat(*size_ones + end_of_repeat)
+
+            output = (255 * (output.clamp(-1, 1) * 0.5 + 0.5))
+            output = output.to(torch.uint8)
+
+
+        return output
+
     def forward(self, input, labels):
+
+        input = self.assert_input(input)
+
         ## conv for the embedding
         # latent vector z: N x noise_dim x 1 x 1 
         embedding = self.label_embed(labels).unsqueeze(2).unsqueeze(3)
@@ -73,4 +116,6 @@ class CondCvGenerator(nn.Module):
         x = torch.cat([input, embedding], dim=1)
        # x = x.view(input.shape[0], self.nz + self.num_classes, 1, 1) # pq nz * 2 ? pq não nz?
 
+        x = self.reshape_output(x)
+        
         return self.main(x)
