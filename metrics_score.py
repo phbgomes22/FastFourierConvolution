@@ -73,7 +73,7 @@ def test():
             )
 
     print("Storing metrics...")
-    with open('../metrics/metrics_' + file_name + '.txt', 'w+') as f:
+    with open('../metrics/metrics_' + file_name + '.txt\n', 'w+') as f:
         for k, v in metrics.items():
             f.write(str(model_path) + " " + str(k) + " " + str(v))
 
