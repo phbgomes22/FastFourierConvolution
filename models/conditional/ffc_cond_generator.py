@@ -83,7 +83,7 @@ class FFCCondGenerator(FFCModel):
          
          This function should not alter the behavior of the training routine.
         '''
-        if x[..., -2:, -1:].eq(1).all():
+        if input[..., -2:, -1:].eq(1).all():
             return input
         else:
             new_input = input.unsqueeze(-1).unsqueeze(-1)
