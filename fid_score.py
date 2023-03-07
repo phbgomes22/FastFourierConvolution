@@ -32,7 +32,7 @@ def test():
     print("Calculating metrics...")
 
     netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
-                                    embed_size=embed_size, uses_noise=True).to(device) 
+                                    embed_size=embed_size, uses_noise=True, training=False).to(device) 
 
 
     metrics = torch_fidelity.calculate_metrics(

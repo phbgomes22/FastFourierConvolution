@@ -12,7 +12,7 @@ import math
 # - This is the one bringing good results!
 class FFCCondGenerator(FFCModel):
 
-    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int, uses_sn: bool = False, uses_noise: bool = False):
+    def __init__(self, nz: int, nc: int, ngf: int, num_classes: int, embed_size: int, uses_sn: bool = False, uses_noise: bool = False, training: bool = True):
         super(FFCCondGenerator, self).__init__(debug=False)
         self.embed_size = embed_size
         self.num_classes = num_classes
@@ -20,6 +20,7 @@ class FFCCondGenerator(FFCModel):
         self.ngf = ngf
         self.uses_noise = uses_noise
         self.uses_sn = uses_sn
+        self.training = training
 
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
@@ -120,6 +121,10 @@ class FFCCondGenerator(FFCModel):
         self.print_size(x)
 
         debug_print("** END FFC_COND_GENERATOR")
+
+        if not self.training:
+            x = (255 * (x.clamp(-1, 1) * 0.5 + 0.5))
+            x = x.to(torch.uint8)
 
         return x
 
