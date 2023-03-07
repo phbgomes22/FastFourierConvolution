@@ -24,13 +24,10 @@ def test():
     embed_size = config.gen_embed
 
 
+    print("Loading dataset...")
     ## Loads data for traning based on the config set by the user
     dataset, batch_size, workers = load_data()
 
-    print("Loading dataset...")
-    # Create the dataloader
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                            shuffle=True, num_workers=workers)
 
     print("Calculating metrics...")
 
@@ -41,13 +38,13 @@ def test():
     metrics = torch_fidelity.calculate_metrics(
                 input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
                 input1_model_num_samples=number_samples,
-                input2='cifar10-train',
+                input2=dataset,
                 isc=True,
                 fid=True,
                 kid=True,
                 ppl=True,
                 ppl_epsilon=1e-2,
-                ppl_sample_similarity_resize=64,
+                ppl_sample_similarity_resize=32,
             )
 
     print("Storing metrics...")

@@ -72,8 +72,28 @@ class FFCCondGenerator(FFCModel):
 
         return nn.Sequential(*layers)
 
+    def assert_input(self, input):
+        '''
+         Check if the last dimensions of the noise tensor have width and height valued 1/
+         If not, unsqueeze the tensor to add them.
+
+         This was added due to the torch-fidelity framework to calculate FID, that gives to the 
+         Generator a noise input of shape (batch_size, nz), while training gives the Generator
+         a noise of shape (batch_size, nz, 1, 1). 
+         
+         This function should not alter the behavior of the training routine.
+        '''
+        if x[..., -2:, -1:].eq(1).all():
+            return input
+        else:
+            new_input = input.unsqueeze(-1).unsqueeze(-1)
+            return new_input
+
 
     def forward(self, input, labels):
+
+        input = self.assert_input(input)
+
         debug_print("** FFC_COND_GENERATOR")
         ## allows a subset of classes in the dataset
         labels = torch.remainder(labels, self.num_classes)
