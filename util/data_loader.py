@@ -56,7 +56,7 @@ def load_data():
             list_transforms.append( transforms.Grayscale() )
 
 
-    transform.append(transforms.ToTensor())
+    list_transforms.append(transforms.ToTensor())
 
     transform = transforms.Compose(list_transforms)
 
