@@ -74,9 +74,10 @@ class CondCvGenerator(nn.Module):
          
          This function should not alter the behavior of the training routine.
         '''
-        if input[..., -2:, -1:].eq(1).all():
+        if input.dim() == 4 and input.size(dim=2) == 1 and input.size(dim=3) == 1:
             return input
         else:
+            debug_print("- tensor doesn't end with 1, 1")
             new_input = input.unsqueeze(-1).unsqueeze(-1)
             return new_input
 
@@ -90,15 +91,14 @@ class CondCvGenerator(nn.Module):
         if not self.training:
             if self.nc == 1:
                 ## gets the number of ones in the repeat
-                size_ones = (1,) * len(output.shape) - 3
+                size_ones = (1,) * (len(output.shape) - 3)
                 ## repeat the color value, and leave the rest the same
-                end_of_repeat = (self.nc, 1, 1) 
+                end_of_repeat = (3, 1, 1) 
                 ## transforms grayscale to RGB by making it r==g==b
                 output = output.repeat(*size_ones + end_of_repeat)
 
             output = (255 * (output.clamp(-1, 1) * 0.5 + 0.5))
             output = output.to(torch.uint8)
-
 
         return output
 
