@@ -102,7 +102,7 @@ class FFCCondGenerator(FFCModel):
         if not self.training:
             if self.nc == 1:
                 ## gets the number of ones in the repeat
-                size_ones = (1,) * len(output.shape) - 3
+                size_ones = (1,) * (len(output.shape) - 3)
                 ## repeat the color value, and leave the rest the same
                 end_of_repeat = (self.nc, 1, 1) 
                 ## transforms grayscale to RGB by making it r==g==b
@@ -113,7 +113,6 @@ class FFCCondGenerator(FFCModel):
 
 
         return output
-
 
     def forward(self, input, labels):
 
