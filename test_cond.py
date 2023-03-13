@@ -29,9 +29,11 @@ def test_cond():
    ## Loading generator
     netG = None
     if config.FFC_GENERATOR:
+        print("Using FFC Generator...")
         netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
                                 embed_size=embed_size, uses_noise=True, training=False).to(device) 
     else:
+        print("Using Vanilla Generator...")
         netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 
                         num_classes= num_classes, 
                         embed_size=embed_size).to(device)
