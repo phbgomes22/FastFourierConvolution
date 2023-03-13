@@ -77,7 +77,7 @@ def test():
             fake = netG(noise, labels).detach().cpu()#.numpy()
 
         # save the samples 
-        for idx, f in fake.enumerated():
+        for idx, f in enumerate(fake):
             generated_image = np.transpose(f, (1,2,0))
             im = Image.fromarray((generated_image.squeeze(axis=2).numpy()))
             im.save("../metrics/" + 'image' + str(idx) + ".jpg")
