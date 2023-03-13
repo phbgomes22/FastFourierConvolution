@@ -60,6 +60,8 @@ def test():
                         embed_size=embed_size, training=False).to(device)
         file_name += "_vanilla_"
 
+    netG.load_state_dict(torch.load(model_path))
+
     ### - DEBUGGING
     if config.DEBUG:
         # create noise array
@@ -76,7 +78,7 @@ def test():
         with torch.no_grad():
             fake = netG(noise, labels).detach().cpu()#.numpy()
         img_path = "../metrics/images/"
-        
+
         config.check_and_fill_path(img_path)
 
         # save the samples 
