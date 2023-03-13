@@ -85,9 +85,7 @@ class FFCCondGenerator(FFCModel):
          
          This function should not alter the behavior of the training routine.
         '''
-        debug_print(input)
-        debug_print(input[..., -2:, -1:])
-        if input[..., -2:, -1:].eq(1).all():
+        if input.dim() == 4 and t.size(dim=2) == 1 and t.size(dim=3) == 1:
             return input
         else:
             debug_print("- tensor doesn't end with 1, 1")
