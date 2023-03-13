@@ -92,6 +92,7 @@ class FFCCondGenerator(FFCModel):
             new_input = input.unsqueeze(-1).unsqueeze(-1)
             return new_input
 
+
     def reshape_output(self, output):
         '''
         Reshape output for FID calculations.
