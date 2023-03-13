@@ -35,7 +35,7 @@ def load_data(color_channels: int = -1):
     workers = config.workers
     # We can use an image folder dataset the way we have it setup.
 
-    color_channels = self.nc if color_channels == -1 else color_channels
+    color_channels = config.nc if color_channels == -1 else color_channels
 
     # Create the dataset
 
