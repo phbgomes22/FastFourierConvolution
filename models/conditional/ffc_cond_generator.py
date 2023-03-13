@@ -85,6 +85,8 @@ class FFCCondGenerator(FFCModel):
          
          This function should not alter the behavior of the training routine.
         '''
+        debug_print(input)
+        debug_print(input[..., -2:, -1:])
         if input[..., -2:, -1:].eq(1).all():
             return input
         else:
