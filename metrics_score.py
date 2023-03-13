@@ -61,27 +61,28 @@ def test():
         file_name += "_vanilla_"
 
     ### - DEBUGGING
+        if config.DEBUG:
+        # create noise array
+        noise = torch.randn(2*num_classes, nz, 1, 1, device=device)
 
-    # create noise array
-    noise = torch.randn(2*num_classes, nz, 1, 1, device=device)
+        # create label array
+        num_per_class = 2
+        labels = torch.zeros(2*num_classes, dtype=torch.long)
 
-    # create label array
-    num_per_class = 2
-    labels = torch.zeros(2*num_classes, dtype=torch.long)
+        for i in range(num_classes):
+            labels[i*num_per_class : (i+1)*num_per_class] = i
+        labels = labels.to(device)
 
-    for i in range(num_classes):
-        labels[i*num_per_class : (i+1)*num_per_class] = i
-    labels = labels.to(device)
+        with torch.no_grad():
+            fake = netG(noise, labels).detach().cpu()#.numpy()
 
-     with torch.no_grad():
-        fake = netG(noise, labels).detach().cpu()#.numpy()
-
-    # save the samples 
-    for f in fake:
-        generated_image = np.transpose(f, (1,2,0))
-        im = Image.fromarray((generated_image.squeeze(axis=2).numpy()))
-        im.save("../metrics/" + 'image' + str(count) + ".jpg")
-        count+=1
+        # save the samples 
+        for f in fake:
+            generated_image = np.transpose(f, (1,2,0))
+            im = Image.fromarray((generated_image.squeeze(axis=2).numpy()))
+            im.save("../metrics/" + 'image' + str(count) + ".jpg")
+            count+=1
+        return
 
     ### - END DEBUGGING
 

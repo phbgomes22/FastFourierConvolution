@@ -55,6 +55,10 @@ def read_metrics_options(args = sys.argv[1:]):
                                 Datasets.FLOWERS.value],
                     default=Datasets.LOCAL_DATASET.value)
 
+    parser.add_argument("--debug",
+                    help="Choose if running with debug prints or not",
+                    action='store_true')
+
     opts = parser.parse_args(args)
 
     return opts

@@ -129,6 +129,8 @@ class Config:
         self.sample_output = self.check_and_fill_path(opts.output)
         self.nc = 1 if opts.color == 'grayscale' else 3
 
+        self.DEBUG = opts.debug
+        
         self.FFC_GENERATOR = True if opts.generator == 'ffc' else False
 
 
