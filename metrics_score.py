@@ -40,7 +40,7 @@ def test():
 
     print("Loading dataset...")
     ## Loads data for traning based on the config set by the user
-    dataset, _, _ = load_data()
+    dataset, _, _ = load_data(color_channels=3)
 
     file_name += config.dataset_name
     metrics_dataset = DropLabelsDataset(dataset)
@@ -92,16 +92,16 @@ def test():
 
     ### - Running metrics
     metrics = torch_fidelity.calculate_metrics(
-                input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
-                input1_model_num_samples=number_samples,
-                input2=metrics_dataset,
-                isc=True,
-                fid=True,
-                kid=True,
-                ppl=False,
-                ppl_epsilon=1e-2,
-                ppl_sample_similarity_resize=32,
-            )
+            input1=torch_fidelity.GenerativeModelModuleWrapper(netG, nz, "normal", num_classes),
+            input1_model_num_samples=number_samples,
+            input2=metrics_dataset,
+            isc=True,
+            fid=True,
+            kid=True,
+            ppl=False,
+            ppl_epsilon=1e-2,
+            ppl_sample_similarity_resize=32,
+        )
 
     print("Storing metrics...")
     with open('../metrics/metrics_' + file_name + '.txt', 'w+') as f:

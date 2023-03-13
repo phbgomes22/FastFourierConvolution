@@ -111,7 +111,6 @@ class FFCCondGenerator(FFCModel):
             output = (255 * (output.clamp(-1, 1) * 0.5 + 0.5))
             output = output.to(torch.uint8)
 
-
         return output
 
     def forward(self, input, labels):

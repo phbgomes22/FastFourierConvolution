@@ -22,7 +22,7 @@ def get_device():
     return device 
 
 
-def load_data():
+def load_data(color_channels: int = -1):
     ''''
     Based on the configuration setup, this function loads the dataset for the training.
     For this implementation, the training set will always have 64x64 images. The available datasets are defined
@@ -34,6 +34,9 @@ def load_data():
     batch_size = config.batch_size
     workers = config.workers
     # We can use an image folder dataset the way we have it setup.
+
+    color_channels = self.nc if color_channels == -1 else color_channels
+
     # Create the dataset
 
     list_transforms = [
@@ -42,7 +45,7 @@ def load_data():
     ]
 
     if Datasets.is_grayscale(config.dataset_name):
-        if config.nc == 3:
+        if color_channels == 3:
             print("Converting Grayscale to RGB...")
             list_transforms.append( transforms.Grayscale(num_output_channels=3) )
 
@@ -51,7 +54,7 @@ def load_data():
             transforms.Normalize((0.5,), (0.5,))
         ])
     else:
-        if config.nc == 1:
+        if color_channels == 1:
             print("Converting RGB to Grayscale...")
             list_transforms.append( transforms.Grayscale() )
 
