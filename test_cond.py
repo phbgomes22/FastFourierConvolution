@@ -30,7 +30,7 @@ def test_cond():
     netG = None
     if config.FFC_GENERATOR:
         netG = FFCCondGenerator(nz=nz, nc=nc, ngf=ngf, num_classes= num_classes, 
-                                embed_size=embed_size, uses_noise=True).to(device) 
+                                embed_size=embed_size, uses_noise=True, training=False).to(device) 
     else:
         netG = CondCvGenerator(nz=nz, nc=nc, ngf=ngf, 
                         num_classes= num_classes, 

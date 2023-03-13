@@ -75,12 +75,15 @@ def test():
 
         with torch.no_grad():
             fake = netG(noise, labels).detach().cpu()#.numpy()
+        img_path = "../metrics/images/"
+        
+        config.check_and_fill_path(img_path)
 
         # save the samples 
         for idx, f in enumerate(fake):
             generated_image = np.transpose(f, (1,2,0))
             im = Image.fromarray((generated_image.squeeze(axis=2).numpy()))
-            im.save("../metrics/images/" + 'image' + str(idx) + ".jpg")
+            im.save(img_path + 'image' + str(idx) + ".jpg")
         return
 
     ### - END DEBUGGING
