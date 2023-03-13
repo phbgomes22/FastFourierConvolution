@@ -99,13 +99,13 @@ class FFCCondGenerator(FFCModel):
         This function should not alter the behavior of the training routine.
         '''
         if not self.training:
-            if self.nc == 1:
-                ## gets the number of ones in the repeat
-                size_ones = (1,) * len(output.shape) - 3
-                ## repeat the color value, and leave the rest the same
-                end_of_repeat = (self.nc, 1, 1) 
-                ## transforms grayscale to RGB by making it r==g==b
-                output = output.repeat(*size_ones + end_of_repeat)
+            # if self.nc == 1:
+            #     ## gets the number of ones in the repeat
+            #     size_ones = (1,) * len(output.shape) - 3
+            #     ## repeat the color value, and leave the rest the same
+            #     end_of_repeat = (self.nc, 1, 1) 
+            #     ## transforms grayscale to RGB by making it r==g==b
+            #     output = output.repeat(*size_ones + end_of_repeat)
 
             output = (255 * (output.clamp(-1, 1) * 0.5 + 0.5))
             output = output.to(torch.uint8)
