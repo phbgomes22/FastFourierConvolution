@@ -88,6 +88,7 @@ class FFCCondGenerator(FFCModel):
         if input[..., -2:, -1:].eq(1).all():
             return input
         else:
+            debug_print("- tensor doesn't end with 1, 1")
             new_input = input.unsqueeze(-1).unsqueeze(-1)
             return new_input
 
