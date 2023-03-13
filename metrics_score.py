@@ -61,7 +61,7 @@ def test():
         file_name += "_vanilla_"
 
     ### - DEBUGGING
-        if config.DEBUG:
+    if config.DEBUG:
         # create noise array
         noise = torch.randn(2*num_classes, nz, 1, 1, device=device)
 
