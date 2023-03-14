@@ -13,62 +13,6 @@ import torch_fidelity
 from models import *
 
 
-class Generator(torch.nn.Module):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size):
-        super(Generator, self).__init__()
-        self.z_size = z_size
-        self.model = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
-            torch.nn.BatchNorm2d(512),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(256),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(128),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(64),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
-            torch.nn.Tanh()
-        )
-
-    def forward(self, z):
-        fake = self.model(z.view(-1, self.z_size, 1, 1))
-        if not self.training:
-            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
-            fake = fake.to(torch.uint8)
-        return fake
-
-
-class Discriminator(torch.nn.Module):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True):
-        super(Discriminator, self).__init__()
-        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
-        self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
-        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
-        self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
-        self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
-        self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
-        self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
-        self.act = torch.nn.LeakyReLU(0.1)
-
-    def forward(self, x):
-        m = self.act(self.conv1(x))
-        m = self.act(self.conv2(m))
-        m = self.act(self.conv3(m))
-        m = self.act(self.conv4(m))
-        m = self.act(self.conv5(m))
-        m = self.act(self.conv6(m))
-        m = self.act(self.conv7(m))
-        return self.fc(m.view(-1, 4 * 4 * 512))
-
-
 def hinge_loss_dis(fake, real):
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
     loss = torch.nn.functional.relu(1.0 - real).mean() + \
