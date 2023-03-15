@@ -1,5 +1,7 @@
 # https://github.com/toshas/torch-fidelity/blob/master/examples/sngan_cifar10.py
 
+from models import *
+
 import argparse
 import os
 
@@ -7,7 +9,7 @@ import PIL
 import torch
 import torchvision
 import tqdm
-from models import *
+
 from torch.utils import tensorboard
 
 import torch_fidelity
@@ -195,5 +197,4 @@ def main():
     train(args)
 
 
-if __name__ == '__main__':
-    main()
+main()
