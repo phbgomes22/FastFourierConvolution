@@ -40,7 +40,7 @@ class FFCCondDiscriminator(FFCModel):
 
         self.input_conv = nn.Sequential(
             # input is (nc) x 64 x 64
-            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), # +1 due to conditional
+            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), 
             nn.GELU(),
         )
 
