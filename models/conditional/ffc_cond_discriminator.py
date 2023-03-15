@@ -95,8 +95,28 @@ class FFCCondDiscriminator(FFCModel):
     def get_noise_decay(self, epoch: int):
         return self.noise_decay ** (epoch / self.num_epochs)
 
+    def assert_input(self, input):
+     '''
+        Check if the last dimensions of the noise tensor have width and height valued 1/
+        If not, unsqueeze the tensor to add them.
+
+        This was added due to the torch-fidelity framework to calculate FID, that gives to the 
+        Generator a noise input of shape (batch_size, nz), while training gives the Generator
+        a noise of shape (batch_size, nz, 1, 1). 
+        
+        This function should not alter the behavior of the training routine.
+        '''
+        if input.dim() == 4 and input.size(dim=2) == 1 and input.size(dim=3) == 1:
+            return input
+        else:
+            debug_print("- tensor doesn't end with 1, 1")
+            new_input = input.unsqueeze(-1).unsqueeze(-1)
+            return new_input
 
     def forward(self, input, labels, epoch: int):
+        ## assert input size
+        input = self.assert_input(input)
+        
         ## embedding and convolution of classes
         ## allows a subset of classes in the dataset
         labels = torch.remainder(labels, self.num_classes)
