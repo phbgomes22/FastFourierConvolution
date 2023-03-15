@@ -89,6 +89,7 @@ class FFCCondDiscriminator(FFCModel):
     def get_noise_decay(self, epoch: int):
         return self.noise_decay ** (epoch / self.num_epochs)
 
+
     def assert_input(self, input):
         '''
         Check if the last dimensions of the noise tensor have width and height valued 1/

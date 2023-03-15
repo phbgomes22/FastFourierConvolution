@@ -100,7 +100,7 @@ class CondDiscriminator(nn.Module):
         return self.noise_decay ** (epoch / self.num_epochs)
 
     def assert_input(self, input):
-     '''
+        '''
         Check if the last dimensions of the noise tensor have width and height valued 1/
         If not, unsqueeze the tensor to add them.
 
