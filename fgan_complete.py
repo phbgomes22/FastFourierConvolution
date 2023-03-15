@@ -16,8 +16,9 @@ import torch_fidelity
 
 
 def hinge_loss_dis(fake, real):
-    print(fake.dim())
-    print(fake.size())
+    print(real.dim())
+    print(real.size())
+    fake = fake.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
     loss = torch.nn.functional.relu(1.0 - real).mean() + \
            torch.nn.functional.relu(1.0 + fake).mean()
