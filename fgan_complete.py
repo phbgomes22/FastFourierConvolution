@@ -110,8 +110,6 @@ def train(args):
             optim_D.zero_grad()
             optim_G.zero_grad()
             fake = G(z, real_label)
-            print("IMG SIZE=")
-            print(real_img.size())
             loss_D = hinge_loss_dis(D(fake, real_label, step), D(real_img, real_label, step))
             loss_D.backward()
             optim_D.step()
