@@ -110,6 +110,10 @@ class FFCCondDiscriminator(FFCModel):
         input = self.input_conv(input)
 
         # concatenates the embedding with the number of channels (dimension 0)
+        print(input.size())
+        print(input.dim())
+        print(embedding.size())
+        print(embedding.dim())
         inp=torch.cat([input, embedding],1)
 
         output = self.main(inp)
