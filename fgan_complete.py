@@ -23,6 +23,8 @@ def hinge_loss_dis(fake, real):
 
 
 def hinge_loss_gen(fake):
+    print(fake.dim())
+    print(fake)
     assert fake.dim() == 2 and fake.shape[1] == 1
     loss = -fake.mean()
     return loss
