@@ -1,9 +1,6 @@
 # https://github.com/toshas/torch-fidelity/blob/master/examples/sngan_cifar10.py
 
-import sys
-sys.path.append('../')
-
-from models.conditional import *
+from models import *
 
 import argparse
 import os
