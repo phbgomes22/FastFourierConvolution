@@ -25,7 +25,7 @@ def hinge_loss_dis(fake, real):
 def hinge_loss_gen(fake):
     print(fake.dim())
     print(fake.size())
-    fake = fake.squeeze(4).squeeze(3)
+    fake = fake.squeeze(3).squeeze(4)
     print(fake.dim())
     print(fake.size())
     assert fake.dim() == 2 and fake.shape[1] == 1
