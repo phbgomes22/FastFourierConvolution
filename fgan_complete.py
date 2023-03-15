@@ -35,7 +35,12 @@ def train(args):
     # set up dataset loader
     os.makedirs(args.dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
-        [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        [
+            torchvision.transforms.Resize(64),
+            torchvision.transforms.CenterCrop(64),
+            torchvision.transforms.ToTensor(), 
+            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
     )
     ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
@@ -105,6 +110,7 @@ def train(args):
             optim_D.zero_grad()
             optim_G.zero_grad()
             fake = G(z, real_label)
+            print("IMG SIZE=")
             print(real_img.size())
             loss_D = hinge_loss_dis(D(fake, real_label, step), D(real_img, real_label, step))
             loss_D.backward()
