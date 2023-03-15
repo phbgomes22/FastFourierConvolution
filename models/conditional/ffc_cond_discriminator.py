@@ -61,12 +61,6 @@ class FFCCondDiscriminator(FFCModel):
     def create_layers(self, ndf: int):
         layers = []
 
-        # # - testing last ffc convolution with full image size 
-        # layers.append(
-        #     FFC_BN_ACT(ndf*2, ndf*2, 4, 0.0, 0.5, stride=2, padding=1, activation_layer=nn.LeakyReLU, 
-        #               upsampling=False, uses_noise=self.uses_noise, uses_sn=self.uses_sn, attention=False) 
-        # ) 
-
         # adds the hidden layers
         for itr in range(1, self.number_convs):
             mult = int(math.pow(2, itr)) # 2^iter
@@ -96,7 +90,7 @@ class FFCCondDiscriminator(FFCModel):
         return self.noise_decay ** (epoch / self.num_epochs)
 
     def assert_input(self, input):
-     '''
+        '''
         Check if the last dimensions of the noise tensor have width and height valued 1/
         If not, unsqueeze the tensor to add them.
 
@@ -116,7 +110,7 @@ class FFCCondDiscriminator(FFCModel):
     def forward(self, input, labels, epoch: int):
         ## assert input size
         input = self.assert_input(input)
-        
+
         ## embedding and convolution of classes
         ## allows a subset of classes in the dataset
         labels = torch.remainder(labels, self.num_classes)
