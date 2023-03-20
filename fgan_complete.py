@@ -48,6 +48,7 @@ class FGenerator(FFCModel):
     def forward(self, z):
         fake = self.model(z.view(-1, self.z_size, 1, 1))
         fake = self.resizer(fake)
+        self.print_size(fake)
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
@@ -77,8 +78,11 @@ class FDiscriminator(FFCModel):
         self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
+        debug_print("Começando Discriminador...")
+        self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
+        self.print_size(m)
         return self.fc(m.view(-1, 4 * 4 * 512))
 
 def hinge_loss_dis(fake, real):
