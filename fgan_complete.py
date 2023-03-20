@@ -217,13 +217,6 @@ def train(args):
 
             last_best_metric = metrics[leading_metric]
 
-            dummy_input = torch.zeros(1, args.z_size, device=device)
-            torch.jit.save(torch.jit.trace(G, (dummy_input,)), os.path.join(args.dir_logs, 'generator.pth'))
-            torch.onnx.export(G, dummy_input, os.path.join(args.dir_logs, 'generator.onnx'),
-                opset_version=11, input_names=['z'], output_names=['rgb'],
-                dynamic_axes={'z': {0: 'batch'}, 'rgb': {0: 'batch'}},
-            )
-
         # resume training
         if next_step <= args.num_total_steps:
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
