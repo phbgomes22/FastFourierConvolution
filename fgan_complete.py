@@ -123,19 +123,15 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = GeneratorFGAN(nz=args.z_size, nc=3, ngf=64, num_classes=num_classes, 
-                         embed_size=200, uses_sn=True, uses_noise=True).to(device).train()
-
-
+    G = FGenerator(nz=args.z_size).to(device).train()
     G.apply(weights_init)
-    D = FFCCondDiscriminator(nc=3, ndf=64, num_classes=num_classes, num_epochs=args.num_total_steps, uses_sn=True, uses_noise=True).to(device).train()
+
+    D = FDiscriminator(sn=True).to(device).train()
     D.apply(weights_init)
-    
+
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
-    labels = range(num_classes)
-    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 8)[:64] ) ).float().to(device)
-
+    
     # prepare optimizer and learning rate schedulers (linear decay)
     optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.0, 0.9))
     optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.0, 0.9))
@@ -164,8 +160,8 @@ def train(args):
 
         optim_D.zero_grad()
         optim_G.zero_grad()
-        fake = G(z, real_label)
-        loss_G = hinge_loss_gen(D(fake, real_label, step))
+        fake = G(z)
+        loss_G = hinge_loss_gen(D(fake))
         loss_G.backward()
         optim_G.step()
 
@@ -176,8 +172,8 @@ def train(args):
             z = torch.randn(args.batch_size, args.z_size, device=device)
             optim_D.zero_grad()
             optim_G.zero_grad()
-            fake = G(z, real_label)
-            loss_D = hinge_loss_dis(D(fake, real_label, step), D(real_img, real_label, step))
+            fake = G(z)
+            loss_D = hinge_loss_dis(D(fake), D(real_img))
             loss_D.backward()
             optim_D.step()
 
@@ -220,7 +216,7 @@ def train(args):
             tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
-        samples_vis = G(z_vis, torch.argmax(fixed_labels, dim=1)).detach().cpu()
+        samples_vis = G(z_vis).detach().cpu()
         samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
         tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
         samples_vis = PIL.Image.fromarray(samples_vis)
