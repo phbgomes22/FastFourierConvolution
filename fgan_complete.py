@@ -205,7 +205,7 @@ def train(args):
             tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
-        samples_vis = G(z_vis, fixed_labels).detach().cpu()
+        samples_vis = G(z_vis, torch.argmax(fixed_labels, dim=1)).detach().cpu()
         samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
         tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
         samples_vis = PIL.Image.fromarray(samples_vis)
