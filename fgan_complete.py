@@ -88,7 +88,7 @@ class FDiscriminator(FFCModel):
         m = self.resizer(m)
         self.print_size(m)
         debug_print(m.size())
-        return m
+        return m.squeeze(-1).squeeze(-1)
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
