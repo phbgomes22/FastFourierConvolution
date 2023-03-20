@@ -15,6 +15,18 @@ from torch.utils import tensorboard
 import torch_fidelity
 
 
+def weights_init(m):
+    '''
+    Custom weights initialization called on netG and netD
+    '''
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+        
+
 class FGenerator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size):
@@ -114,7 +126,10 @@ def train(args):
     G = GeneratorFGAN(nz=args.z_size, nc=3, ngf=64, num_classes=num_classes, 
                          embed_size=200, uses_sn=True, uses_noise=True).to(device).train()
 
+
+    G.apply(weights_init)
     D = FFCCondDiscriminator(nc=3, ndf=64, num_classes=num_classes, num_epochs=args.num_total_steps, uses_sn=True, uses_noise=True).to(device).train()
+    D.apply(weights_init)
     
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
