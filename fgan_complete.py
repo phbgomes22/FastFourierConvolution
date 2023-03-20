@@ -78,11 +78,15 @@ class FDiscriminator(FFCModel):
             #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
             #     activation_layer=nn.Sigmoid)
         )
+
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+
+        self.gaus_noise = GaussianNoise(0.05)
         # self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
         debug_print("Começando Discriminador...")
+        x = self.gaus_noise(x)
         self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
