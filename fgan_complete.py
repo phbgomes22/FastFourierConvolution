@@ -123,7 +123,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(nz=args.z_size).to(device).train()
+    G = FGenerator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
 
     D = FDiscriminator(sn=True).to(device).train()
