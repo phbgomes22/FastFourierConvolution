@@ -80,8 +80,8 @@ class FDiscriminator(torch.nn.Module):
         return self.fc(m.view(-1, 4 * 4 * 512))
 
 def hinge_loss_dis(fake, real):
-    fake = fake.squeeze(-1).squeeze(-1)
-    real = real.squeeze(-1).squeeze(-1)
+   # fake = fake.squeeze(-1).squeeze(-1)
+  #  real = real.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
     loss = torch.nn.functional.relu(1.0 - real).mean() + \
            torch.nn.functional.relu(1.0 + fake).mean()
@@ -89,7 +89,7 @@ def hinge_loss_dis(fake, real):
 
 
 def hinge_loss_gen(fake):
-    fake = fake.squeeze(-1).squeeze(-1)
+   # fake = fake.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1
     loss = -fake.mean()
     return loss
