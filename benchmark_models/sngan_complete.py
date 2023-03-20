@@ -12,6 +12,7 @@ from torch.utils import tensorboard
 import torch_fidelity
 
 
+
 class Generator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size):
@@ -169,7 +170,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % args.num_epoch_steps != 0:
+        if next_step % (args.num_epoch_steps/100) != 0:
             continue
         pbar.close()
         G.eval()
@@ -183,7 +184,7 @@ def train(args):
             isc=True,
             fid=True,
             kid=True,
-            ppl=True,
+            ppl=False,
             ppl_epsilon=1e-2,
             ppl_sample_similarity_resize=64,
         )

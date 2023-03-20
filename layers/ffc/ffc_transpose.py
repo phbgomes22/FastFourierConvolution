@@ -81,8 +81,7 @@ class FFCTranspose(nn.Module):
         self.convg2gup = nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
         
-
-        ## -- debugging
+        ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
     def convtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,

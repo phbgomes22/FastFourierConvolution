@@ -59,7 +59,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FFCCondGenerator(nz=args.z_size, nc=3, ngf=64, num_classes=num_classes, 
+    G = GeneratorFGAN(nz=args.z_size, nc=3, ngf=64, num_classes=num_classes, 
                          embed_size=200, uses_sn=True, uses_noise=True).to(device).train()
 
     D = FFCCondDiscriminator(nc=3, ndf=64, num_classes=num_classes, num_epochs=args.num_total_steps, uses_sn=True, uses_noise=True).to(device).train()
