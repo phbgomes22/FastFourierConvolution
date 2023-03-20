@@ -54,29 +54,31 @@ class FGenerator(FFCModel):
         return fake
 
 
-class FDiscriminator(torch.nn.Module):
+class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True):
         super(FDiscriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
-        self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
-        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
-        self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
-        self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
-        self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
-        self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
+        self.main = torch.nn.Sequential(
+            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=4,
+                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+            FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+            FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+            FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0.0, stride=2, padding=1, bias=False, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+        )
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
         self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
-        m = self.act(self.conv1(x))
-        m = self.act(self.conv2(m))
-        m = self.act(self.conv3(m))
-        m = self.act(self.conv4(m))
-        m = self.act(self.conv5(m))
-        m = self.act(self.conv6(m))
-        m = self.act(self.conv7(m))
+        m = self.main(x)
+        m = self.resizer(m)
         return self.fc(m.view(-1, 4 * 4 * 512))
 
 def hinge_loss_dis(fake, real):
@@ -192,7 +194,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/100) != 0:
+        if next_step % (args.num_epoch_steps/2) != 0:
             continue
         pbar.close()
         G.eval()
