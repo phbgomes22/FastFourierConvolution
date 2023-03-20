@@ -71,7 +71,7 @@ class Config:
     # Controls the FFC layer ratio of local and global signals
     gout_factor = 0.5
 
-    DEBUG = False
+    DEBUG = True
 
     FFC_GENERATOR = True
 
