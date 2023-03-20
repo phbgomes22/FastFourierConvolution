@@ -15,6 +15,58 @@ from torch.utils import tensorboard
 import torch_fidelity
 
 
+class FGenerator(torch.nn.Module):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, z_size):
+        super(FGenerator, self).__init__()
+        self.z_size = z_size
+        self.model = torch.nn.Sequential(
+            FFC_BN_ACT(z_size, 512, 4, 0.0, 0.5, stride=1, padding=0, activation_layer=nn.GELU, 
+                      upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(512, 256, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
+                      upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(256, 128, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
+                      upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(128, 64, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
+                      upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(64, 3, 4, 0.5, 0.0, stride=2, padding=1, activation_layer=nn.Tanh, 
+                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True), 
+        )
+
+    def forward(self, z):
+        fake = self.model(z.view(-1, self.z_size, 1, 1))
+        fake = self.resizer(fake)
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+        return fake
+
+
+class FDiscriminator(torch.nn.Module):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, sn=True):
+        super(FDiscriminator, self).__init__()
+        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
+        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
+        self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
+        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
+        self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
+        self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
+        self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
+        self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
+        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        self.act = torch.nn.LeakyReLU(0.1)
+
+    def forward(self, x):
+        m = self.act(self.conv1(x))
+        m = self.act(self.conv2(m))
+        m = self.act(self.conv3(m))
+        m = self.act(self.conv4(m))
+        m = self.act(self.conv5(m))
+        m = self.act(self.conv6(m))
+        m = self.act(self.conv7(m))
+        return self.fc(m.view(-1, 4 * 4 * 512))
+
 def hinge_loss_dis(fake, real):
     fake = fake.squeeze(-1).squeeze(-1)
     real = real.squeeze(-1).squeeze(-1)
@@ -129,7 +181,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % args.num_epoch_steps != 0:
+        if next_step % (args.num_epoch_steps/100) != 0:
             continue
         pbar.close()
         G.eval()
