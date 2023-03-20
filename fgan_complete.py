@@ -42,7 +42,7 @@ class FGenerator(torch.nn.Module):
             FFC_BN_ACT(128, 64, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
                       upsampling=True, uses_noise=True, uses_sn=True), 
             FFC_BN_ACT(64, 3, 4, 0.5, 0.0, stride=2, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True), 
+                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=False), 
         )
 
     def forward(self, z):
