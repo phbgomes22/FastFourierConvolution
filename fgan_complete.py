@@ -234,10 +234,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
-        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-            last_best_metric = metrics[leading_metric]
+        #     last_best_metric = metrics[leading_metric]
 
         # resume training
         if next_step <= args.num_total_steps:
