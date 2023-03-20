@@ -71,11 +71,15 @@ class FDiscriminator(FFCModel):
                 ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.0, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+            FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
+                uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
+                activation_layer=nn.Sigmoid)
         )
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
-        self.act = torch.nn.LeakyReLU(0.1)
+        # self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        # self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
         debug_print("Começando Discriminador...")
@@ -83,7 +87,7 @@ class FDiscriminator(FFCModel):
         m = self.main(x)
         m = self.resizer(m)
         self.print_size(m)
-        return self.fc(m.view(-1, 4 * 4 * 512))
+        return m
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
