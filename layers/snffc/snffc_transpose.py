@@ -17,19 +17,12 @@ class SNFFCTranspose(FFCTranspose):
 
         FFCTranspose.__init__(self, in_channels, out_channels, kernel_size, ratio_gin, ratio_gout, stride,
                     padding, dilation, groups, bias, enable_lfu, out_padding, attention)
-        
-        print("Initing SNFFC_Transposed")
-        print(type(self.convg2l))
-        print(isinstance(self.convg2l, nn.ConvTranspose2d))
-        print(type(self.convg2l) == nn.ConvTranspose2d)
 
         self.convl2l = spectral_norm(self.convl2l)
 
         if isinstance(self.convg2l, nn.ConvTranspose2d):
-            print("Added Spectral Nrom")
             self.convg2l = spectral_norm(self.convg2l)
         if isinstance(self.convl2g, nn.ConvTranspose2d):
-            print("Added Spectral Nrom")
             self.convl2g = spectral_norm(self.convl2g)
 
         self.convg2gup = spectral_norm(self.convg2gup)
