@@ -20,7 +20,7 @@ class SNFFCTranspose(FFCTranspose):
         
         print("Initing SNFFC_Transposed")
         print(isinstance(self.convg2l, nn.Conv2d))
-        print(type(self.convg2l))
+        print(type(self.convg2l) == nn.Conv2d)
 
         self.convl2l = spectral_norm(self.convl2l)
 
