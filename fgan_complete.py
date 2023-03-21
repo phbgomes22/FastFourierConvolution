@@ -263,8 +263,8 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
     
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
