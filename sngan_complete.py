@@ -99,7 +99,7 @@ def train(args):
     )
     ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=4, pin_memory=True
+        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
     loader_iter = iter(loader)
 
@@ -126,8 +126,8 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
 
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.0, 0.9))
-    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.0, 0.9))
+    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
@@ -243,7 +243,7 @@ def main():
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_total_steps', type=int, default=100000)
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
-    parser.add_argument('--num_dis_updates', type=int, default=5)
+    parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=50000)
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
