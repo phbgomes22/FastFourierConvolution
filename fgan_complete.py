@@ -161,7 +161,7 @@ class FDiscriminator(FFCModel):
 class LargeFDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True):
-        super(FDiscriminator, self).__init__()
+        super(LargeFDiscriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         # 3, 4, 3, 4, 3, 4, 3
         self.main = torch.nn.Sequential(
