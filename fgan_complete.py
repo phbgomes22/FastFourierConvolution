@@ -126,21 +126,21 @@ class FDiscriminator(FFCModel):
         # 3, 4, 3, 4, 3, 4, 3
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
-            # FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
-            #     ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
-            #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
-            #     activation_layer=nn.Sigmoid)
+            FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
+                uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
+                activation_layer=nn.Sigmoid)
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
@@ -154,9 +154,10 @@ class FDiscriminator(FFCModel):
         self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
+        m = m.view(-1,1)
         self.print_size(m)
         debug_print(m.size())
-        return self.fc(m.view(-1, 4 * 4 * 256))
+        return m#self.fc(m.view(-1, 4 * 4 * 256))
 
 class LargeFDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -166,25 +167,25 @@ class LargeFDiscriminator(FFCModel):
         # 3, 4, 3, 4, 3, 4, 3
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=32, out_channels=32, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=3,
-                ratio_gin=0.5, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=64, out_channels=64, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=3,
-                ratio_gin=0.5, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=128, out_channels=128, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=3,
-                ratio_gin=0.5, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                ratio_gin=0.5, ratio_gout=0.5, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             # FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
             #     ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
@@ -254,7 +255,7 @@ def train(args):
     params = count_parameters(G)
     print("- Parameters on generator: ", params)
 
-    D = LargeFDiscriminator(sn=True).to(device).train()
+    D = FDiscriminator(sn=True).to(device).train()
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
@@ -322,28 +323,28 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps) != 0:
+        if next_step % (args.num_epoch_steps/100) != 0:
             continue
         pbar.close()
         G.eval()
         print('Evaluating the generator...')
 
-        # compute and log generative metrics
-        metrics = torch_fidelity.calculate_metrics(
-            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
-            input1_model_num_samples=args.num_samples_for_metrics,
-            input2='cifar10-train',
-            isc=True,
-            fid=True,
-            kid=True,
-            ppl=False,
-            ppl_epsilon=1e-2,
-            ppl_sample_similarity_resize=64,
-        )
+        # # compute and log generative metrics
+        # metrics = torch_fidelity.calculate_metrics(
+        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
+        #     input1_model_num_samples=args.num_samples_for_metrics,
+        #     input2='cifar10-train',
+        #     isc=True,
+        #     fid=True,
+        #     kid=True,
+        #     ppl=False,
+        #     ppl_epsilon=1e-2,
+        #     ppl_sample_similarity_resize=64,
+        # )
         
-        # log metrics
-        for k, v in metrics.items():
-            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        # # log metrics
+        # for k, v in metrics.items():
+        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis).detach().cpu()
@@ -353,10 +354,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
-        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-            last_best_metric = metrics[leading_metric]
+        #     last_best_metric = metrics[leading_metric]
 
         # resume training
         if next_step <= args.num_total_steps:
