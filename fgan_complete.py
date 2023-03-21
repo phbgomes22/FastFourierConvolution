@@ -44,7 +44,7 @@ class FGenerator(FFCModel):
             FFC_BN_ACT(64, 3, 3, 0.5, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=False), 
         )
-        self.print_layer = Print(debug=True)
+      #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
         fake = self.model(z.view(-1, self.z_size, 1, 1))
@@ -53,8 +53,6 @@ class FGenerator(FFCModel):
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        
-        self.print_layer(fake)
         return fake
 
 class Discriminator(torch.nn.Module):
@@ -70,7 +68,7 @@ class Discriminator(torch.nn.Module):
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
-        self.print_layer = Print(debug=True)
+       # self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
@@ -82,7 +80,7 @@ class Discriminator(torch.nn.Module):
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
         output = self.fc(m.view(-1, 4 * 4 * 512))
-        self.print_layer(output)
+       
         return output
 
 class FDiscriminator(FFCModel):
