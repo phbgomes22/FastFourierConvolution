@@ -137,14 +137,14 @@ class FDiscriminator(FFCModel):
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
                 ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
-            FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
+            FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
                 ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
                 uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
                 activation_layer=nn.Sigmoid)
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
-
+        self.print_size = Print(debug=True)
         self.gaus_noise = GaussianNoise(0.05)
         # self.act = torch.nn.LeakyReLU(0.1)
 
@@ -154,9 +154,9 @@ class FDiscriminator(FFCModel):
         self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
+        self.print_size(m)
         m = m.view(-1,1)
         self.print_size(m)
-        debug_print(m.size())
         return m#self.fc(m.view(-1, 4 * 4 * 256))
 
 class LargeFDiscriminator(FFCModel):
