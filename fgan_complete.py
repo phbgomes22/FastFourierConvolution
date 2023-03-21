@@ -156,7 +156,7 @@ class FDiscriminator(FFCModel):
         m = self.resizer(m)
         self.print_size(m)
         debug_print(m.size())
-        return self.fc(m.view(-1, 4 * 4 * 512))
+        return self.fc(m.view(-1, 4 * 4 * 256))
 
 class LargeFDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -205,7 +205,7 @@ class LargeFDiscriminator(FFCModel):
         m = self.resizer(m)
         self.print_size(m)
         debug_print(m.size())
-        return self.fc(m.view(-1, 4 * 4 * 512))
+        return self.fc(m.view(-1, 4 * 4 * 256))
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
