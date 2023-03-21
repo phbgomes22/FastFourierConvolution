@@ -254,6 +254,8 @@ def train(args):
     G = FGenerator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
+    print(G)
+    
     print("- Parameters on generator: ", params)
 
     D = Discriminator(sn=True).to(device).train()
