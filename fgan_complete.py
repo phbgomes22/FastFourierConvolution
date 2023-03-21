@@ -144,7 +144,7 @@ class FDiscriminator(FFCModel):
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
-        self.print_size = Print(debug=True)
+        #self.print_size = Print(debug=True)
         self.gaus_noise = GaussianNoise(0.05)
         # self.act = torch.nn.LeakyReLU(0.1)
 
