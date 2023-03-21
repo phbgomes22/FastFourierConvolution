@@ -157,8 +157,11 @@ class FDiscriminator(FFCModel):
         self.print_size(m)
         print(m[1])
         m = m.view(-1)
+        m2 = m.view(-1, 1)
         self.print_size(m)
+        self.print_size(m2)
         print(m[0])
+        print(m2[0])
         return m#self.fc(m.view(-1, 4 * 4 * 256))
 
 class LargeFDiscriminator(FFCModel):
