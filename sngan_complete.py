@@ -12,6 +12,8 @@ from torch.utils import tensorboard
 import torch_fidelity
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 class Generator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -43,7 +45,7 @@ class Generator(torch.nn.Module):
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        self.print_layer(fake)
+    #    self.print_layer(fake)
         return fake
 
 
@@ -65,7 +67,7 @@ class Discriminator(torch.nn.Module):
         self.print_layer = Print(debug=True)
 
     def forward(self, x):
-        self.print_layer(x)
+       # self.print_layer(x)
         m = self.act(self.conv1(x))
         m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
@@ -113,7 +115,12 @@ def train(args):
 
     # create Generator and Discriminator models
     G = Generator(args.z_size).to(device).train()
+    params = count_parameters(G)
+    print("- Parameters on generator: ", params)
+    
     D = Discriminator(not args.disable_sn).to(device).train()
+    params = count_parameters(D)
+    print("- Parameters on discriminator: ", params)
     
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
