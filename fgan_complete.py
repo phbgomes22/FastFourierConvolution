@@ -35,7 +35,7 @@ class Generator(torch.nn.Module):
         super(Generator, self).__init__()
         self.z_size = z_size
 
-        self.print_layer = Print(debug=True)
+     #   self.print_layer = Print(debug=True)
 
         self.model = torch.nn.Sequential(
             torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
@@ -59,7 +59,7 @@ class Generator(torch.nn.Module):
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        self.print_layer(fake)
+
         return fake
 
 class FGenerator(FFCModel):
