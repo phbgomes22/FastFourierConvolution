@@ -20,14 +20,15 @@ class SNFFCTranspose(FFCTranspose):
         
         print("Initing SNFFC_Transposed")
         print(type(self.convg2l))
-        print(type(self.convg2l) == False)
+        print(isinstance(self.convg2l, nn.ConvTranspose2d))
+        print(type(self.convg2l) == nn.ConvTranspose2d)
 
         self.convl2l = spectral_norm(self.convl2l)
 
-        if isinstance(self.convg2l, nn.Conv2d):
+        if isinstance(self.convg2l, nn.ConvTranspose2d):
             print("Added Spectral Nrom")
             self.convg2l = spectral_norm(self.convg2l)
-        if isinstance(self.convl2g, nn.Conv2d):
+        if isinstance(self.convl2g, nn.ConvTranspose2d):
             print("Added Spectral Nrom")
             self.convl2g = spectral_norm(self.convl2g)
 
@@ -37,6 +38,6 @@ class SNFFCTranspose(FFCTranspose):
         if not isinstance(self.convg2g, nn.Identity):
             # Replace the BatchNorm2d layer with Identity
             for name, module in self.convg2g.named_children():
-                if isinstance(module, nn.Conv2d):
+                if isinstance(module, nn.Conv2d) or isinstance(module, nn.ConvTranspose2d):
                     new_module = spectral_norm(module)
                     self.convg2g._modules[name] = new_module
