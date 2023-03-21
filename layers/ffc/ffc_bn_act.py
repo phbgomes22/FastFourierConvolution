@@ -32,7 +32,7 @@ class FFC_BN_ACT(nn.Module):
     def __init__(self, in_channels, out_channels,
                  kernel_size, ratio_gin, ratio_gout,
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
-                 norm_layer:nn.Module=nn.BatchNorm2d, activation_layer:nn.Module=nn.Identity,
+                 norm_layer:nn.Module=nn.Identity, activation_layer:nn.Module=nn.Identity,
                  enable_lfu=True, upsampling=False, out_padding=0,
                  uses_noise: bool = False, uses_sn: bool = False, attention: bool = False):
         '''
