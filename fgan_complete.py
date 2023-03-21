@@ -167,8 +167,8 @@ def train(args):
     G = FGenerator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
 
-    D = Discriminator(sn=True).to(device).train()
-  #  D.apply(weights_init)
+    D = FDiscriminator(sn=True).to(device).train()
+    D.apply(weights_init)
 
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
