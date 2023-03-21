@@ -29,6 +29,38 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
         
+class Generator(torch.nn.Module):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, z_size):
+        super(Generator, self).__init__()
+        self.z_size = z_size
+
+        self.print_layer = Print(debug=True)
+
+        self.model = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
+            torch.nn.BatchNorm2d(512),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(256),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(128),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(64),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
+            torch.nn.Tanh()
+        )
+
+    def forward(self, z):
+        fake = self.model(z.view(-1, self.z_size, 1, 1))
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+        self.print_layer(fake)
+        return fake
 
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -217,7 +249,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size).to(device).train()
+    G = Generator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     print("- Parameters on generator: ", params)
