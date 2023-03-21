@@ -103,7 +103,7 @@ class Discriminator(torch.nn.Module):
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
-       # self.print_layer = Print(debug=True)
+        self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
@@ -115,7 +115,7 @@ class Discriminator(torch.nn.Module):
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
         output = self.fc(m.view(-1, 4 * 4 * 512))
-       
+        self.print_layer(output)
         return output
 
 class FDiscriminator(FFCModel):
@@ -260,7 +260,7 @@ def train(args):
     params = count_parameters(G)
     print("- Parameters on generator: ", params)
 
-    D = FDiscriminator(sn=True).to(device).train()
+    D = Discriminator(sn=True).to(device).train()
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
