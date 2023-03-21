@@ -115,7 +115,7 @@ class Discriminator(torch.nn.Module):
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
         output = self.fc(m.view(-1, 4 * 4 * 512))
-        print(output[:10])
+ 
         return output
 
 class FDiscriminator(FFCModel):
