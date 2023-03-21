@@ -262,6 +262,7 @@ def train(args):
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
+    print(D)
 
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)

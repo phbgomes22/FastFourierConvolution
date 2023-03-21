@@ -29,4 +29,4 @@ class SNFFCTranspose(FFCTranspose):
             for name, module in self.convg2g.named_children():
                 if isinstance(module, nn.Conv2d):
                     new_module = spectral_norm(module)
-                    self.convg2g._modules[name] = module
+                    self.convg2g._modules[name] = new_module
