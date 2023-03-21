@@ -143,7 +143,7 @@ class FDiscriminator(FFCModel):
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
-        self.print_size = Print(debug=True)
+      #  self.print_size = Print(debug=True)
         self.gaus_noise = GaussianNoise(0.05)
         # self.act = torch.nn.LeakyReLU(0.1)
 
@@ -154,10 +154,10 @@ class FDiscriminator(FFCModel):
         m = self.main(x)
         m = self.resizer(m)
         self.print_size(m)
-        print(m[:5])
+       
         m = m.view(-1, 1)
         self.print_size(m)
-        print(m[:5])
+       
         return m#self.fc(m.view(-1, 4 * 4 * 256))
 
 class LargeFDiscriminator(FFCModel):
