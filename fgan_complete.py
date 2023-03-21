@@ -139,8 +139,6 @@ def train(args):
     os.makedirs(args.dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
-            torchvision.transforms.Resize(64),
-            torchvision.transforms.CenterCrop(64),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
