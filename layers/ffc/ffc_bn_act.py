@@ -46,6 +46,7 @@ class FFC_BN_ACT(nn.Module):
 
         if upsampling:
             transposed = SNFFCTranspose if uses_sn else FFCTranspose
+            print("Upsampling")
             self.ffc = transposed(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
                        groups, bias, enable_lfu, out_padding=out_padding, attention=attention)
