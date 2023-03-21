@@ -43,7 +43,7 @@ class Generator(torch.nn.Module):
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        self.print_layer(x)
+        self.print_layer(fake)
         return fake
 
 
