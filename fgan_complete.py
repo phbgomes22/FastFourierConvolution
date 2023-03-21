@@ -54,6 +54,30 @@ class FGenerator(FFCModel):
             fake = fake.to(torch.uint8)
         return fake
 
+class Discriminator(torch.nn.Module):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, sn=True):
+        super(Discriminator, self).__init__()
+        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
+        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
+        self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
+        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
+        self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
+        self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
+        self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
+        self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
+        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        self.act = torch.nn.LeakyReLU(0.1)
+
+    def forward(self, x):
+        m = self.act(self.conv1(x))
+        m = self.act(self.conv2(m))
+        m = self.act(self.conv3(m))
+        m = self.act(self.conv4(m))
+        m = self.act(self.conv5(m))
+        m = self.act(self.conv6(m))
+        m = self.act(self.conv7(m))
+        return self.fc(m.view(-1, 4 * 4 * 512))
 
 class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -141,8 +165,8 @@ def train(args):
     G = FGenerator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
 
-    D = FDiscriminator(sn=True).to(device).train()
-    D.apply(weights_init)
+    D = Discriminator(sn=True).to(device).train()
+  #  D.apply(weights_init)
 
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)

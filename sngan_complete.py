@@ -2,7 +2,7 @@
 
 import argparse
 import os
-
+from layers import *
 import PIL
 import torch
 import torchvision
@@ -18,6 +18,9 @@ class Generator(torch.nn.Module):
     def __init__(self, z_size):
         super(Generator, self).__init__()
         self.z_size = z_size
+
+        self.print_layer = Print(debug=True)
+
         self.model = torch.nn.Sequential(
             torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
             torch.nn.BatchNorm2d(512),
@@ -40,6 +43,7 @@ class Generator(torch.nn.Module):
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
+        self.print_layer(x)
         return fake
 
 
@@ -58,7 +62,10 @@ class Discriminator(torch.nn.Module):
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
         self.act = torch.nn.LeakyReLU(0.1)
 
+        self.print_layer = Print(debug=True)
+
     def forward(self, x):
+        self.print_layer(x)
         m = self.act(self.conv1(x))
         m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
