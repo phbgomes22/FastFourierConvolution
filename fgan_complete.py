@@ -68,15 +68,15 @@ class FGenerator(FFCModel):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.model = torch.nn.Sequential(
-            FFC_BN_ACT(z_size, 512, 4, 0.0, 0.5, stride=1, padding=0, activation_layer=nn.GELU, 
+            FFC_BN_ACT(z_size, 258, 4, 0.0, 0.5, stride=1, padding=0, activation_layer=nn.GELU, 
                       upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(512, 256, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(256, 128, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
+            FFC_BN_ACT(258, 128, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
                       upsampling=True, uses_noise=True, uses_sn=True), 
             FFC_BN_ACT(128, 64, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
                       upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(64, 3, 3, 0.5, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+            FFC_BN_ACT(64, 32, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
+                      upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(32, 3, 3, 0.5, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=False), 
         )
       #  self.print_layer = Print(debug=True)
@@ -125,16 +125,16 @@ class FDiscriminator(FFCModel):
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         # 3, 4, 3, 4, 3, 4, 3
         self.main = torch.nn.Sequential(
-            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=3,
+            FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=False, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+            FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=4,
+                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
-            FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
                 ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             # FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
@@ -249,7 +249,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = Generator(z_size=args.z_size).to(device).train()
+    G = FGenerator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     print("- Parameters on generator: ", params)
