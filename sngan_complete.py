@@ -117,7 +117,7 @@ def train(args):
     G = Generator(args.z_size).to(device).train()
     params = count_parameters(G)
     print("- Parameters on generator: ", params)
-
+    
     D = Discriminator(not args.disable_sn).to(device).train()
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
@@ -126,8 +126,8 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
 
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.9, 0.999))
-    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.9, 0.999))
+    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.0, 0.9))
+    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.0, 0.9))
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
@@ -220,12 +220,12 @@ def train(args):
 
             last_best_metric = metrics[leading_metric]
 
-            dummy_input = torch.zeros(1, args.z_size, device=device)
-            torch.jit.save(torch.jit.trace(G, (dummy_input,)), os.path.join(args.dir_logs, 'generator.pth'))
-            torch.onnx.export(G, dummy_input, os.path.join(args.dir_logs, 'generator.onnx'),
-                opset_version=11, input_names=['z'], output_names=['rgb'],
-                dynamic_axes={'z': {0: 'batch'}, 'rgb': {0: 'batch'}},
-            )
+            # dummy_input = torch.zeros(1, args.z_size, device=device)
+            # torch.jit.save(torch.jit.trace(G, (dummy_input,)), os.path.join(args.dir_logs, 'generator.pth'))
+            # torch.onnx.export(G, dummy_input, os.path.join(args.dir_logs, 'generator.onnx'),
+            #     opset_version=11, input_names=['z'], output_names=['rgb'],
+            #     dynamic_axes={'z': {0: 'batch'}, 'rgb': {0: 'batch'}},
+            # )
 
         # resume training
         if next_step <= args.num_total_steps:
