@@ -41,7 +41,7 @@ class FGenerator(FFCModel):
                       upsampling=True, uses_noise=True, uses_sn=True), 
             FFC_BN_ACT(128, 64, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
                       upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(64, 3, 4, 0.5, 0.0, stride=2, padding=1, activation_layer=nn.Tanh, 
+            FFC_BN_ACT(64, 3, 3, 0.5, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=False), 
         )
         self.print_layer = Print(debug=True)
@@ -91,8 +91,8 @@ class FDiscriminator(FFCModel):
         super(FDiscriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.main = torch.nn.Sequential(
-            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=4,
-                ratio_gin=0.0, ratio_gout=0.5, stride=2, padding=1, bias=False, 
+            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=3,
+                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=False, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=False, 
