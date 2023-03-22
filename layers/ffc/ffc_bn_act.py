@@ -86,10 +86,10 @@ class FFC_BN_ACT(nn.Module):
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(spectral_norm(x_l))
+        x_l = self.act_l(self.bn_l(x_l))
         self.print_size(x_l)
 
-        x_g = self.act_g(spectral_norm(x_g))
+        x_g = self.act_g(self.bn_g(x_g))
         debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG

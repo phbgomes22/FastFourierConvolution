@@ -127,20 +127,20 @@ class FDiscriminator(FFCModel):
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=0.0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.GELU),
-            FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
-                ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
-                uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
-                activation_layer=nn.Sigmoid)
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+            # FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
+            #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
+            #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
+            #     activation_layer=nn.Sigmoid)
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
@@ -153,12 +153,11 @@ class FDiscriminator(FFCModel):
         self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
-        self.print_size(m)
-        m = m.view(-1, 1)
-        
-        self.print_size(m)
+       # self.print_size(m)
+       # m = m.view(-1, 1)
+      #  self.print_size(m)
        
-        return m#self.fc(m.view(-1, 4 * 4 * 256))
+        return self.fc(m.view(-1, 4 * 4 * 256))
 
 class LargeFDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
