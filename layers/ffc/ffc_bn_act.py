@@ -93,8 +93,8 @@ class FFC_BN_ACT(nn.Module):
         debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG
-        x_l = self.noise_l(x_l)
-        if type(x_g) != int:
-            x_g = self.noise_g(x_g)
+       # x_l = self.noise_l(x_l)
+       # if type(x_g) != int:
+       #     x_g = self.noise_g(x_g)
 
         return x_l, x_g
