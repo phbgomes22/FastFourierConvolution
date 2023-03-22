@@ -121,6 +121,7 @@ class Discriminator(torch.nn.Module):
     
 class DCGANDiscrimnator(nn.Module):
     def __init__(self, sn: bool):
+        super(DCGANDiscrimnator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 32, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(32, 64, 4, stride=2, padding=(1,1)))
