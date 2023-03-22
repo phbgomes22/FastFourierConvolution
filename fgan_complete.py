@@ -192,14 +192,8 @@ class LargeFDiscriminator(FFCModel):
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         # 3, 4, 3, 4, 3, 4, 3
         self.main = torch.nn.Sequential(
-            FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
+            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
-            FFC_BN_ACT(in_channels=32, out_channels=32, kernel_size=4,
-                ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
-            FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=3,
-                ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(in_channels=64, out_channels=64, kernel_size=4,
                 ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
@@ -207,10 +201,16 @@ class LargeFDiscriminator(FFCModel):
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=3,
                 ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
-            FFC_BN_ACT(in_channels=128, out_channels=128, kernel_size=4,
+            FFC_BN_ACT(in_channels=12, out_channels=128, kernel_size=4,
                 ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=3,
+                ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+            FFC_BN_ACT(in_channels=256, out_channels=256, kernel_size=4,
+                ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+            FFC_BN_ACT(in_channels=125628, out_channels=512, kernel_size=3,
                 ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             # FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
@@ -219,7 +219,7 @@ class LargeFDiscriminator(FFCModel):
             #     activation_layer=nn.Sigmoid)
         )
 
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
+        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
 
         #self.gaus_noise = GaussianNoise(0.05)
         # self.act = torch.nn.LeakyReLU(0.1)
@@ -232,7 +232,7 @@ class LargeFDiscriminator(FFCModel):
         m = self.resizer(m)
         self.print_size(m)
         debug_print(m.size())
-        return self.fc(m.view(-1, 4 * 4 * 256))
+        return self.fc(m.view(-1, 4 * 4 * 512))
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
