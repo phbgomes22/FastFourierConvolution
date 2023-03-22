@@ -85,7 +85,6 @@ class FFC_BN_ACT(nn.Module):
                               stride, padding, dilation, groups, bias))
 
     def forward(self, x):
-
         fake_output = self.fake_conv(x)
         # debug_print(" -- FFC_BN_ACT")
         # x_l, x_g = self.ffc(x)
@@ -102,4 +101,4 @@ class FFC_BN_ACT(nn.Module):
        # if type(x_g) != int:
        #     x_g = self.noise_g(x_g)
         
-        return fake_output#x_l, x_g
+        return self.act_l(fake_output)#x_l, x_g
