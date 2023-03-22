@@ -103,4 +103,4 @@ class FFC_BN_ACT(nn.Module):
        #     x_g = self.noise_g(x_g)
 
         
-        return fake_output, 0 
+        return fake_output#x_l, x_g
