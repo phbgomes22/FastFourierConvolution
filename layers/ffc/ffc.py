@@ -46,12 +46,14 @@ class FFC(nn.Module):
         self.ratio_gout = ratio_gout
 
         # defines the module as a Conv2d unless the channels input or output are zero
-        module = nn.Identity if in_cl == 0 or out_cl == 0 else nn.Conv2d
+        condition = in_cl == 0 or out_cl == 0
+        module = nn.Identity if condition else nn.Conv2d
+        sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
         
-        self.convl2l = module(in_cl, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias)
+        self.convl2l = sn_fn(module(in_cl, out_cl, kernel_size,
+                              stride, padding, dilation, groups, bias))
 
 
         self.attention_layer = Self_Attn(out_cg, 'relu')  if attention else nn.Identity()

@@ -70,8 +70,8 @@ class FFC_BN_ACT(nn.Module):
         lact = nn.Identity if ratio_gout == 1 else activation_layer
         gact = nn.Identity if ratio_gout == 0 else activation_layer
         
-        self.act_l = lact(0.2, inplace=True) if isinstance(lact(), nn.LeakyReLU) else lact()
-        self.act_g = gact(0.2, inplace=True) if isinstance(gact(), nn.LeakyReLU) else gact()
+        self.act_l = lact(0.1, inplace=True) if isinstance(lact(), nn.LeakyReLU) else lact()
+        self.act_g = gact(0.1, inplace=True) if isinstance(gact(), nn.LeakyReLU) else gact()
 
         self.print_size = Print(debug=Config.shared().DEBUG)
 
