@@ -124,9 +124,12 @@ class DCGANDiscrimnator(nn.Module):
         super(DCGANDiscrimnator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 32, 3, stride=1, padding=(1,1)))
-        self.conv2 = sn_fn(torch.nn.Conv2d(32, 64, 4, stride=2, padding=(1,1)))
-        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 4, stride=2, padding=(1,1)))
-        self.conv4 = sn_fn(torch.nn.Conv2d(128, 256, 4, stride=2, padding=(1,1)))
+        self.conv2 = sn_fn(torch.nn.Conv2d(32, 32, 4, stride=2, padding=(1,1)))
+        self.conv3 = sn_fn(torch.nn.Conv2d(32, 64, 3, stride=1, padding=(1,1)))
+        self.conv4 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
+        self.conv5 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
+        self.conv6 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
+        self.conv7 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
 
         self.act = torch.nn.LeakyReLU(0.1)
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
@@ -136,6 +139,9 @@ class DCGANDiscrimnator(nn.Module):
         m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
         m = self.act(self.conv4(m))
+        m = self.act(self.conv5(m))
+        m = self.act(self.conv6(m))
+        m = self.act(self.conv7(m))
         return self.fc(m.view(-1, 4 * 4 * 256))
 
 class FDiscriminator(FFCModel):
