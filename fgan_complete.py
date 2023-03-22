@@ -121,25 +121,20 @@ class Discriminator(torch.nn.Module):
     
 class DCGANDiscrimnator(nn.Module):
     def __init__(self):
-        self.main = torch.nn.Sequential (
-            torch.nn.Conv2d(3, 32, 3, stride=1, padding=(1,1)),
-            nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.2, inplace=True),
-            torch.nn.Conv2d(32, 64, 4, stride=2, padding=(1,1)),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2, inplace=True),
-            torch.nn.Conv2d(64, 128, 4, stride=2, padding=(1,1)),
-            nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.2, inplace=True),
-            torch.nn.Conv2d(128, 256, 4, stride=2, padding=(1,1)),
-            nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
         sn_fn = torch.nn.utils.spectral_norm
+        self.conv1 = sn_fn(torch.nn.Conv2d(3, 32, 3, stride=1, padding=(1,1)))
+        self.conv2 = sn_fn(torch.nn.Conv2d(32, 64, 4, stride=2, padding=(1,1)))
+        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 4, stride=2, padding=(1,1)))
+        self.conv4 = sn_fn(torch.nn.Conv2d(128, 256, 4, stride=2, padding=(1,1)))
+
+        self.act = torch.nn.LeakyReLU(0.1)
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
 
     def forward(self, x):
-        m = self.main(x)
+        m = self.act(self.conv1(x))
+        m = self.act(self.conv2(m))
+        m = self.act(self.conv3(m))
+        m = self.act(self.conv4(m))
         return self.fc(m.view(-1, 4 * 4 * 256))
 
 class FDiscriminator(FFCModel):
@@ -281,7 +276,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = FDiscriminator(sn=True).to(device).train()
+    D = DCGANDiscrimnator(sn=True).to(device).train()
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
