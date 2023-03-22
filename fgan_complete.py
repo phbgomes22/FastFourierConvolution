@@ -29,6 +29,7 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
         
+
 class Generator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size):
@@ -117,6 +118,29 @@ class Discriminator(torch.nn.Module):
         output = self.fc(m.view(-1, 4 * 4 * 512))
  
         return output
+    
+class DCGANDiscrimnator(nn.Module):
+    def __init__(self):
+        self.main = torch.nn.Sequential (
+            torch.nn.Conv2d(3, 32, 3, stride=1, padding=(1,1)),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(0.2, inplace=True),
+            torch.nn.Conv2d(32, 64, 4, stride=2, padding=(1,1)),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.2, inplace=True),
+            torch.nn.Conv2d(64, 128, 4, stride=2, padding=(1,1)),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+            torch.nn.Conv2d(128, 256, 4, stride=2, padding=(1,1)),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        sn_fn = torch.nn.utils.spectral_norm
+        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
+
+    def forward(self, x):
+        m = self.main(x)
+        return self.fc(m.view(-1, 4 * 4 * 256))
 
 class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -149,7 +173,7 @@ class FDiscriminator(FFCModel):
         # self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
-        x = self.gaus_noise(x)
+      #  x = self.gaus_noise(x)
         self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
