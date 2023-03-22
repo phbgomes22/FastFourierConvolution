@@ -81,8 +81,12 @@ class FFC_BN_ACT(nn.Module):
         ## Add Noise - PG
         self.noise_g = NoiseInjection(out_ch_g) if uses_noise else nn.Identity()
 
+        self.fake_conv = spectral_norm(torch.nn.Conv2d(in_channels, out_channels, kernel_size,
+                              stride, padding, dilation, groups, bias))
 
     def forward(self, x):
+
+        fake_output = self.fake_conv(x)
         debug_print(" -- FFC_BN_ACT")
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
@@ -97,4 +101,6 @@ class FFC_BN_ACT(nn.Module):
        # x_l = self.noise_l(x_l)
        # if type(x_g) != int:
        #     x_g = self.noise_g(x_g)
-        return x_l, x_g
+
+        
+        return fake_output, 0 
