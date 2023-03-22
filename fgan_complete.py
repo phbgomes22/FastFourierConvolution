@@ -201,7 +201,7 @@ class LargeFDiscriminator(FFCModel):
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=3,
                 ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
-            FFC_BN_ACT(in_channels=12, out_channels=128, kernel_size=4,
+            FFC_BN_ACT(in_channels=128, out_channels=128, kernel_size=4,
                 ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=3,
