@@ -13,6 +13,7 @@ from ..print_layer import *
 from ..snffc.snffc import *
 from ..snffc.snffc_transpose import *
 
+from torch.nn.utils import spectral_norm
 
 
 class FFC_BN_ACT(nn.Module):
@@ -43,7 +44,7 @@ class FFC_BN_ACT(nn.Module):
 
         # Creates the FFC layer, that will process the signal 
         # (divided into local and global and apply the convolutions and Fast Fourier)
-
+        self.uses_sn = uses_sn
         if upsampling:
             transposed = SNFFCTranspose if uses_sn else FFCTranspose
             print("Upsampling")
@@ -85,10 +86,10 @@ class FFC_BN_ACT(nn.Module):
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(self.bn_l(x_l))
+        x_l = self.act_l(spectral_norm(x_l))
         self.print_size(x_l)
 
-        x_g = self.act_g(self.bn_g(x_g))
+        x_g = self.act_g(spectral_norm(x_g))
         debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG
