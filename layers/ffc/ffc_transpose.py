@@ -101,11 +101,10 @@ class FFCTranspose(nn.Module):
         x_l, x_g = x if type(x) is tuple else (x, 0)
         out_xl, out_xg = 0, 0
 
-
+        ## -- esses ifs estao estranhos
         if self.ratio_gout != 1:
             # creates the output local signal passing the right signals to the right convolutions
             debug_print(".  --- FFC Transp")
-            self.print_size(x_l)
             out_xl = self.convl2l(x_l) 
             debug_print(".  --- Conv2l2")
 

@@ -47,6 +47,7 @@ class FFC(nn.Module):
 
         # defines the module as a Conv2d unless the channels input or output are zero
         condition = in_cl == 0 or out_cl == 0
+        print(in_cl, out_cl)
         module = nn.Identity if condition else nn.Conv2d
         sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
         # this is the convolution that processes the local signal and contributes 

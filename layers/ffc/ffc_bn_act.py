@@ -91,12 +91,10 @@ class FFC_BN_ACT(nn.Module):
         self.print_size(x_l)
 
         x_g = self.act_g(self.bn_g(x_g))
-        print(x_g)
         debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG
        # x_l = self.noise_l(x_l)
        # if type(x_g) != int:
        #     x_g = self.noise_g(x_g)
-
         return x_l, x_g
