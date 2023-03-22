@@ -283,7 +283,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = DCGANDiscrimnator(sn=True).to(device).train()
+    D = Discriminator(sn=True).to(device).train()
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
