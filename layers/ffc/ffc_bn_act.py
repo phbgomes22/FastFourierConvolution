@@ -53,7 +53,8 @@ class FFC_BN_ACT(nn.Module):
                        groups, bias, enable_lfu, out_padding=out_padding, attention=attention)
         else:
             regular = SNFFC if uses_sn else FFC
-            self.ffc = regular(in_channels, out_channels, kernel_size,
+            print("Using FFC with spectral norm by hand!")
+            self.ffc = FFC(in_channels, out_channels, kernel_size,
                         ratio_gin, ratio_gout, stride, padding, dilation,
                         groups, bias, enable_lfu, attention=attention)
              
@@ -90,6 +91,7 @@ class FFC_BN_ACT(nn.Module):
         self.print_size(x_l)
 
         x_g = self.act_g(self.bn_g(x_g))
+        print(x_g.size())
         debug_print(" -- Fim FFC_BN_ACT")
 
         ## Add Noise - PG
