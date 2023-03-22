@@ -88,7 +88,6 @@ class FFC(nn.Module):
         out_xl, out_xg = 0, 0
 
         if self.ratio_gout != 1:
-            print("Diff")
             # creates the output local signal passing the right signals to the right convolutions
             out_xl = self.convl2l(x_l) # + self.convg2l(x_g)
         if self.ratio_gout != 0:
