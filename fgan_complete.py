@@ -191,7 +191,7 @@ class LargeFDiscriminator(FFCModel):
         super(LargeFDiscriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         # 3, 4, 3, 4, 3, 4, 3
-        ratio_g = 0.0
+        ratio_g = 0.5
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
