@@ -48,7 +48,7 @@ class FFC(nn.Module):
         # defines the module as a Conv2d unless the channels input or output are zero
         condition = in_cl == 0 or out_cl == 0
         module = nn.Identity if condition else nn.Conv2d
-        sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
+        sn_fn = lambda x: x if condition else torch.nn.utils.spectral_norm 
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
         self.convl2l = sn_fn(module(in_cl, out_cl, kernel_size,
@@ -56,7 +56,7 @@ class FFC(nn.Module):
 
         condition = in_cl == 0 or out_cg == 0
         module = nn.Identity if condition else nn.Conv2d
-        sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
+        sn_fn = lambda x: x if condition else torch.nn.utils.spectral_norm 
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
         self.convl2g = sn_fn(module(in_cl, out_cg, kernel_size,
@@ -64,7 +64,7 @@ class FFC(nn.Module):
 
         condition = in_cg == 0 or out_cl == 0
         module = nn.Identity if condition else nn.Conv2d
-        sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
+        sn_fn = lambda x: x if condition else torch.nn.utils.spectral_norm 
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
         self.convg2l = sn_fn(module(in_cg, out_cl, kernel_size,
