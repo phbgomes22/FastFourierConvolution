@@ -85,20 +85,19 @@ class FFC_BN_ACT(nn.Module):
                               stride, padding, dilation, groups, bias))
 
     def forward(self, x):
-        fake_output = self.fake_conv(x)
-        # debug_print(" -- FFC_BN_ACT")
-        # x_l, x_g = self.ffc(x)
-        # self.print_size(x_l)
+        debug_print(" -- FFC_BN_ACT")
+        x_l, x_g = self.ffc(x)
+        self.print_size(x_l)
         
-        # x_l = self.act_l(self.bn_l(x_l))
-        # self.print_size(x_l)
+        x_l = self.act_l(self.bn_l(x_l))
+        self.print_size(x_l)
 
-        # x_g = self.act_g(self.bn_g(x_g))
-        # debug_print(" -- Fim FFC_BN_ACT")
+        x_g = self.act_g(self.bn_g(x_g))
+        debug_print(" -- Fim FFC_BN_ACT")
 
-        ## Add Noise - PG
-       # x_l = self.noise_l(x_l)
-       # if type(x_g) != int:
-       #     x_g = self.noise_g(x_g)
+        # Add Noise - PG
+        x_l = self.noise_l(x_l)
+        if type(x_g) != int:
+            x_g = self.noise_g(x_g)
         
-        return self.act_l(fake_output)#x_l, x_g
+        return x_l#self.act_l(fake_output)#x_l, x_g
