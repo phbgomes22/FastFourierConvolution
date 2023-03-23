@@ -37,20 +37,25 @@ class Generator(torch.nn.Module):
         self.z_size = z_size
 
      #   self.print_layer = Print(debug=True)
-
+      
         self.model = torch.nn.Sequential(
+            GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
             torch.nn.BatchNorm2d(512),
             torch.nn.ReLU(),
+            GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(256),
             torch.nn.ReLU(),
+            GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(128),
             torch.nn.ReLU(),
+            GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(64),
             torch.nn.ReLU(),
+            GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
             torch.nn.Tanh()
         )
@@ -223,17 +228,17 @@ class LargeFDiscriminator(FFCModel):
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
 
-       # self.gaus_noise = GaussianNoise(0.01)
+        self.gaus_noise = GaussianNoise(0.01)
         # self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
         debug_print("Começando Discriminador...")
-       # x = self.gaus_noise(x)
-        self.print_size(x)
+        x = self.gaus_noise(x)
+        # self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
-        self.print_size(m)
-        debug_print(m.size())
+        # self.print_size(m)
+        # debug_print(m.size())
         return self.fc(m.view(-1, 4 * 4 * 512))
 
 def hinge_loss_dis(fake, real):
@@ -354,28 +359,28 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/50) != 0:
+        if next_step % (args.num_epoch_steps/4) != 0:
             continue
         pbar.close()
         G.eval()
         print('Evaluating the generator...')
 
-        # # compute and log generative metrics
-        # metrics = torch_fidelity.calculate_metrics(
-        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
-        #     input1_model_num_samples=args.num_samples_for_metrics,
-        #     input2='cifar10-train',
-        #     isc=True,
-        #     fid=True,
-        #     kid=True,
-        #     ppl=False,
-        #     ppl_epsilon=1e-2,
-        #     ppl_sample_similarity_resize=64,
-        # )
+        # compute and log generative metrics
+        metrics = torch_fidelity.calculate_metrics(
+            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
+            input1_model_num_samples=args.num_samples_for_metrics,
+            input2='cifar10-train',
+            isc=True,
+            fid=True,
+            kid=True,
+            ppl=False,
+            ppl_epsilon=1e-2,
+            ppl_sample_similarity_resize=64,
+        )
         
-        # # log metrics
-        # for k, v in metrics.items():
-        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        # log metrics
+        for k, v in metrics.items():
+            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis).detach().cpu()
@@ -385,10 +390,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
-        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-        #     last_best_metric = metrics[leading_metric]
+            last_best_metric = metrics[leading_metric]
 
         # resume training
         if next_step <= args.num_total_steps:
