@@ -100,4 +100,4 @@ class FFC_BN_ACT(nn.Module):
         # if type(x_g) != int:
         #     x_g = self.noise_g(x_g)
         
-        return x_l#self.act_l(fake_output)#x_l, x_g
+        return x_l, x_g
