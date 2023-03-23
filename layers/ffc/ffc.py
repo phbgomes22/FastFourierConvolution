@@ -47,28 +47,28 @@ class FFC(nn.Module):
 
         # defines the module as a Conv2d unless the channels input or output are zero
         condition = in_cl == 0 or out_cl == 0
-        print(in_cl, out_cl)
         module = nn.Identity if condition else nn.Conv2d
         sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
-        
         self.convl2l = sn_fn(module(in_cl, out_cl, kernel_size,
                               stride, padding, dilation, groups, bias))
 
-
-        self.attention_layer = Self_Attn(out_cg, 'relu')  if attention else nn.Identity()
-        module = nn.Identity if in_cl == 0 or out_cg == 0 else nn.Conv2d
+        condition = in_cl == 0 or out_cg == 0
+        module = nn.Identity if condition else nn.Conv2d
+        sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = module(in_cl, out_cg, kernel_size,
-                              stride, padding, dilation, groups, bias)
+        self.convl2g = sn_fn(module(in_cl, out_cg, kernel_size,
+                              stride, padding, dilation, groups, bias))
 
-        module = nn.Identity if in_cg == 0 or out_cl == 0 else nn.Conv2d
+        condition = in_cg == 0 or out_cl == 0
+        module = nn.Identity if condition else nn.Conv2d
+        sn_fn = torch.nn.utils.spectral_norm if condition else lambda x: x
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = module(in_cg, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias)
+        self.convg2l = sn_fn(module(in_cg, out_cl, kernel_size,
+                              stride, padding, dilation, groups, bias))
 
         # defines the module as the Spectral Transform unless the channels output are zero
         module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
@@ -89,7 +89,7 @@ class FFC(nn.Module):
 
         if self.ratio_gout != 1:
             # creates the output local signal passing the right signals to the right convolutions
-            out_xl = self.convl2l(x_l) # + self.convg2l(x_g)
+            out_xl = self.convl2l(x_l) + self.convg2l(x_g)
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l) + self.convg2g(x_g)

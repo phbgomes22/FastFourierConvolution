@@ -27,13 +27,11 @@ class SpectralTransform(nn.Module):
 
         self.stride = stride
 
+        sn_fn = torch.nn.utils.spectral_norm
         # sets the initial 1x1 convolution, batch normalization and relu flow.
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels //
-                      2, kernel_size=1, groups=groups, bias=False),
-            nn.BatchNorm2d(out_channels // 2),
-            nn.ReLU(inplace=True)
-        )
+        self.conv1 = sn_fn(nn.Conv2d(in_channels, out_channels //
+                      2, kernel_size=1, groups=groups, bias=False))
+        self.act1 = nn.ReLU(inplace=True)
 
         # creates the Fourier Unit that will do convolutions in the spectral domain.
         self.fu = FourierUnit(
@@ -43,6 +41,7 @@ class SpectralTransform(nn.Module):
         if self.enable_lfu:
             self.lfu = FourierUnit(
                 out_channels // 2, out_channels // 2, groups)
+        
         ## sets the convolution that will occur at the end of the Spectral Transform
         self.conv2 = torch.nn.Conv2d(
             out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
@@ -52,7 +51,7 @@ class SpectralTransform(nn.Module):
         # the default behavior is no downsample - so this is an identity
         x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
-        x = self.conv1(x)
+        x = self.act1(self.conv1(x))
         # gets the output from the Fourier Unit (back in pixel domain)
         output = self.fu(x)
 

@@ -61,8 +61,8 @@ class FFC_BN_ACT(nn.Module):
         out_ch_l = int(out_channels * (1 - ratio_gout))
         out_ch_g = int(out_channels * ratio_gout)
         # create the BatchNormalization layers
-        lnorm = nn.Identity if ratio_gout == 1 else nn.BatchNorm2d
-        gnorm = nn.Identity if ratio_gout == 0 else nn.BatchNorm2d
+        lnorm = nn.Identity if ratio_gout == 1 else nn.Identity
+        gnorm = nn.Identity if ratio_gout == 0 else nn.Identity
 
         self.bn_l = lnorm(out_ch_l)
         self.bn_g = gnorm(out_ch_g)
