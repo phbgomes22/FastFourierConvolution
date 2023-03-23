@@ -48,27 +48,30 @@ class FFC(nn.Module):
         # defines the module as a Conv2d unless the channels input or output are zero
         condition = in_cl == 0 or out_cl == 0
         module = nn.Identity if condition else nn.Conv2d
-        sn_fn = lambda x: x if condition else torch.nn.utils.spectral_norm 
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted local signal
-        self.convl2l = sn_fn(module(in_cl, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias))
+        self.convl2l = module(in_cl, out_cl, kernel_size,
+                              stride, padding, dilation, groups, bias)
+        if not condition:
+            self.convl2l = torch.nn.utils.spectral_norm(self.convl2l)
 
         condition = in_cl == 0 or out_cg == 0
-        module = nn.Identity if condition else nn.Conv2d
-        sn_fn = lambda x: x if condition else torch.nn.utils.spectral_norm 
+        module = nn.Identity if condition else nn.Conv2d 
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal
-        self.convl2g = sn_fn(module(in_cl, out_cg, kernel_size,
-                              stride, padding, dilation, groups, bias))
+        self.convl2g = module(in_cl, out_cg, kernel_size,
+                              stride, padding, dilation, groups, bias)
+        if not condition:
+            self.convl2g = torch.nn.utils.spectral_norm(self.convl2g)
 
         condition = in_cg == 0 or out_cl == 0
         module = nn.Identity if condition else nn.Conv2d
-        sn_fn = lambda x: x if condition else torch.nn.utils.spectral_norm 
         # this is the convolution that processes the global signal and contributes 
         # for the formation of the outputted local signal
-        self.convg2l = sn_fn(module(in_cg, out_cl, kernel_size,
-                              stride, padding, dilation, groups, bias))
+        self.convg2l = module(in_cg, out_cl, kernel_size,
+                              stride, padding, dilation, groups, bias)
+        if not condition:
+            self.convg2l = torch.nn.utils.spectral_norm(self.convg2l)
 
         # defines the module as the Spectral Transform unless the channels output are zero
         module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
