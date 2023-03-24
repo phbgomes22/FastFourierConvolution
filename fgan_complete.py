@@ -226,7 +226,6 @@ class LargeFDiscriminator(FFCModel):
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * ndf*8, 1))
 
         self.gaus_noise = GaussianNoise(0.01)
-        # self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x):
         debug_print("Começando Discriminador...")
