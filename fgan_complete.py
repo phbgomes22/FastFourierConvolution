@@ -35,7 +35,7 @@ class Generator(torch.nn.Module):
     def __init__(self, z_size):
         super(Generator, self).__init__()
         self.z_size = z_size
-
+     
      #   self.print_layer = Print(debug=True)
       
         self.model = torch.nn.Sequential(
@@ -201,10 +201,10 @@ class LargeFDiscriminator(FFCModel):
         ndf = 64 # 32
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=ndf, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
+                ratio_gin=0.0, ratio_gout=0.0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf, out_channels=ndf, kernel_size=4,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
+                ratio_gin=0.0, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf, out_channels=ndf*2, kernel_size=3,
                 ratio_gin=ratio_g, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
@@ -225,7 +225,7 @@ class LargeFDiscriminator(FFCModel):
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * ndf*8, 1))
 
-        self.gaus_noise = GaussianNoise(0.01)
+    #    self.gaus_noise = GaussianNoise(0.01)
 
     def forward(self, x):
         debug_print("Começando Discriminador...")
