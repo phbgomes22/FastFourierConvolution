@@ -198,29 +198,29 @@ class LargeFDiscriminator(FFCModel):
         # 3, 4, 3, 4, 3, 4, 3
         ratio_g = 0.5 #0.5
         act_func = nn.LeakyReLU
-        ndf = 32 # 32
+        ndf = 64 # 32
         self.ndf = ndf
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=ndf, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
+                ratio_gin=0.0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf, out_channels=ndf, kernel_size=4,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
+                ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf, out_channels=ndf*2, kernel_size=3,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
+                ratio_gin=0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*2, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*4, kernel_size=3,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
+                ratio_gin=ratio_g, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*4, kernel_size=4,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
+                ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*8, kernel_size=3,
-                ratio_gin=ratio_g, ratio_gout=0, stride=1, padding=1, bias=True, 
+                ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
         )
 
