@@ -42,6 +42,9 @@ class FFC(nn.Module):
         out_cg = int(out_channels * ratio_gout)
         out_cl = out_channels - out_cg
 
+        print("in_cl, in_cg, out_cl, out_cg")
+        print(in_cl, in_cg, out_cl, out_cg )
+
         self.ratio_gin = ratio_gin
         self.ratio_gout = ratio_gout
 
