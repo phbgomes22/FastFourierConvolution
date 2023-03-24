@@ -39,23 +39,23 @@ class Generator(torch.nn.Module):
      #   self.print_layer = Print(debug=True)
       
         self.model = torch.nn.Sequential(
-            GaussianNoise(0.01), #
+          #  GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
             torch.nn.BatchNorm2d(512),
             torch.nn.ReLU(),
-            GaussianNoise(0.01), #
+          #  GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(256),
             torch.nn.ReLU(),
-            GaussianNoise(0.01), #
+          #  GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(128),
             torch.nn.ReLU(),
-            GaussianNoise(0.01), #
+           # GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(64),
             torch.nn.ReLU(),
-            GaussianNoise(0.01), #
+         #   GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
             torch.nn.Tanh()
         )
@@ -197,7 +197,7 @@ class LargeFDiscriminator(FFCModel):
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         # 3, 4, 3, 4, 3, 4, 3
         ratio_g = 0.0 #0.5
-        act_func = nn.GELU
+        act_func = nn.LeakyReLU
         ndf = 64 # 32
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=ndf, kernel_size=3,
@@ -221,10 +221,6 @@ class LargeFDiscriminator(FFCModel):
             FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*8, kernel_size=3,
                 ratio_gin=ratio_g, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
-            # FFC_BN_ACT(in_channels=512, out_channels=1, kernel_size=4,
-            #     ratio_gin=0.5, ratio_gout=0, stride=1, padding=0, bias=False, 
-            #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
-            #     activation_layer=nn.Sigmoid)
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * ndf*8, 1))
@@ -234,7 +230,7 @@ class LargeFDiscriminator(FFCModel):
 
     def forward(self, x):
         debug_print("Começando Discriminador...")
-        x = self.gaus_noise(x)
+      #  x = self.gaus_noise(x)
         # self.print_size(x)
         m = self.main(x)
         m = self.resizer(m)
