@@ -199,6 +199,7 @@ class LargeFDiscriminator(FFCModel):
         ratio_g = 0.5 #0.5
         act_func = nn.LeakyReLU
         ndf = 32 # 32
+        self.ndf = ndf
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=ndf, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
@@ -235,7 +236,7 @@ class LargeFDiscriminator(FFCModel):
         m = self.resizer(m)
         # self.print_size(m)
         # debug_print(m.size())
-        return self.fc(m.view(-1, 4 * 4 * 512))
+        return self.fc(m.view(-1, 4 * 4 * self.ndf * 8))
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
