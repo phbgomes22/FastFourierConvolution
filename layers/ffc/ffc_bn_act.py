@@ -48,7 +48,7 @@ class FFC_BN_ACT(nn.Module):
         if upsampling:
             transposed = SNFFCTranspose if uses_sn else FFCTranspose
             print("Upsampling")
-            self.ffc = transposed(in_channels, out_channels, kernel_size,
+            self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
                        groups, bias, enable_lfu, out_padding=out_padding, attention=attention)
         else:
@@ -61,8 +61,8 @@ class FFC_BN_ACT(nn.Module):
         out_ch_l = int(out_channels * (1 - ratio_gout))
         out_ch_g = int(out_channels * ratio_gout)
         # create the BatchNormalization layers
-        lnorm = nn.Identity if ratio_gout == 1 else nn.Identity
-        gnorm = nn.Identity if ratio_gout == 0 else nn.Identity
+        lnorm = nn.Identity if ratio_gout == 1 else norm_layer
+        gnorm = nn.Identity if ratio_gout == 0 else norm_layer
 
         self.bn_l = lnorm(out_ch_l)
         self.bn_g = gnorm(out_ch_g)

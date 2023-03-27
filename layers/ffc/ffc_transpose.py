@@ -55,8 +55,6 @@ class FFCTranspose(nn.Module):
         self.convl2l = self.convtransp2d(condition, in_cl, out_cl, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
 
-
-
         condition = in_cl == 0 or out_cg == 0
         # this is the convolution that processes the local signal and contributes 
         # for the formation of the outputted global signal

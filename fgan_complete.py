@@ -73,16 +73,18 @@ class FGenerator(FFCModel):
     def __init__(self, z_size):
         super(FGenerator, self).__init__()
         self.z_size = z_size
+        self.ngf = 64
+        ratio_g = 0.5
         self.model = torch.nn.Sequential(
-            FFC_BN_ACT(z_size, 258, 4, 0.0, 0.5, stride=1, padding=0, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(258, 128, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(128, 64, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(64, 32, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(32, 3, 3, 0.5, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+            FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True), 
+            FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True), 
         )
       #  self.print_layer = Print(debug=True)
@@ -283,14 +285,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = Generator(z_size=args.z_size).to(device).train()
+    G = FGenerator(z_size=args.z_size).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = LargeFDiscriminator(sn=True).to(device).train()
+    D = Discriminator(sn=True).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
