@@ -213,13 +213,10 @@ class LargeFDiscriminator(FFCModel):
                 ratio_gin=0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*2, kernel_size=4,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
-            FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*2, kernel_size=4,
-                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
+                ratio_gin=ratio_g, ratio_gout=0, stride=2, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*4, kernel_size=3,
-                ratio_gin=ratio_g, ratio_gout=0, stride=1, padding=1, bias=True, 
+                ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*4, kernel_size=4,
                 ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
@@ -285,14 +282,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size).to(device).train()
+    G = Generator(z_size=args.z_size).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True).to(device).train() #LargeF
+    D = LargeFDiscriminator(sn=True).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
