@@ -218,7 +218,7 @@ def train(args):
     print(D)
 
     # initialize persistent noise for observed samples
-    z_vis = torch.randn(64, args.z_size, device=device
+    z_vis = torch.randn(64, args.z_size, device=device)
     z_label_vis = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(num_classes), 8)[:64] ) ).float().to(device)
 
 
