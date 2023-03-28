@@ -15,6 +15,9 @@ from torch.utils import tensorboard
 import torch_fidelity
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 def weights_init(m):
     '''
     Custom weights initialization called on netG and netD
@@ -27,37 +30,85 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
         
 
-class FGenerator(torch.nn.Module):
+class FCondGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size):
-        super(FGenerator, self).__init__()
+    def __init__(self, z_size, num_classes):
+        super(FCondGenerator, self).__init__()
         self.z_size = z_size
-        self.model = torch.nn.Sequential(
-            FFC_BN_ACT(z_size, 512, 4, 0.0, 0.5, stride=1, padding=0, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(512, 256, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(256, 128, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(128, 64, 4, 0.5, 0.5, stride=2, padding=1, activation_layer=nn.GELU, 
-                      upsampling=True, uses_noise=True, uses_sn=True), 
-            FFC_BN_ACT(64, 3, 4, 0.5, 0.0, stride=2, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True), 
+        self.ngf = 64
+        ratio_g = 0.5
+
+        # self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
+        #               norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        # self.lcl_noise1 = NoiseInjection(self.ngf*4)
+        # self.glb_noise1 = NoiseInjection(self.ngf*4)
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise2 = NoiseInjection(self.ngf*2)
+        self.glb_noise2 = NoiseInjection(self.ngf*2)
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise3 = NoiseInjection(self.ngf)
+        self.glb_noise3 = NoiseInjection(self.ngf)
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise4 = NoiseInjection(self.ngf//2)
+        self.glb_noise4 = NoiseInjection(self.ngf//2)
+        self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+        
+        ## == Conditional
+
+        self.label_conv = nn.Sequential(
+            nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
+            nn.BatchNorm2d(self.ngf*4),
+            nn.GELU()
         )
 
-    def forward(self, z):
-        fake = self.model(z.view(-1, self.z_size, 1, 1))
+        self.input_conv = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0),
+            nn.BatchNorm2d(self.ngf*4),
+            nn.GELU()
+        )
+
+        self.label_embed = nn.Embedding(num_classes, num_classes)
+
+    def forward(self, z, labels):
+
+        ## conditional
+
+        embedding = self.label_embed(labels.view(-1, 1))
+        embedding = self.label_conv(embedding)
+
+        input = self.input_conv(z.view(-1, self.z_size, 1, 1))
+        input = torch.cat([input, embedding], dim=1)
+
+        ## remainder
+        fake = self.conv2(input)
+        if self.training:
+            fake = self.lcl_noise2(fake[0]), fake[1] #self.glb_noise2(fake[1])
+        
+        fake = self.conv3(fake)
+        if self.training:
+            fake = self.lcl_noise3(fake[0]), fake[1]# self.glb_noise3(fake[1])
+        
+        fake = self.conv4(fake)
+        if self.training:
+            fake = self.lcl_noise4(fake[0]), fake[1] #self.glb_noise4(fake[1])
+
+        fake = self.conv5(fake)
         fake = self.resizer(fake)
+
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
         return fake
 
-
-class FDiscriminator(torch.nn.Module):
+class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True):
-        super(FDiscriminator, self).__init__()
+    def __init__(self, sn=True, num_classes=10):
+        super(Discriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
@@ -67,21 +118,47 @@ class FDiscriminator(torch.nn.Module):
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+    #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
-    def forward(self, x):
-        m = self.act(self.conv1(x))
+        ## == Conditional
+
+        self.label_embed = nn.Embedding(num_classes, num_classes)
+
+        self.label_conv = nn.Sequential(
+            nn.ConvTranspose2d(num_classes, 32, 4, 1, 0),
+            nn.BatchNorm2d(32),
+            nn.GELU()
+        )
+
+        self.input_conv  = nn.Sequential(
+            nn.ConvTranspose2d(3, 32, 4, 1, 0),
+            nn.BatchNorm2d(32),
+            nn.GELU()
+        )
+
+    def forward(self, x, labels):
+        embedding = self.label_embed(labels.view(-1, 1))
+        embedding = self.label_conv(embedding)
+
+        input = self.input_conv(x)
+        input = torch.cat([input, embedding], dim=1)
+
+        m = self.act(self.conv1(input))
         m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
         m = self.act(self.conv4(m))
         m = self.act(self.conv5(m))
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
-        return self.fc(m.view(-1, 4 * 4 * 512))
+        output = self.fc(m.view(-1, 4 * 4 * 512))
+ 
+        return output
+    
 
 def hinge_loss_dis(fake, real):
-    fake = fake.squeeze(-1).squeeze(-1)
-    real = real.squeeze(-1).squeeze(-1)
+   # fake = fake.squeeze(-1).squeeze(-1)
+  #  real = real.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
     loss = torch.nn.functional.relu(1.0 - real).mean() + \
            torch.nn.functional.relu(1.0 + fake).mean()
@@ -89,7 +166,7 @@ def hinge_loss_dis(fake, real):
 
 
 def hinge_loss_gen(fake):
-    fake = fake.squeeze(-1).squeeze(-1)
+   # fake = fake.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1
     loss = -fake.mean()
     return loss
@@ -100,15 +177,13 @@ def train(args):
     os.makedirs(args.dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
-            torchvision.transforms.Resize(64),
-            torchvision.transforms.CenterCrop(64),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
     ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=4, pin_memory=True
+        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
     loader_iter = iter(loader)
 
@@ -123,22 +198,26 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = GeneratorFGAN(nz=args.z_size, nc=3, ngf=64, num_classes=num_classes, 
-                         embed_size=200, uses_sn=True, uses_noise=True).to(device).train()
-
-
-    G.apply(weights_init)
-    D = FFCCondDiscriminator(nc=3, ndf=64, num_classes=num_classes, num_epochs=args.num_total_steps, uses_sn=True, uses_noise=True).to(device).train()
-    D.apply(weights_init)
+    G = FCondGenerator(z_size=args.z_size, num_classes=10).to(device).train()
+   # G.apply(weights_init)
+    params = count_parameters(G)
+    print(G)
     
+    print("- Parameters on generator: ", params)
+
+    D = Discriminator(sn=True, num_classes=10).to(device).train() #LargeF
+ #   D.apply(weights_init)
+    params = count_parameters(D)
+    print("- Parameters on discriminator: ", params)
+    print(D)
+
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
-    labels = range(num_classes)
-    fixed_labels = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(labels, 8)[:64] ) ).float().to(device)
-
+    z_label_vis = torch.as_tensor( np.repeat(range(num_classes), 8)[:64] ).float().to(device)
+    
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.0, 0.9))
-    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.0, 0.9))
+    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
@@ -146,6 +225,10 @@ def train(args):
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
     os.makedirs(args.dir_logs, exist_ok=True)
+
+    # Establish convention for real and fake labels during training
+    real_label = 1
+    fake_label = 0
 
     for step in range(args.num_total_steps):
         # read next batch
@@ -165,7 +248,9 @@ def train(args):
         optim_D.zero_grad()
         optim_G.zero_grad()
         fake = G(z, real_label)
-        loss_G = hinge_loss_gen(D(fake, real_label, step))
+        output = D(fake, real_label)
+        ## - update hinge loss
+        loss_G = hinge_loss_gen(output)
         loss_G.backward()
         optim_G.step()
 
@@ -177,7 +262,10 @@ def train(args):
             optim_D.zero_grad()
             optim_G.zero_grad()
             fake = G(z, real_label)
-            loss_D = hinge_loss_dis(D(fake, real_label, step), D(real_img, real_label, step))
+            output_dg = D(fake, real_label)
+            output_dreal = D(real_img, real_label)
+            ## - update hinge loss
+            loss_D = hinge_loss_dis(output_dg, output_dreal)
             loss_D.backward()
             optim_D.step()
 
@@ -196,7 +284,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/100) != 0:
+        if next_step % (args.num_epoch_steps) != 0:
             continue
         pbar.close()
         G.eval()
@@ -220,7 +308,7 @@ def train(args):
             tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
-        samples_vis = G(z_vis, torch.argmax(fixed_labels, dim=1)).detach().cpu()
+        samples_vis = G(z_vis, z_label_vis).detach().cpu()
         samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
         tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
         samples_vis = PIL.Image.fromarray(samples_vis)
@@ -248,14 +336,14 @@ def main():
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_total_steps', type=int, default=100000)
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
-    parser.add_argument('--num_dis_updates', type=int, default=5)
+    parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
-    parser.add_argument('--conditional', default=False, action='store_true')
+    parser.add_argument('--conditional', default=True, action='store_true')
     parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset'))
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan'))
     args = parser.parse_args()
