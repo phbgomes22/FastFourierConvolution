@@ -140,7 +140,11 @@ class Discriminator(torch.nn.Module):
         )
 
     def forward(self, x, labels):
-        embedding = self.label_embed(labels.view(-1, 1))
+
+        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(labels, dim=-1)
+        embedding = self.label_embed(labels)
+        embedding = embedding.view(labels.shape[0], -1, 1, 1)
         embedding = self.label_conv(embedding)
 
         input = self.input_conv(x)
