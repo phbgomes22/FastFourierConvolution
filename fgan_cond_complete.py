@@ -146,10 +146,8 @@ class Discriminator(torch.nn.Module):
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 32, 32)
         embedding = self.label_conv(embedding)
-        print(embedding.size())
 
         input = self.input_conv(x)
-        print(input.size())
         input = torch.cat([input, embedding], dim=1)
 
      #   m = self.act(self.conv1(input))
