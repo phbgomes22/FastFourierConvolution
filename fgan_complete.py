@@ -98,7 +98,6 @@ class FGenerator(FFCModel):
       #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
-        fake = self.model(z.view(-1, self.z_size, 1, 1))
 
         fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         if self.training:
