@@ -221,7 +221,6 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
     z_label_vis = torch.as_tensor( np.repeat(range(num_classes), 8)[:64] ).float().to(device)
 
-    print(z_label_vis.size())
     # prepare optimizer and learning rate schedulers (linear decay)
     optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
     optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
@@ -247,8 +246,6 @@ def train(args):
         real_img = real_img.to(device)
         real_label = real_label.to(device)
 
-        print(real_label.size())
-        
         # update Generator
         G.requires_grad_(True)
         D.requires_grad_(False)
@@ -293,7 +290,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/20) != 0:
+        if next_step % (args.num_epoch_steps/30) != 0:
             continue
         pbar.close()
         G.eval()
