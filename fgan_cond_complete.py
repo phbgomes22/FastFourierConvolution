@@ -128,7 +128,7 @@ class Discriminator(torch.nn.Module):
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, 32, 4, 2, 1),
+            nn.ConvTranspose2d(1, 32, 4, 2, 1),
             nn.BatchNorm2d(32),
             nn.GELU()
         )
@@ -144,7 +144,7 @@ class Discriminator(torch.nn.Module):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
-        embedding = embedding.view(labels.shape[0], -1, 1, 1)
+        embedding = embedding.view(labels.shape[0], 1, self.ndf, self.ndf)
         embedding = self.label_conv(embedding)
 
         input = self.input_conv(x)
