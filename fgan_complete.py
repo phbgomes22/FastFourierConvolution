@@ -101,19 +101,19 @@ class FGenerator(FFCModel):
 
         fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         if self.training:
-            fake = self.lcl_noise1(fake[0]), fake[1] #self.glb_noise1(fake[1])
+            fake = self.lcl_noise1(fake[0]), self.glb_noise1(fake[1])
 
         fake = self.conv2(fake)
         if self.training:
-            fake = self.lcl_noise2(fake[0]), fake[1]#self.glb_noise2(fake[1])
+            fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1])
         
         fake = self.conv3(fake)
         if self.training:
-            fake = self.lcl_noise3(fake[0]), fake[1]#self.glb_noise3(fake[1])
+            fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
         
         fake = self.conv4(fake)
         if self.training:
-            fake = self.lcl_noise4(fake[0]), fake[1]#self.glb_noise4(fake[1])
+            fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1])
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
