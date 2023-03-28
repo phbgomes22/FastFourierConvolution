@@ -42,7 +42,7 @@ class FCondGenerator(FFCModel):
         #               norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         # self.lcl_noise1 = NoiseInjection(self.ngf*4)
         # self.glb_noise1 = NoiseInjection(self.ngf*4)
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         self.glb_noise2 = NoiseInjection(self.ngf*2)
