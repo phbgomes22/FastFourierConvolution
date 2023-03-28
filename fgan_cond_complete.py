@@ -77,7 +77,9 @@ class FCondGenerator(FFCModel):
     def forward(self, z, labels):
 
         ## conditional
-        embedding = self.label_embed(labels.unsqueeze(2).unsqueeze(3))
+        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(labels, dim=-1)
+        embedding = self.label_embed(labels)
         embedding = self.label_conv(embedding)
 
         input = self.input_conv(z.view(-1, self.z_size, 1, 1))
