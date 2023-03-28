@@ -218,8 +218,9 @@ def train(args):
     print(D)
 
     # initialize persistent noise for observed samples
-    z_vis = torch.randn(64, args.z_size, device=device)
-    z_label_vis = torch.as_tensor( np.repeat(range(num_classes), 8)[:64] ).float().to(device)
+    z_vis = torch.randn(64, args.z_size, device=device
+    z_label_vis = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(num_classes), 8)[:64] ) ).float().to(device)
+
 
     # prepare optimizer and learning rate schedulers (linear decay)
     optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
@@ -314,7 +315,7 @@ def train(args):
         #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
-        samples_vis = G(z_vis, z_label_vis).detach().cpu()
+        samples_vis = G(z_vis, torch.argmax(z_label_vis, dim=1)).detach().cpu()
         samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
         tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
         samples_vis = PIL.Image.fromarray(samples_vis)
