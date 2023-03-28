@@ -125,7 +125,7 @@ class Discriminator(torch.nn.Module):
 
         ## == Conditional
 
-        self.label_embed = nn.Embedding(num_classes, num_classes)
+        self.label_embed = nn.Embedding(num_classes, self.ndf*self.ndf)
 
         self.label_conv = nn.Sequential(
             nn.ConvTranspose2d(1, 32, 4, 2, 1),
