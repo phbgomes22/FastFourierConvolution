@@ -254,12 +254,11 @@ def train(args):
         optim_D.zero_grad()
         optim_G.zero_grad()
         fake = G(z, real_label)
-        output = D(fake, real_label)
         ## - update hinge loss
 
      #  label = torch.full((args.batch_size,), 0, device=device)
       #  loss_G = criterion(output, label.float())
-        loss_G = hinge_loss_gen(output)
+        loss_G = hinge_loss_gen(D(fake, real_label))
         loss_G.backward()
         optim_G.step()
 
@@ -311,7 +310,7 @@ def train(args):
 
         if next_step % (args.num_epoch_steps) != 0:
             continue
-        
+
         # compute and log generative metrics
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
