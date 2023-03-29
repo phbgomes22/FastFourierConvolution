@@ -13,6 +13,7 @@ import tqdm
 from torch.utils import tensorboard
 
 import torch_fidelity
+from torchmetrics.classification import MulticlassHingeLoss
 
 
 def count_parameters(model):
@@ -163,8 +164,6 @@ class Discriminator(torch.nn.Module):
     
 
 def hinge_loss_dis(fake, real):
-   # fake = fake.squeeze(-1).squeeze(-1)
-  #  real = real.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
     loss = torch.nn.functional.relu(1.0 - real).mean() + \
            torch.nn.functional.relu(1.0 + fake).mean()
@@ -172,11 +171,11 @@ def hinge_loss_dis(fake, real):
 
 
 def hinge_loss_gen(fake):
-   # fake = fake.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1
     loss = -fake.mean()
     return loss
 
+#criterion = MulticlassHingeLoss(num_classes=10)
 
 def train(args):
     # set up dataset loader
@@ -257,6 +256,9 @@ def train(args):
         fake = G(z, real_label)
         output = D(fake, real_label)
         ## - update hinge loss
+
+     #  label = torch.full((args.batch_size,), 0, device=device)
+      #  loss_G = criterion(output, label.float())
         loss_G = hinge_loss_gen(output)
         loss_G.backward()
         optim_G.step()
@@ -271,6 +273,9 @@ def train(args):
             fake = G(z, real_label)
             output_dg = D(fake, real_label)
             output_dreal = D(real_img, real_label)
+            ## - hinge loss with criterion
+           # label.fill_(0)
+           # loss_D = criterion()
             ## - update hinge loss
             loss_D = hinge_loss_dis(output_dg, output_dreal)
             loss_D.backward()
@@ -298,17 +303,17 @@ def train(args):
         print('Evaluating the generator...')
 
         # compute and log generative metrics
-        # metrics = torch_fidelity.calculate_metrics(
-        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
-        #     input1_model_num_samples=args.num_samples_for_metrics,
-        #     input2='cifar10-train',
-        #     isc=True,
-        #     fid=True,
-        #     kid=True,
-        #     ppl=False,
-        #     ppl_epsilon=1e-2,
-        #     ppl_sample_similarity_resize=64,
-        # )
+        metrics = torch_fidelity.calculate_metrics(
+            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
+            input1_model_num_samples=args.num_samples_for_metrics,
+            input2='cifar10-train',
+            isc=True,
+            fid=True,
+            kid=True,
+            ppl=False,
+            ppl_epsilon=1e-2,
+            ppl_sample_similarity_resize=64,
+        )
         
         # log metrics
         # for k, v in metrics.items():
@@ -322,10 +327,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
-        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-        #     last_best_metric = metrics[leading_metric]
+            last_best_metric = metrics[leading_metric]
 
         # resume training
         if next_step <= args.num_total_steps:
