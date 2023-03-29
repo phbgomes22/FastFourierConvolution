@@ -302,6 +302,16 @@ def train(args):
         G.eval()
         print('Evaluating the generator...')
 
+        # log observed images
+        samples_vis = G(z_vis, torch.argmax(z_label_vis, dim=1)).detach().cpu()
+        samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
+        tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
+        samples_vis = PIL.Image.fromarray(samples_vis)
+        samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
+
+        if next_step % (args.num_epoch_steps) != 0:
+            continue
+        
         # compute and log generative metrics
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
@@ -318,13 +328,6 @@ def train(args):
         # log metrics
         # for k, v in metrics.items():
         #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
-
-        # log observed images
-        samples_vis = G(z_vis, torch.argmax(z_label_vis, dim=1)).detach().cpu()
-        samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
-        tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
-        samples_vis = PIL.Image.fromarray(samples_vis)
-        samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
         if metric_greater_cmp(metrics[leading_metric], last_best_metric):
