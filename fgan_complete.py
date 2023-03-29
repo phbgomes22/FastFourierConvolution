@@ -73,7 +73,7 @@ class FGenerator(FFCModel):
     def __init__(self, z_size):
         super(FGenerator, self).__init__()
         self.z_size = z_size
-        self.ngf = 64
+        self.ngf = 32#64
         ratio_g = 0.5
 
         self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 

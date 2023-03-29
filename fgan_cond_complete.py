@@ -39,22 +39,19 @@ class FCondGenerator(FFCModel):
         self.ngf = 64
         ratio_g = 0.5
 
-        # self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
-        #               norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        # self.lcl_noise1 = NoiseInjection(self.ngf*4)
+        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise1 = NoiseInjection(self.ngf*4)
         # self.glb_noise1 = NoiseInjection(self.ngf*4)
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
-        self.glb_noise2 = NoiseInjection(self.ngf*2)
         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
-        self.glb_noise3 = NoiseInjection(self.ngf)
         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
-        self.glb_noise4 = NoiseInjection(self.ngf//2)
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
         
@@ -90,15 +87,15 @@ class FCondGenerator(FFCModel):
         ## remainder
         fake = self.conv2(input)
         if self.training:
-            fake = self.lcl_noise2(fake[0]), fake[1] #self.glb_noise2(fake[1])
+            fake = self.lcl_noise2(fake[0]), fake[1] 
         
         fake = self.conv3(fake)
         if self.training:
-            fake = self.lcl_noise3(fake[0]), fake[1]# self.glb_noise3(fake[1])
+            fake = self.lcl_noise3(fake[0]), fake[1]
         
         fake = self.conv4(fake)
         if self.training:
-            fake = self.lcl_noise4(fake[0]), fake[1] #self.glb_noise4(fake[1])
+            fake = self.lcl_noise4(fake[0]), fake[1] 
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
