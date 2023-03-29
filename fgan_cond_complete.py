@@ -244,7 +244,7 @@ def train(args):
             loader_iter = iter(loader)
             real_img, real_label = next(loader_iter)
         real_img = real_img.to(device)
-        real_label = real_label.float().to(device)
+        real_label = real_label.to(device)
 
         # update Generator
         G.requires_grad_(True)
