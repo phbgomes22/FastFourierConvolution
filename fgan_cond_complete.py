@@ -254,11 +254,12 @@ def train(args):
         optim_D.zero_grad()
         optim_G.zero_grad()
         fake = G(z, real_label)
+        output = D(fake, real_label)
         ## - update hinge loss
 
      #  label = torch.full((args.batch_size,), 0, device=device)
       #  loss_G = criterion(output, label.float())
-        loss_G = hinge_loss_gen(D(fake, real_label))
+        loss_G = hinge_loss_gen(output)
         loss_G.backward()
         optim_G.step()
 
@@ -295,21 +296,11 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/25) != 0:
+        if next_step % (args.num_epoch_steps/20) != 0:
             continue
         pbar.close()
         G.eval()
         print('Evaluating the generator...')
-
-        # log observed images
-        samples_vis = G(z_vis, torch.argmax(z_label_vis, dim=1)).detach().cpu()
-        samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
-        tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
-        samples_vis = PIL.Image.fromarray(samples_vis)
-        samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
-
-        if next_step % (args.num_epoch_steps) != 0:
-            continue
 
         # compute and log generative metrics
         metrics = torch_fidelity.calculate_metrics(
@@ -327,6 +318,13 @@ def train(args):
         # log metrics
         # for k, v in metrics.items():
         #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+
+        # log observed images
+        samples_vis = G(z_vis, torch.argmax(z_label_vis, dim=1)).detach().cpu()
+        samples_vis = torchvision.utils.make_grid(samples_vis).permute(1, 2, 0).numpy()
+        tb.add_image('observations', samples_vis, global_step=next_step, dataformats='HWC')
+        samples_vis = PIL.Image.fromarray(samples_vis)
+        samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
         if metric_greater_cmp(metrics[leading_metric], last_best_metric):
