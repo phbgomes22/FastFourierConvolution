@@ -38,12 +38,14 @@ class Generator(torch.nn.Module):
         self.z_size = z_size
 
      #   self.print_layer = Print(debug=True)
+        self.mg = 4
+        self.l1 = nn.Linear(z_size, self.mg * self.mg * 512 )
       
         self.model = torch.nn.Sequential(
           #  GaussianNoise(0.01), #
-            torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
-            torch.nn.BatchNorm2d(512),
-            torch.nn.ReLU(),
+            # torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
+            # torch.nn.BatchNorm2d(512),
+            # torch.nn.ReLU(),
           #  GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(256),
@@ -62,7 +64,8 @@ class Generator(torch.nn.Module):
         )
 
     def forward(self, z):
-        fake = self.model(z.view(-1, self.z_size, 1, 1))
+        input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
+        fake = self.model(input)
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
@@ -318,7 +321,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size).to(device).train()
+    G = Generator(z_size=args.z_size).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
@@ -404,7 +407,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2='stl10-train',
+            input2='cifar10-train',
             isc=True,
             fid=True,
             kid=True,
