@@ -112,8 +112,6 @@ class FGenerator(FFCModel):
         # print(fake[0].size())
         # print(fake[1].size())
 
-        print(input.size())
-
         fake = self.conv2(input)
         if self.training:
             fake = self.lcl_noise2(fake[0]), fake[1] #self.glb_noise2(fake[1])
@@ -128,8 +126,6 @@ class FGenerator(FFCModel):
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
-
-        print(fake.size())
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
@@ -398,7 +394,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/1000) != 0:
+        if next_step % (args.num_epoch_steps) != 0:
             continue
         pbar.close()
         G.eval()
