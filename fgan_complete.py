@@ -107,7 +107,6 @@ class FGenerator(FFCModel):
     def forward(self, z):
         
         input = self.l1(z).view(-1, self.ngf, self.mg, self.mg)
-        # print(input.size())
 
         fake = self.conv1(input)
         if self.training:
