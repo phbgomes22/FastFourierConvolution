@@ -288,7 +288,7 @@ def train(args):
         ]
     )
     
-    ds_instance = torchvision.datasets.STL10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
   #  ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
@@ -382,7 +382,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps) != 0:
+        if next_step % (args.num_epoch_steps/1000) != 0:
             continue
         pbar.close()
         G.eval()
