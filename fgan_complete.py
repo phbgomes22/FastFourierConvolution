@@ -288,7 +288,7 @@ def train(args):
         ]
     )
     
-    ds_instance = torchvision.datasets.STL10(os.path.join(dir, 'dataset_stl10'), train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.STL10(args.dir_dataset, train=True, download=True, transform=ds_transform)
   #  ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
@@ -442,7 +442,7 @@ def main():
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
-    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset'))
+    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset_stl10'))
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_stl10'))
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
