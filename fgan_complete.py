@@ -14,6 +14,7 @@ from torch.utils import tensorboard
 
 import torch_fidelity
 
+image_size = 48
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -73,8 +74,11 @@ class FGenerator(FFCModel):
     def __init__(self, z_size):
         super(FGenerator, self).__init__()
         self.z_size = z_size
-        self.ngf = 32#64
+        self.ngf = 64
         ratio_g = 0.5
+        self.mg = 4
+
+        self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf*8 )
 
         self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
@@ -98,10 +102,14 @@ class FGenerator(FFCModel):
       #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
-
+        
+      #  input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
+    
         fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         if self.training:
             fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
+
+        print(fake.size())
 
         fake = self.conv2(fake)
         if self.training:
@@ -283,13 +291,15 @@ def train(args):
     os.makedirs(args.dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
+            transforms.Resize(image_size),
+            transforms.CenterCrop(image_size),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
     
-    ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
-  #  ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+   # ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
