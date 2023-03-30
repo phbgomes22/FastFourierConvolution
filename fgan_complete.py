@@ -84,7 +84,7 @@ class FGenerator(FFCModel):
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise1 = NoiseInjection(self.ngf*4)
         self.glb_noise1 = NoiseInjection(self.ngf*4)
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         self.glb_noise2 = NoiseInjection(self.ngf*2)
@@ -103,16 +103,16 @@ class FGenerator(FFCModel):
 
     def forward(self, z):
         
-      #  input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
+        input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
     
-        fake = self.conv1(z.view(-1, self.z_size, 1, 1))
-        if self.training:
-            fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
+        # fake = self.conv1(z.view(-1, self.z_size, 1, 1))
+        # if self.training:
+        #     fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
 
-        print(fake[0].size())
-        print(fake[1].size())
+        # print(fake[0].size())
+        # print(fake[1].size())
 
-        fake = self.conv2(fake)
+        fake = self.conv2(input)
         if self.training:
             fake = self.lcl_noise2(fake[0]), fake[1] #self.glb_noise2(fake[1])
         
@@ -135,6 +135,7 @@ class FGenerator(FFCModel):
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True):
+        self.mg = 4
         super(Discriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
@@ -144,7 +145,7 @@ class Discriminator(torch.nn.Module):
         self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
@@ -156,7 +157,7 @@ class Discriminator(torch.nn.Module):
         m = self.act(self.conv5(m))
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
-        output = self.fc(m.view(-1, 4 * 4 * 512))
+        output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
     
