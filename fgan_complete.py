@@ -108,9 +108,9 @@ class FGenerator(FFCModel):
         
         input = self.l1(z).view(-1, self.ngf, self.mg, self.mg)
     
-        # fake = self.conv1(z.view(-1, self.z_size, 1, 1))
-        # if self.training:
-        #     fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
+        fake = self.conv1(input)
+        if self.training:
+            fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
 
         # print(fake[0].size())
         # print(fake[1].size())
