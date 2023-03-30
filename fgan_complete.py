@@ -79,15 +79,15 @@ class FGenerator(FFCModel):
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.5
-        self.mg = 4
+        self.mg = 2
 
-        self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf*8 )
+        self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf )
 
-        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
+        self.conv1 = FFC_BN_ACT(self.ngf*8, self.ngf*8, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise1 = NoiseInjection(self.ngf*4)
         self.glb_noise1 = NoiseInjection(self.ngf*4)
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         self.glb_noise2 = NoiseInjection(self.ngf*2)
@@ -106,7 +106,7 @@ class FGenerator(FFCModel):
 
     def forward(self, z):
         
-        input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
+        input = self.l1(z).view(-1, self.ngf, self.mg, self.mg)
     
         # fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         # if self.training:
