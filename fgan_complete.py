@@ -64,7 +64,7 @@ class Generator(torch.nn.Module):
         )
 
     def forward(self, z):
-        input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
+        input = self.l1(z).view(-1, 512, self.mg, self.mg)
         fake = self.model(input)
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
@@ -321,7 +321,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = Generator(z_size=args.z_size).to(device).train()
+    G = FGenerator(z_size=args.z_size).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
