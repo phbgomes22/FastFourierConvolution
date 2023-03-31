@@ -121,9 +121,9 @@ GEN_SIZE=128
 DISC_SIZE=128
 
 class Generator(nn.Module):
-    def __init__(self, z_dim):
+    def __init__(self, z_size):
         super(Generator, self).__init__()
-        self.z_dim = z_dim
+        self.z_dim = z_size
 
         self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
         self.final = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
@@ -143,7 +143,7 @@ class Generator(nn.Module):
         return self.model(self.dense(z).view(-1, GEN_SIZE, 4, 4))
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, sn: bool):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
