@@ -81,39 +81,38 @@ class FGenerator(FFCModel):
         ratio_g = 0.5
         self.mg = 2
 
-        self.l1 = torch.nn.utils.spectral_norm(nn.Linear(z_size, self.mg * self.mg * self.ngf*8 ))
+      #  self.l1 = torch.nn.utils.spectral_norm(nn.Linear(z_size, self.mg * self.mg * self.ngf*8 ))
 
-        self.conv1 = FFC_BN_ACT(self.ngf*8, self.ngf*8, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+        self.conv1 = FFC_BN_ACT(self.ngf*8, self.ngf*8, 3, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise1 = NoiseInjection(self.ngf*4)
         self.glb_noise1 = NoiseInjection(self.ngf*4)
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         self.glb_noise2 = NoiseInjection(self.ngf*2)
         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
         self.glb_noise3 = NoiseInjection(self.ngf)
         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
         self.glb_noise4 = NoiseInjection(self.ngf//2)
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         
       #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
         
-        input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
+      #  input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
 
-        fake = self.conv1(input)
+        fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         if self.training:
             fake = self.lcl_noise1(fake[0]), fake[1] #self.glb_noise1(fake[1])
 
-        # print(fake[0].size())
-        # print(fake[1].size())
+        print(fake.size())
 
         fake = self.conv2(fake)
         if self.training:
@@ -129,6 +128,8 @@ class FGenerator(FFCModel):
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
+        
+        print(fake.size())
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
@@ -150,7 +151,9 @@ class Discriminator(torch.nn.Module):
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
-        self.act = torch.nn.LeakyReLU(0.1)
+        self.act = torch.nn.GELU#LeakyReLU(0.1)
+
+     #   self.gaus_noise = GaussianNoise(0.05)
 
     def forward(self, x):
         m = self.act(self.conv1(x))
