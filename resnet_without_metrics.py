@@ -378,7 +378,7 @@ def evaluate(epoch):
         ax.set_aspect('equal')
         plt.imshow(sample.transpose((1,2,0)) * 0.5 + 0.5)
 
-    img_path = os.path.join(args.dir_logs, '{}.png'.format(str(epoch).zfill(3)))
+    img_path = os.path.join(logs_dir, '{}.png'.format(str(epoch).zfill(3)))
     plt.savefig(img_path, bbox_inches='tight')
     plt.close(fig)
 
