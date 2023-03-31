@@ -16,3 +16,6 @@ from .noise_injection import *
 from .resizer import *
 from .print_layer import *
 from .gaussian_noise import *
+
+
+from .resnet.bottleneck import *
