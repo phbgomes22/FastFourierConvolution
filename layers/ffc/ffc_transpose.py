@@ -87,9 +87,10 @@ class FFCTranspose(nn.Module):
         if condition:
             return nn.Identity(in_ch, out_ch, kernel_size, stride, padding, dilation, groups, bias)
 
-        return torch.nn.utils.spectral_norm(nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
+        #torch.nn.utils.spectral_norm()
+        return nn.ConvTranspose2d(in_ch, out_ch, kernel_size,
                               stride, padding, output_padding=output_padding, 
-                              groups=groups, bias=bias, dilation=dilation)) 
+                              groups=groups, bias=bias, dilation=dilation)
 
 
     # receives the signal as a tuple containing the local signal in the first position
