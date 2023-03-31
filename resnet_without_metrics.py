@@ -234,6 +234,7 @@ class DiscriminatorSNResidualBlock(nn.Module):
 class Generator(nn.Module):
     def __init__(self, enable_conditional=False):
         super().__init__()
+        print(enable_conditional)
         n_classes = 10 if enable_conditional else 0
         self.dense = nn.Linear(128, 4 * 4 * 256)
         self.block1 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
@@ -306,7 +307,7 @@ disc_iters = 5
 # discriminator = torch.nn.DataParallel(Discriminator()).cuda() # TODO: try out multi-gpu training
 # if args.model == 'resnet':
 discriminator = Discriminator().cuda()
-generator = Generator(Z_dim).cuda()
+generator = Generator().cuda()
 # else:
 #     discriminator = model.Discriminator().cuda()
 #     generator = model.Generator(Z_dim).cuda()
