@@ -66,11 +66,11 @@ class SpectralNorm(nn.Module):
 		height = w.data.shape[0]
 		width = w.view(height, -1).data.shape[1]
 
-		u = Parameter(w.data.new(height).normal_(0, 1), requires_grad=False)
-		v = Parameter(w.data.new(height).normal_(0, 1), requires_grad=False)
+		u = nn.Parameter(w.data.new(height).normal_(0, 1), requires_grad=False)
+		v = nn.Parameter(w.data.new(height).normal_(0, 1), requires_grad=False)
 		u.data = l2normalize(u.data)
 		v.data = l2normalize(v.data)
-		w_bar = Parameter(w.data)
+		w_bar = nn.Parameter(w.data)
 
 		del self.module._parameters[self.name]
 		self.module.register_parameter(self.name + "_u", u)
