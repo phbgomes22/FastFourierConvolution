@@ -83,19 +83,19 @@ class FGenerator(FFCModel):
 
         self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf*8 )
 
-        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, self.mg, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
+        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, self.mg, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.ReLU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise1 = NoiseInjection(self.ngf*4)
         self.glb_noise1 = NoiseInjection(self.ngf*4)
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         self.glb_noise2 = NoiseInjection(self.ngf*2)
-        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
         self.glb_noise3 = NoiseInjection(self.ngf)
-        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
         self.glb_noise4 = NoiseInjection(self.ngf//2)
