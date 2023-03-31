@@ -136,6 +136,7 @@ class GeneratorResidualBlock(nn.Module):
             self.bn1 = nn.BatchNorm2d(in_ch)
             self.bn2 = nn.BatchNorm2d(out_ch)
         else:
+            print("HAS CLASSES")
             self.bn1 = ConditionalBatchNorm2d(in_ch, n_classes)
             self.bn2 = ConditionalBatchNorm2d(out_ch, n_classes)
         if in_ch != out_ch or upsampling > 1:
@@ -149,6 +150,7 @@ class GeneratorResidualBlock(nn.Module):
     def forward(self, inputs, label_onehots=None):
         # main
         if label_onehots is not None:
+            print("Not None")
             x = self.bn1(inputs, label_onehots)
         else:
             x = self.bn1(inputs)
@@ -272,7 +274,11 @@ class Discriminator(nn.Module):
             self.sn_embedding = None
 
     def forward(self, inputs, y=None):
-        x = self.block4(self.block3(self.block2(self.block1(inputs))))
+        inputs = self.block1(inputs)
+        inputs = self.block2(inputs)
+        inputs = self.block3(inputs)
+        x = self.block4(inputs)
+
         x = F.relu(x)
         features = torch.sum(x, dim=(2,3)) # global sum pooling
         x = self.dense(features)
