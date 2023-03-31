@@ -363,7 +363,7 @@ def train(epoch):
 fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
 
 def evaluate(epoch):
-
+    print("evaluating...")
     samples = generator(fixed_z).cpu().data.numpy()[:64]
 
     fig = plt.figure(figsize=(8, 8))
