@@ -128,7 +128,7 @@ class FGenerator(FFCModel):
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
-        
+
         print(fake.size())
 
         if not self.training:
@@ -151,7 +151,7 @@ class Discriminator(torch.nn.Module):
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
-        self.act = torch.nn.GELU#LeakyReLU(0.1)
+        self.act = torch.nn.GELU()#LeakyReLU(0.1)
 
      #   self.gaus_noise = GaussianNoise(0.05)
 
