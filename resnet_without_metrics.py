@@ -287,7 +287,7 @@ dataset_dir = os.path.join(dir, 'dataset')
 logs_dir = os.path.join(dir, 'logs_resnet')
 
 loader = torch.utils.data.DataLoader(
-    datasets.CIFAR10(default=dataset_dir, train=True, download=True,
+    datasets.CIFAR10(dataset_dir, train=True, download=True,
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
