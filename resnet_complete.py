@@ -374,7 +374,7 @@ class DiscriminatorSNResidualBlock(nn.Module):
             x = F.avg_pool2d(x, kernel_size=self.downsampling)
             shortcut = F.avg_pool2d(shortcut, kernel_size=self.downsampling)
         # residual add
-        return x +   
+        return x + shortcut 
 
 class Generator(nn.Module):
     def __init__(self, enable_conditional=False):
@@ -403,7 +403,7 @@ class Generator(nn.Module):
 
         return x
     
-    
+
 class Discriminator(nn.Module):
     def __init__(self, enable_conditional=False):
         super().__init__()
