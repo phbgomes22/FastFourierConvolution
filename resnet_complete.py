@@ -425,7 +425,7 @@ class Discriminator(nn.Module):
         x = self.dense(features)
         if self.sn_embedding is not None:
             x = self.sn_embedding(features, x, y)
-        return 
+        return x
 
 
 
