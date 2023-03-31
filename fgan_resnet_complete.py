@@ -3,6 +3,8 @@ from models import *
 import argparse
 import os
 
+from models import *
+
 import PIL
 import torch
 import torchvision
@@ -15,31 +17,72 @@ import torch_fidelity
 
 channels = 3
 
-class ResBlockGenerator(nn.Module):
+class FFCResBlockGenerator(nn.Module):
 
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, ratio_gin, ratio_gout, stride=1):
         super(ResBlockGenerator, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+        inner_ratio = 0.5
+        self.conv1 = FFC(in_channels=in_channels, out_channels=out_channels, kernel_size=3,
+                        ratio_gin=ratio_gin, ratio_gout=inner_ratio, stride=1, padding=0)
+        
+        self.conv2 = FFC(in_channels=out_channels, out_channels=out_channels, kernel_size=3,
+                        ratio_gin=inner_ratio, ratio_gout=ratio_gout, stride=1, padding=0)
+        
+        nn.init.xavier_uniform(self.conv1.convl2l.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.convl2l.weight.data, 1.)
 
-        self.model = nn.Sequential(
-            nn.BatchNorm2d(in_channels),
-            nn.ReLU(),
-            nn.Upsample(scale_factor=2),
-            self.conv1,
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
-            self.conv2
-            )
-        self.bypass = nn.Sequential()
+        self.act_l = nn.ReLU()
+        self.act_g = nn.ReLU()
+
+        norm_l1_ch = int(out_channels * (1 - inner_ratio))
+        norm_g1_ch = int(out_channels * inner_ratio)
+
+        self.norm_l1 = nn.BatchNorm2d(norm_l1_ch)
+        self.norm_g1 = nn.BatchNorm2d(norm_g1_ch)
+
+        norm_l2_ch = int(out_channels * (1 - ratio_gout))
+        norm_g2_ch = int(out_channels * ratio_gout)
+
+        self.norm_l2 = nn.BatchNorm2d(norm_l2_ch)
+        self.norm_g2 = nn.BatchNorm2d(norm_g2_ch)
+
+        self.upsample = nn.Upsample(scale_factor=2)
+
+        self.bypass_l = nn.Sequential()
+        self.bypass_g = nn.Sequential()
+
         if stride != 1:
-            self.bypass = nn.Upsample(scale_factor=2)
+            self.bypass_l = nn.Upsample(scale_factor=2)
+            self.bypass_g = nn.Upsample(scale_factor=2)
+        
+        # self.model = nn.Sequential(
+        #     nn.BatchNorm2d(in_channels),
+        #     nn.ReLU(),
+        #     nn.Upsample(scale_factor=2),
+        #     self.conv1,
+        #     nn.BatchNorm2d(out_channels),
+        #     nn.ReLU(),
+        #     self.conv2
+        # )
 
     def forward(self, x):
-        return self.model(x) + self.bypass(x)
+        x_l, x_g = x if type(x) is tuple else (x, 0)
+
+        x_l = self.act_l(self.norm_l1(x_l))
+        x_g = self.act_g(self.norm_g1(x_g))
+        x_l = self.upsample(x_l)
+        x_g = self.upsample(x_g)
+
+        x_l, x_g = self.conv1(x_l, x_g)
+        x_l = self.act_l(self.norm_l2(x_l))
+        x_g = self.act_g(self.norm_g2(x_g))
+        x_l, x_g = self.conv2(x_l, x_g)
+
+        x_l = x_l + self.bypass_l(x_l)
+        x_g = x_g + self.bypass_g(x_g)
+
+        return x_l, x_g
 
 
 class ResBlockDiscriminator(nn.Module):
@@ -130,21 +173,27 @@ class Generator(nn.Module):
         nn.init.xavier_uniform(self.dense.weight.data, 1.)
         nn.init.xavier_uniform(self.final.weight.data, 1.)
 
-        self.model = nn.Sequential(
-            ResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
-            ResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
-            ResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
+        self.blocks = nn.Sequential(
+            FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
+            FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
+            FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
+        )
+
+        self.final = nn.Sequential(
             nn.BatchNorm2d(GEN_SIZE),
             nn.ReLU(),
             self.final,
-            nn.Tanh())
+            nn.Tanh()
+        )
+
+        self.resizer = Resizer()
 
     def forward(self, z):
-        fake = self.model(self.dense(z).view(-1, GEN_SIZE, 4, 4))
+        fake = self.dense(z).view(-1, GEN_SIZE, 4, 4)
+        fake = self.blocks(fake)
+        fake = self.resizer(fake)
+        fake = self.final(fake)
 
-        if not self.training:
-            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
-            fake = fake.to(torch.uint8)
         return fake
 
 class Discriminator(nn.Module):

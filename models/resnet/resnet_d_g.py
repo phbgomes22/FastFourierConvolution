@@ -152,7 +152,7 @@ class Discriminator(nn.Module):
             )
         self.fc = nn.Linear(DISC_SIZE, 1)
         nn.init.xavier_uniform(self.fc.weight.data, 1.)
-        self.fc = SpectralNorm(self.fc)
+        self.fc = spectral_norm(self.fc)
 
     def forward(self, x):
         return self.fc(self.model(x).view(-1,DISC_SIZE))
