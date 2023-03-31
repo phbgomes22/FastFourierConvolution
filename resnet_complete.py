@@ -117,7 +117,7 @@ class FirstResBlockDiscriminator(nn.Module):
     def forward(self, x):
         return self.model(x) + self.bypass(x)
 
-GEN_SIZE=128
+GEN_SIZE=256
 DISC_SIZE=128
 
 class Generator(nn.Module):

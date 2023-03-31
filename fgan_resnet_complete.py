@@ -194,6 +194,10 @@ class Generator(nn.Module):
         fake = self.resizer(fake)
         fake = self.final(fake)
 
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+
         return fake
 
 class Discriminator(nn.Module):
