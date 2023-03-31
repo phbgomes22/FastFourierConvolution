@@ -112,8 +112,6 @@ class FGenerator(FFCModel):
         if self.training:
             fake = self.lcl_noise1(fake[0]), fake[1] #self.glb_noise1(fake[1])
 
-        print(fake[0].size())
-
         fake = self.conv2(fake)
         if self.training:
             fake = self.lcl_noise2(fake[0]), fake[1] #self.glb_noise2(fake[1])
@@ -128,8 +126,6 @@ class FGenerator(FFCModel):
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
-
-        print(fake.size())
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
