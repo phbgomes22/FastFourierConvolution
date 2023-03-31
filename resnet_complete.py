@@ -14,6 +14,9 @@ import torch_fidelity
 
 
 channels = 3
+GEN_SIZE=256
+DISC_SIZE=128
+
 
 class ResBlockGenerator(nn.Module):
 
@@ -89,6 +92,7 @@ class ResBlockDiscriminator(nn.Module):
     def forward(self, x):
         return self.model(x) + self.bypass(x)
 
+
 # special ResBlock just for the first layer of the discriminator
 class FirstResBlockDiscriminator(nn.Module):
 
@@ -117,8 +121,6 @@ class FirstResBlockDiscriminator(nn.Module):
     def forward(self, x):
         return self.model(x) + self.bypass(x)
 
-GEN_SIZE=256
-DISC_SIZE=128
 
 class Generator(nn.Module):
     def __init__(self, z_size):
@@ -147,6 +149,7 @@ class Generator(nn.Module):
             fake = fake.to(torch.uint8)
         return fake
 
+
 class Discriminator(nn.Module):
     def __init__(self, sn: bool):
         super(Discriminator, self).__init__()
@@ -166,6 +169,7 @@ class Discriminator(nn.Module):
     def forward(self, x):
         return self.fc(self.model(x).view(-1,DISC_SIZE))
     
+
 
 
 def hinge_loss_dis(fake, real):
@@ -232,10 +236,18 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
     
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
-    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
+    # optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    # optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    # scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
+    # scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
+
+    # https://github.com/christiancosgrove/pytorch-spectral-normalization-gan/blob/master/main.py
+    optim_D = torch.optim.AdamW(filter(lambda p: p.requires_grad, D.parameters()), lr=args.lr, betas=(0.0,0.9))
+    optim_G  = torch.optim.AdamW(filter(lambda p: p.requires_grad, G.parameters()), lr=args.lr, betas=(0.0,0.9))
+
+    # use an exponentially decaying learning rate
+    scheduler_D = torch.optim.lr_scheduler.ExponentialLR(optim_D, gamma=0.99)
+    scheduler_G = torch.optim.lr_scheduler.ExponentialLR(optim_G, gamma=0.99)
 
     # initialize logging
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
