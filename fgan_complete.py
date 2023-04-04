@@ -14,7 +14,6 @@ from torch.utils import tensorboard
 
 import torch_fidelity
 
-image_size = 32
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -38,14 +37,12 @@ class Generator(torch.nn.Module):
         self.z_size = z_size
 
      #   self.print_layer = Print(debug=True)
-        self.mg = 4
-        self.l1 = nn.Linear(z_size, self.mg * self.mg * 512 )
       
         self.model = torch.nn.Sequential(
           #  GaussianNoise(0.01), #
-            # torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
-            # torch.nn.BatchNorm2d(512),
-            # torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
+            torch.nn.BatchNorm2d(512),
+            torch.nn.ReLU(),
           #  GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(256),
@@ -64,8 +61,7 @@ class Generator(torch.nn.Module):
         )
 
     def forward(self, z):
-        input = self.l1(z).view(-1, 512, self.mg, self.mg)
-        fake = self.model(input)
+        fake = self.model(z.view(-1, self.z_size, 1, 1))
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
@@ -79,23 +75,20 @@ class FGenerator(FFCModel):
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.5
-        self.mg = 4
 
-      #  self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf*8 )
-
-        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, self.mg, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.ReLU, 
+        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise1 = NoiseInjection(self.ngf*4)
         self.glb_noise1 = NoiseInjection(self.ngf*4)
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         self.glb_noise2 = NoiseInjection(self.ngf*2)
-        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
         self.glb_noise3 = NoiseInjection(self.ngf)
-        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
         self.glb_noise4 = NoiseInjection(self.ngf//2)
@@ -105,12 +98,10 @@ class FGenerator(FFCModel):
       #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
-        
-      #  input = self.l1(z).view(-1, self.ngf*8, self.mg, self.mg)
 
         fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         if self.training:
-            fake = self.lcl_noise1(fake[0]), fake[1] #self.glb_noise1(fake[1])
+            fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
 
         fake = self.conv2(fake)
         if self.training:
@@ -135,7 +126,6 @@ class FGenerator(FFCModel):
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True):
-        self.mg = 4
         super(Discriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
@@ -145,11 +135,9 @@ class Discriminator(torch.nn.Module):
         self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
+        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
-
-     #   self.gaus_noise = GaussianNoise(0.05)
 
     def forward(self, x):
         m = self.act(self.conv1(x))
@@ -159,7 +147,7 @@ class Discriminator(torch.nn.Module):
         m = self.act(self.conv5(m))
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
-        output = self.fc(m.view(-1, self.mg * self.mg * 512))
+        output = self.fc(m.view(-1, 4 * 4 * 512))
  
         return output
     
@@ -278,6 +266,8 @@ class LargeFDiscriminator(FFCModel):
         return self.fc(m.view(-1, 4 * 4 * self.ndf * 8))
 
 def hinge_loss_dis(fake, real):
+   # fake = fake.squeeze(-1).squeeze(-1)
+  #  real = real.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
     loss = torch.nn.functional.relu(1.0 - real).mean() + \
            torch.nn.functional.relu(1.0 + fake).mean()
@@ -285,6 +275,7 @@ def hinge_loss_dis(fake, real):
 
 
 def hinge_loss_gen(fake):
+   # fake = fake.squeeze(-1).squeeze(-1)
     assert fake.dim() == 2 and fake.shape[1] == 1
     loss = -fake.mean()
     return loss
@@ -295,16 +286,11 @@ def train(args):
     os.makedirs(args.dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
-            transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
-    
-   # ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
-    ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
- #   ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
@@ -451,14 +437,14 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
-    parser.add_argument('--lr', type=float, default=2e-4) # was 2e-4
+    parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
-    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset_stl10'))
-    parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_stl10'))
+    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset'))
+    parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan'))
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
   #  assert not args.conditional, 'Conditional mode not implemented'
