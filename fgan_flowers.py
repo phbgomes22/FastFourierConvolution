@@ -24,6 +24,7 @@ class DropLabelsDataset(Dataset):
         item = self.ds[index]
         assert type(item) in (tuple, list)
         print(type(item))
+        print("$$$$$$$")
         # test adding this clamp (same as generator)
         returned_item = (255 * (item[0].clamp(-1, 1) * 0.5 + 0.5))
         returned_item = returned_item[0].to(torch.uint8)
