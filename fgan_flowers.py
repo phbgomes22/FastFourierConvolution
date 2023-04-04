@@ -16,6 +16,21 @@ import torch_fidelity
 
 IMAGE_SIZE = 32
 
+class DropLabelsDataset(Dataset):
+    def __init__(self, ds):
+        self.ds = ds
+
+    def __getitem__(self, index):
+        item = self.ds[index]
+        assert type(item) in (tuple, list)
+        returned_item = item[0].to(torch.uint8)
+      
+        return returned_item
+
+    def __len__(self):
+        return len(self.ds)
+
+
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -293,7 +308,10 @@ def train(args):
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
-    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.Flower102(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    
+    metrics_dataset = DropLabelsDataset(ds_instance)
+    
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
@@ -396,7 +414,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2=ds_instance,
+            input2=metrics_dataset,
             isc=True,
             fid=True,
             kid=True,
