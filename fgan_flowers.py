@@ -308,7 +308,7 @@ def train(args):
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
-    ds_instance = torchvision.datasets.Flower102(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.Flowers102(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
     
     metrics_dataset = DropLabelsDataset(ds_instance)
     
