@@ -14,7 +14,7 @@ from torch.utils import tensorboard
 
 import torch_fidelity
 
-image_size = 48
+image_size = 32
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -295,15 +295,16 @@ def train(args):
     os.makedirs(args.dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
-          #  transforms.Resize(image_size),
-          #  transforms.CenterCrop(image_size),
+            transforms.Resize(image_size),
+            transforms.CenterCrop(image_size),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
     
    # ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
-    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
+   # ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
