@@ -23,11 +23,10 @@ class DropLabelsDataset(Dataset):
     def __getitem__(self, index):
         item = self.ds[index]
         assert type(item) in (tuple, list)
-        print(type(item[0]))
         # test adding this clamp (same as generator)
         returned_item = (255 * (item[0].clamp(-1, 1) * 0.5 + 0.5))
         returned_item = returned_item.to(torch.uint8)
-        print(type(returned_item))
+        
         return returned_item
 
     def __len__(self):
@@ -457,7 +456,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_total_steps', type=int, default=100000)
-    parser.add_argument('--num_epoch_steps', type=int, default=1) #5000
+    parser.add_argument('--num_epoch_steps', type=int, default=5000) #5000
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
     parser.add_argument('--lr', type=float, default=1e-4) #2e-4
