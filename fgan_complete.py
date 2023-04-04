@@ -303,8 +303,8 @@ def train(args):
     )
     
    # ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
-   # ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
-    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
+ #   ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
