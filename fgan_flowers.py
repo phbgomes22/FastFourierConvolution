@@ -23,7 +23,9 @@ class DropLabelsDataset(Dataset):
     def __getitem__(self, index):
         item = self.ds[index]
         assert type(item) in (tuple, list)
-        returned_item = item[0].to(torch.uint8)
+        # test adding this clamp (same as generator)
+        returned_item = (255 * (item[0].clamp(-1, 1) * 0.5 + 0.5))
+        returned_item = returned_item[0].to(torch.uint8)
       
         return returned_item
 
@@ -95,22 +97,18 @@ class FGenerator(FFCModel):
         self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise1 = NoiseInjection(self.ngf*4)
-        self.glb_noise1 = NoiseInjection(self.ngf*4)
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
-        self.glb_noise2 = NoiseInjection(self.ngf*2)
         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
-        self.glb_noise3 = NoiseInjection(self.ngf)
         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
-        self.glb_noise4 = NoiseInjection(self.ngf//2)
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
-        
+        self.lcl_noise5 = NoiseInjection(3)
       #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
@@ -132,6 +130,9 @@ class FGenerator(FFCModel):
             fake = self.lcl_noise4(fake[0]), fake[1] #self.glb_noise4(fake[1])
 
         fake = self.conv5(fake)
+        if self.training:
+            fake = self.lcl_noise5(fake[0]), fake[1]
+
         fake = self.resizer(fake)
 
         if not self.training:
@@ -458,7 +459,7 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
-    parser.add_argument('--lr', type=float, default=2e-4)
+    parser.add_argument('--lr', type=float, default=1e-4) #2e-4
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
