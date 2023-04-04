@@ -5,7 +5,7 @@ Adaptations: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from .spectral_transform import SpectralTransform
+from .spectral_transform import SpectralTransform, SpectralTransformSN
 from ..print_layer import *
 from ..attention_layer import *
 
@@ -77,7 +77,7 @@ class FFC(nn.Module):
             self.convg2l = torch.nn.utils.spectral_norm(self.convg2l)
 
         # defines the module as the Spectral Transform unless the channels output are zero
-        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
+        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransformSN
 
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
