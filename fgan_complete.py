@@ -81,7 +81,7 @@ class FGenerator(FFCModel):
         ratio_g = 0.5
         self.mg = 4
 
-        self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf*8 )
+      #  self.l1 = nn.Linear(z_size, self.mg * self.mg * self.ngf*8 )
 
         self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, self.mg, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.ReLU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
@@ -100,7 +100,7 @@ class FGenerator(FFCModel):
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
         self.glb_noise4 = NoiseInjection(self.ngf//2)
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
         
       #  self.print_layer = Print(debug=True)
 
