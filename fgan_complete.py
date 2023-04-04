@@ -303,8 +303,8 @@ def train(args):
     )
     
    # ds_instance = torchvision.datasets.STL10(args.dir_dataset, split="train", download=True, transform=ds_transform)
-    ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
-   # ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+   # ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
@@ -451,7 +451,7 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
-    parser.add_argument('--lr', type=float, default=1e-4) # was 2e-4
+    parser.add_argument('--lr', type=float, default=2e-4) # was 2e-4
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
