@@ -23,12 +23,11 @@ class DropLabelsDataset(Dataset):
     def __getitem__(self, index):
         item = self.ds[index]
         assert type(item) in (tuple, list)
-        print(type(item))
-        print("$$$$$$$")
+        print(type(item[0]))
         # test adding this clamp (same as generator)
         returned_item = (255 * (item[0].clamp(-1, 1) * 0.5 + 0.5))
-        returned_item = returned_item[0].to(torch.uint8)
-      
+        returned_item = returned_item.to(torch.uint8)
+        print(type(returned_item))
         return returned_item
 
     def __len__(self):
