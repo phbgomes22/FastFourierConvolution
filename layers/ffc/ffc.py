@@ -77,7 +77,7 @@ class FFC(nn.Module):
             self.convg2l = torch.nn.utils.spectral_norm(self.convg2l)
 
         # defines the module as the Spectral Transform unless the channels output are zero
-        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransformSN
+        module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
 
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)

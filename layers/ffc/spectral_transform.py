@@ -19,6 +19,8 @@ class SpectralTransform(nn.Module):
         super(SpectralTransform, self).__init__()
         self.enable_lfu = enable_lfu
 
+        sn_fn = torch.nn.utils.spectral_norm
+        
         # sets a downsample if the stride is set to 2 (default is one)
         if stride == 2:
             self.downsample = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
@@ -28,9 +30,9 @@ class SpectralTransform(nn.Module):
         self.stride = stride
 
         # sets the initial 1x1 convolution, batch normalization and relu flow.
-        self.conv1 = nn.Conv2d(in_channels, out_channels //
-                      2, kernel_size=1, groups=groups, bias=False)
-        self.bn1 = nn.BatchNorm2d(out_channels // 2)
+        self.conv1 = sn_fn(nn.Conv2d(in_channels, out_channels //
+                      2, kernel_size=1, groups=groups, bias=False))
+     #   self.bn1 = nn.BatchNorm2d(out_channels // 2)
         self.act1 = nn.ReLU(inplace=True)
 
         # creates the Fourier Unit that will do convolutions in the spectral domain.
@@ -43,15 +45,17 @@ class SpectralTransform(nn.Module):
                 out_channels // 2, out_channels // 2, groups)
         
         ## sets the convolution that will occur at the end of the Spectral Transform
-        self.conv2 = torch.nn.Conv2d(
-            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
+        self.conv2 = sn_fn(torch.nn.Conv2d(
+            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False))
 
 
     def forward(self, x):
         # the default behavior is no downsample - so this is an identity
         x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
-        x = self.act1(self.bn1(self.conv1(x)))
+        x = self.act1(self.conv1(x))
+        # - testing spectral norm in spectral transform
+      #  x = self.act1(self.bn1(self.conv1(x)))
         # gets the output from the Fourier Unit (back in pixel domain)
         output = self.fu(x)
 
