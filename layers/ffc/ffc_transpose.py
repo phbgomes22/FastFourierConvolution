@@ -76,8 +76,8 @@ class FFCTranspose(nn.Module):
         # for the formation of the outputted global signal 
         self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
             # Upsample with convolution
-        self.convg2gup = nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation)
+        self.convg2gup = torch.nn.utils.spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
+                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
         
         ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
