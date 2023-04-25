@@ -97,7 +97,7 @@ class FGenerator(FFCModel):
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
         self.glb_noise4 = NoiseInjection(self.ngf//2)
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
         
       #  self.print_layer = Print(debug=True)
 
