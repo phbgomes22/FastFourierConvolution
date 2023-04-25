@@ -195,16 +195,20 @@ class FDiscriminator(FFCModel):
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=0.0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
+                norm_layer=nn.BatchNorm2d),
             FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
+                norm_layer=nn.BatchNorm2d),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
+                norm_layer=nn.BatchNorm2d),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
+                norm_layer=nn.BatchNorm2d),
             # FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
             #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
             #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
@@ -324,7 +328,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True).to(device).train() #LargeF
+    D = FDiscriminator(sn=True).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
