@@ -30,9 +30,9 @@ class SpectralTransform(nn.Module):
         self.stride = stride
 
         # sets the initial 1x1 convolution, batch normalization and relu flow.
-        self.conv1 = sn_fn(nn.Conv2d(in_channels, out_channels //
-                      2, kernel_size=1, groups=groups, bias=False))
-     #   self.bn1 = nn.BatchNorm2d(out_channels // 2)
+        self.conv1 = nn.Conv2d(in_channels, out_channels //
+                      2, kernel_size=1, groups=groups, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels // 2)
         self.act1 = nn.ReLU(inplace=True)
 
         # creates the Fourier Unit that will do convolutions in the spectral domain.
@@ -53,9 +53,9 @@ class SpectralTransform(nn.Module):
         # the default behavior is no downsample - so this is an identity
         x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
-        x = self.act1(self.conv1(x))
-        # - testing spectral norm in spectral transform
-      #  x = self.act1(self.bn1(self.conv1(x)))
+      #  x = self.act1(self.conv1(x))
+       # # - testing spectral norm in spectral transform
+        x = self.act1(self.bn1(self.conv1(x)))
         # gets the output from the Fourier Unit (back in pixel domain)
         output = self.fu(x)
 
