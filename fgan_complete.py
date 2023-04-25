@@ -75,6 +75,10 @@ class FGenerator(FFCModel):
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.5
+        self.mg = 4
+
+        # sn_fn = torch.nn.utils.spectral_norm 
+        # self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * 512))
 
         self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
