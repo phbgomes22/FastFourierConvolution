@@ -104,7 +104,10 @@ class FGenerator(FFCModel):
     def forward(self, z):
         
         fake = self.noise_to_feature(z)
+        print(fake.size())
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
+        print(fake.size())
+
 
         # fake = self.conv1(z.view(-1, self.z_size, 1, 1))
         # if self.training:
