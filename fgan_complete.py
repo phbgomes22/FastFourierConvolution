@@ -70,12 +70,12 @@ class Generator(torch.nn.Module):
 
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size):
+    def __init__(self, z_size, mg: int = 4):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.5
-        self.mg = 6
+        self.mg = mg
 
         sn_fn = torch.nn.utils.spectral_norm 
         self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
@@ -129,9 +129,9 @@ class FGenerator(FFCModel):
 
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True):
+    def __init__(self, sn=True, mg: int = 4):
         super(Discriminator, self).__init__()
-        self.mg = 6
+        self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
@@ -183,9 +183,9 @@ class DCGANDiscrimnator(nn.Module):
 
 class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True):
+    def __init__(self, sn=True, mg: int = 4):
         super(FDiscriminator, self).__init__()
-        self.mg = 4
+        self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         norm_layer = nn.BatchNorm2d
         # 3, 4, 3, 4, 3, 4, 3
@@ -291,16 +291,21 @@ def hinge_loss_gen(fake):
 
 def train(args):
     # set up dataset loader
-    os.makedirs(args.dir_dataset, exist_ok=True)
+    dir_dataset = os.path.join(dir, 'dataset_' + args.dataset)
+    os.makedirs(dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
-    ds_instance = torchvision.datasets.STL10(args.dir_dataset, split='train', download=True, transform=ds_transform)
+    if args.dataset == 'cifar10':
+        ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
+        mg = 4
+    else:
+        ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
+        mg = 6
 
-    #ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
@@ -317,14 +322,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size).to(device).train()
+    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = FDiscriminator(sn=True).to(device).train() #LargeF
+    D = FDiscriminator(sn=True, mg=mg).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
@@ -403,7 +408,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2='stl10-train',
+            input2= args.dataset + '-train',
             isc=True,
             fid=True,
             kid=True,
