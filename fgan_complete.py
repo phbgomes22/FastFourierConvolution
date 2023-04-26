@@ -36,14 +36,15 @@ class Generator(torch.nn.Module):
         super(Generator, self).__init__()
         self.z_size = z_size
         self.mg = mg
+        self.ngf = 64
 
         self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8)
       
         self.model = torch.nn.Sequential(
           #  GaussianNoise(0.01), #
-            torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
-            torch.nn.BatchNorm2d(512),
-            torch.nn.ReLU(),
+            # torch.nn.ConvTranspose2d(z_size, 512, 4, stride=1),
+            # torch.nn.BatchNorm2d(512),
+            # torch.nn.ReLU(),
           #  GaussianNoise(0.01), #
             torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(256),
