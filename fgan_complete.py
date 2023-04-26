@@ -75,7 +75,7 @@ class FGenerator(FFCModel):
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.5
-        self.mg = 4
+        self.mg = 6
 
         sn_fn = torch.nn.utils.spectral_norm 
         self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
@@ -106,12 +106,6 @@ class FGenerator(FFCModel):
         fake = self.noise_to_feature(z)
       
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
-       
-
-
-        # fake = self.conv1(z.view(-1, self.z_size, 1, 1))
-        # if self.training:
-        #     fake = self.lcl_noise1(fake[0]), fake[1]#self.glb_noise1(fake[1])
 
         fake = self.conv2(fake)
         if self.training:
@@ -137,6 +131,7 @@ class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True):
         super(Discriminator, self).__init__()
+        self.mg = 6
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
@@ -145,7 +140,7 @@ class Discriminator(torch.nn.Module):
         self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
@@ -157,7 +152,7 @@ class Discriminator(torch.nn.Module):
         m = self.act(self.conv5(m))
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
-        output = self.fc(m.view(-1, 4 * 4 * 512))
+        output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
     
@@ -190,6 +185,7 @@ class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True):
         super(FDiscriminator, self).__init__()
+        self.mg = 4
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         norm_layer = nn.BatchNorm2d
         # 3, 4, 3, 4, 3, 4, 3
@@ -212,7 +208,7 @@ class FDiscriminator(FFCModel):
             #     activation_layer=nn.Sigmoid)
         )
 
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
       #  self.print_size = Print(debug=True)
         self.gaus_noise = GaussianNoise(0.05)
         # self.act = torch.nn.LeakyReLU(0.1)
@@ -226,7 +222,7 @@ class FDiscriminator(FFCModel):
        # m = m.view(-1, 1)
       #  self.print_size(m)
        
-        return self.fc(m.view(-1, 4 * 4 * 512))
+        return self.fc(m.view(-1, self.mg * self.mg * 512))
 
 class LargeFDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -302,7 +298,7 @@ def train(args):
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
-    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.STL10(args.dir_dataset, train=True, download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
@@ -405,7 +401,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2='cifar10-train',
+            input2='stl10-train',
             isc=True,
             fid=True,
             kid=True,
@@ -455,7 +451,7 @@ def main():
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
-    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset'))
+    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset_stl'))
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan'))
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
