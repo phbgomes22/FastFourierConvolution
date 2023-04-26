@@ -5,7 +5,7 @@ Adaptations: Pedro Gomes
 
 import torch.nn as nn
 from util import *
-from .spectral_transform import SpectralTransform, SpectralTransformSN
+from .spectral_transform import SpectralTransform
 from ..print_layer import *
 from ..attention_layer import *
 
