@@ -363,7 +363,7 @@ def train(args):
             real_img, real_label = next(loader_iter)
         real_img = real_img.to(device)
         real_label = real_label.to(device)
-        print(real_img.size())
+        
         # update Generator
         G.requires_grad_(True)
         D.requires_grad_(False)
