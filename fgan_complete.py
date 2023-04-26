@@ -98,8 +98,6 @@ class FGenerator(FFCModel):
         
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
-        
-      #  self.print_layer = Print(debug=True)
 
     def forward(self, z):
         
@@ -334,7 +332,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = FDiscriminator(sn=True, mg=mg).to(device).train() #LargeF
+    D = Discriminator(sn=True, mg=mg).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
