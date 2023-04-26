@@ -191,20 +191,21 @@ class FDiscriminator(FFCModel):
     def __init__(self, sn=True):
         super(FDiscriminator, self).__init__()
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
+        norm_layer = nn.BatchNorm2d
         # 3, 4, 3, 4, 3, 4, 3
         self.main = torch.nn.Sequential(
             FFC_BN_ACT(in_channels=3, out_channels=32, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=0.0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=32, out_channels=64, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
                 ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU),
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
             # FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
             #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
             #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
@@ -235,6 +236,7 @@ class LargeFDiscriminator(FFCModel):
         # 3, 4, 3, 4, 3, 4, 3
         ratio_g = 0.5 #0.5
         act_func = nn.LeakyReLU
+        norm_layer = nn.BatchNorm2d
         ndf = 64 # 32
         self.ndf = ndf
         self.main = torch.nn.Sequential(
@@ -243,22 +245,22 @@ class LargeFDiscriminator(FFCModel):
                 uses_noise=False, uses_sn=True, activation_layer=act_func),
             FFC_BN_ACT(in_channels=ndf, out_channels=ndf, kernel_size=4,
                 ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
+                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=ndf, out_channels=ndf*2, kernel_size=3,
                 ratio_gin=0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
+                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*2, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
+                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*4, kernel_size=3,
                 ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
+                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*4, kernel_size=4,
                 ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
+                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
             FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*8, kernel_size=3,
                 ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
+                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
         )
 
         self.fc = sn_fn(torch.nn.Linear(4 * 4 * ndf*8, 1))
@@ -324,7 +326,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = FDiscriminator(sn=True).to(device).train() #LargeF
+    D = LargeFDiscriminator(sn=True).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
