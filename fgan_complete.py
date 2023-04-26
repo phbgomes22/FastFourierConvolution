@@ -226,7 +226,7 @@ class FDiscriminator(FFCModel):
        # m = m.view(-1, 1)
       #  self.print_size(m)
        
-        return self.fc(m.view(-1, 4 * 4 * 256))
+        return self.fc(m.view(-1, 4 * 4 * 512))
 
 class LargeFDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
