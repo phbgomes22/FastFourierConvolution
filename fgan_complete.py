@@ -291,7 +291,8 @@ def hinge_loss_gen(fake):
 
 def train(args):
     # set up dataset loader
-    dir_dataset = os.path.join(dir, 'dataset_' + args.dataset)
+    dir_dataset_name = 'dataset_' + str(args.dataset)
+    dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
     ds_transform = torchvision.transforms.Compose(
         [
