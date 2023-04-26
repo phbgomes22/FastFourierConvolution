@@ -447,6 +447,7 @@ def train(args):
 
 
 def main():
+    dir = os.getcwd()
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_total_steps', type=int, default=100000)
