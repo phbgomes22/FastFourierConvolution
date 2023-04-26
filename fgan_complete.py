@@ -32,11 +32,12 @@ def weights_init(m):
 
 class Generator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size):
+    def __init__(self, z_size, mg: int = 4):
         super(Generator, self).__init__()
         self.z_size = z_size
+        self.mg = mg
 
-     #   self.print_layer = Print(debug=True)
+        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8)
       
         self.model = torch.nn.Sequential(
           #  GaussianNoise(0.01), #
@@ -61,7 +62,11 @@ class Generator(torch.nn.Module):
         )
 
     def forward(self, z):
-        fake = self.model(z.view(-1, self.z_size, 1, 1))
+
+        fake = self.noise_to_feature(z)
+        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
+
+        fake = self.model(fake)
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
@@ -302,6 +307,7 @@ def train(args):
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
+
     if args.dataset == 'cifar10':
         ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
         mg = 4
@@ -325,7 +331,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
