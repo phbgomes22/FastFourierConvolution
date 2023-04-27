@@ -351,8 +351,8 @@ def train(args):
     # prepare optimizer and learning rate schedulers (linear decay)
     optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
     optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
-    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
+   # scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
+   # scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
     # initialize logging
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
@@ -399,12 +399,12 @@ def train(args):
             pbar.set_postfix(step_info)
             for k, v in step_info.items():
                 tb.add_scalar(f'loss/{k}', v, global_step=step)
-            tb.add_scalar(f'LR/lr', scheduler_G.get_last_lr()[0], global_step=step)
+            #tb.add_scalar(f'LR/lr', scheduler_G.get_last_lr()[0], global_step=step)
         pbar.update(1)
 
         # decay LR
-        scheduler_G.step()
-        scheduler_D.step()
+      #  scheduler_G.step()
+       # scheduler_D.step()
 
         # check if it is validation time
         next_step = step + 1
