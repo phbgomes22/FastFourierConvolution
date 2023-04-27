@@ -170,7 +170,8 @@ class Discriminator(torch.nn.Module):
         super(Discriminator, self).__init__()
         self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-       # self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
+
+        self.conv1 = sn_fn(torch.nn.Conv2d(3 + 1, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
         self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
         self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
@@ -184,29 +185,29 @@ class Discriminator(torch.nn.Module):
         ## == Conditional
         self.label_embed = nn.Embedding(num_classes, 32*32)
 
-        self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(1, 32, 4, 2, 1),
-     #       nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.1)
-        )
+    #     self.label_conv = nn.Sequential(
+    #         nn.ConvTranspose2d(1, 32, 4, 2, 1),
+    #  #       nn.BatchNorm2d(32),
+    #         nn.LeakyReLU(0.1)
+    #     )
 
-        self.input_conv = nn.Sequential(
-            nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
-        #    nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.1)
-        )
+        # self.input_conv = nn.Sequential(
+        #     nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
+        # #    nn.BatchNorm2d(32),
+        #     nn.LeakyReLU(0.1)
+        # )
 
     def forward(self, x, labels):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 32, 32)
-        embedding = self.label_conv(embedding)
+      #  embedding = self.label_conv(embedding)
 
-        input = self.input_conv(x)
-        input = torch.cat([input, embedding], dim=1)
+      #  input = self.input_conv(x)
+        input = torch.cat([x, embedding], dim=1)
     
-       # m = self.act(self.conv1(input))
+        m = self.act(self.conv1(input))
         m = self.act(self.conv2(input))
         m = self.act(self.conv3(m))
         m = self.act(self.conv4(m))
