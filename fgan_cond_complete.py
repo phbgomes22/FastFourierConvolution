@@ -233,14 +233,27 @@ def hinge_loss_gen(fake):
 
 def train(args):
     # set up dataset loader
-    os.makedirs(args.dir_dataset, exist_ok=True)
+    dir = os.getcwd()
+    dir_dataset_name = 'dataset_' + str(args.dataset)
+    dir_dataset = os.path.join(dir, dir_dataset_name)
+    os.makedirs(dir_dataset, exist_ok=True)
+    image_size = 32 if args.dataset == 'cifar10' else 48
     ds_transform = torchvision.transforms.Compose(
         [
+            torchvision.transforms.Resize(image_size),
+            torchvision.transforms.CenterCrop(image_size),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
-    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+
+    if args.dataset == 'cifar10':
+        ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
+        mg = 4
+    else:
+        ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
+        mg = 6
+
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
@@ -360,7 +373,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2='cifar10-train',
+            input2= args.dataset + '-train',
             isc=True,
             fid=True,
             kid=True,
@@ -404,14 +417,14 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10'))
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
-    parser.add_argument('--conditional', default=True, action='store_true')
-    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset'))
-    parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan'))
+    parser.add_argument('--conditional', default=False, action='store_true')
+    parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_cond'))
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
   #  assert not args.conditional, 'Conditional mode not implemented'
