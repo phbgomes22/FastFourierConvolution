@@ -45,8 +45,9 @@ class SpectralTransform(nn.Module):
                 out_channels // 2, out_channels // 2, groups)
         
         ## sets the convolution that will occur at the end of the Spectral Transform
-        self.conv2 = sn_fn(torch.nn.Conv2d(
-            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False))
+        self.conv2 = torch.nn.Conv2d(
+            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
+        #sn_fn()
 
 
     def forward(self, x):
