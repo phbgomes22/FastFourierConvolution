@@ -135,6 +135,7 @@ class FCondGenerator(FFCModel):
         embedding = embedding.view(labels.shape[0], -1, 1, 1)
         embedding = self.label_conv(embedding)
 
+        z = z.reshape(z.size(0), 1, 1, 1)
         input = self.input_conv(z)
        # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
@@ -270,14 +271,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FCondGenerator(z_size=args.z_size, mg=4, num_classes=10).to(device).train()
+    G = FCondGenerator(z_size=args.z_size, mg=4, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True, num_classes=10).to(device).train() #LargeF
+    D = Discriminator(sn=True, num_classes=num_classes).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
