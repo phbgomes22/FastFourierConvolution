@@ -161,7 +161,6 @@ class FCondGenerator(FFCModel):
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
 
-        print(fake.size())
         return fake
 
 
@@ -171,7 +170,7 @@ class Discriminator(torch.nn.Module):
         super(Discriminator, self).__init__()
         self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
+       # self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
         self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
         self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
@@ -205,10 +204,12 @@ class Discriminator(torch.nn.Module):
         embedding = self.label_conv(embedding)
 
         input = self.input_conv(x)
+        print(input.size())
+        print(embedding.size())
         input = torch.cat([input, embedding], dim=1)
     
-        m = self.act(self.conv1(input))
-        m = self.act(self.conv2(m))
+       # m = self.act(self.conv1(input))
+        m = self.act(self.conv2(input))
         m = self.act(self.conv3(m))
         m = self.act(self.conv4(m))
         m = self.act(self.conv5(m))
