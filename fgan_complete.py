@@ -87,8 +87,7 @@ class FGenerator(FFCModel):
        # self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
         self.noise_to_feature = nn.Sequential(
             nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*8),
-            nn.ReLU(True),
+      #      nn.BatchNorm1d((self.mg * self.mg) * self.ngf*8)
         )
 
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
