@@ -31,6 +31,59 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
         
 
+class FGenerator(FFCModel):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, z_size, mg: int = 4):
+        super(FGenerator, self).__init__()
+        self.z_size = z_size
+        self.ngf = 64
+        ratio_g = 0.5
+        self.mg = mg
+
+        sn_fn = torch.nn.utils.spectral_norm 
+        self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
+
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise2 = NoiseInjection(self.ngf*2)
+        
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise3 = NoiseInjection(self.ngf)
+        
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise4 = NoiseInjection(self.ngf//2)
+        
+        self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
+
+    def forward(self, z):
+        
+        fake = self.noise_to_feature(z)
+      
+        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
+
+        fake = self.conv2(fake)
+        if self.training:
+            fake = self.lcl_noise2(fake[0]), fake[1] 
+        
+        fake = self.conv3(fake)
+        if self.training:
+            fake = self.lcl_noise3(fake[0]), fake[1]
+        
+        fake = self.conv4(fake)
+        if self.training:
+            fake = self.lcl_noise4(fake[0]), fake[1] 
+
+        fake = self.conv5(fake)
+        fake = self.resizer(fake)
+
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+        return fake
+    
 class FCondGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, num_classes):
@@ -39,21 +92,23 @@ class FCondGenerator(FFCModel):
         self.ngf = 64
         ratio_g = 0.5
 
-        self.conv1 = FFC_BN_ACT(z_size, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        self.lcl_noise1 = NoiseInjection(self.ngf*4)
-        # self.glb_noise1 = NoiseInjection(self.ngf*4)
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        sn_fn = torch.nn.utils.spectral_norm 
+        self.noise_to_feature = sn_fn()
+
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
+        
         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
+        
         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
+        
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=True, uses_noise=True, uses_sn=True)
+                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
         
         ## == Conditional
 
@@ -65,7 +120,7 @@ class FCondGenerator(FFCModel):
 
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0),
+            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0),
             nn.BatchNorm2d(self.ngf*4),
             nn.GELU()
         )
@@ -107,22 +162,23 @@ class FCondGenerator(FFCModel):
 
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True, num_classes=10):
+    def __init__(self, sn=True, mg: int = 4, num_classes=10):
         super(Discriminator, self).__init__()
+        self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-      #  self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
+        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
         self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
         self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
         self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 512, 1))
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
-        ## == Conditional
 
+        ## == Conditional
         self.label_embed = nn.Embedding(num_classes, 32*32)
 
         self.label_conv = nn.Sequential(
@@ -138,7 +194,6 @@ class Discriminator(torch.nn.Module):
         )
 
     def forward(self, x, labels):
-
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
@@ -147,17 +202,18 @@ class Discriminator(torch.nn.Module):
 
         input = self.input_conv(x)
         input = torch.cat([input, embedding], dim=1)
-
-     #   m = self.act(self.conv1(input))
-        m = self.act(self.conv2(input))
+    
+        m = self.act(self.conv1(input))
+        m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
         m = self.act(self.conv4(m))
         m = self.act(self.conv5(m))
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
-        output = self.fc(m.view(-1, 4 * 4 * 512))
+        output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
+    
     
 
 def hinge_loss_dis(fake, real):
