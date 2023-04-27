@@ -193,7 +193,13 @@ class Generator(nn.Module):
     def forward(self, inputs, label_onehots=None):
         x = self.dense(inputs).view(inputs.size(0), 512, self.mg, self.mg)
         x = self.conv3(self.conv2(self.conv1(x, label_onehots), label_onehots), label_onehots)
-        return self.out(x)
+
+        out = self.out(x)
+        if not self.training:
+            out = (255 * (out.clamp(-1, 1) * 0.5 + 0.5))
+            out = out.to(torch.uint8)
+
+        return 
 
 
 class Discriminator(nn.Module):
