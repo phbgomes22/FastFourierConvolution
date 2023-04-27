@@ -93,8 +93,6 @@ class FCondGenerator(FFCModel):
         ratio_g = 0.5
 
         self.mg = mg
-        sn_fn = torch.nn.utils.spectral_norm 
-        self.noise_to_feature = sn_fn()
 
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
@@ -121,8 +119,8 @@ class FCondGenerator(FFCModel):
 
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
+            nn.BatchNorm2d( self.ngf*4), #(self.mg * self.mg) *
             nn.GELU()
         )
 
@@ -138,7 +136,7 @@ class FCondGenerator(FFCModel):
         embedding = self.label_conv(embedding)
 
         input = self.input_conv(z)
-        input = fake.reshape(input.size(0), -1, self.mg, self.mg)
+       # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
         input = torch.cat([input, embedding], dim=1)
 
@@ -163,6 +161,7 @@ class FCondGenerator(FFCModel):
             fake = fake.to(torch.uint8)
         return fake
 
+
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True, mg: int = 4, num_classes=10):
@@ -177,7 +176,6 @@ class Discriminator(torch.nn.Module):
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
-    #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
 
@@ -187,13 +185,13 @@ class Discriminator(torch.nn.Module):
         self.label_conv = nn.Sequential(
             nn.ConvTranspose2d(1, 32, 4, 2, 1),
      #       nn.BatchNorm2d(32),
-            nn.GELU()
+            nn.LeakyReLU(0.1)
         )
 
         self.input_conv = nn.Sequential(
             nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
         #    nn.BatchNorm2d(32),
-            nn.GELU()
+            nn.LeakyReLU(0.1)
         )
 
     def forward(self, x, labels):
@@ -278,8 +276,8 @@ def train(args):
 
 
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
