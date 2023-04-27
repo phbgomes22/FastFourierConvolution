@@ -199,7 +199,7 @@ class Generator(nn.Module):
             out = (255 * (out.clamp(-1, 1) * 0.5 + 0.5))
             out = out.to(torch.uint8)
 
-        return 
+        return out
 
 
 class Discriminator(nn.Module):
