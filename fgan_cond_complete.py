@@ -135,7 +135,7 @@ class FCondGenerator(FFCModel):
         embedding = embedding.view(labels.shape[0], -1, 1, 1)
         embedding = self.label_conv(embedding)
 
-        z = z.reshape(z.size(0), 1, 1, 1)
+        z = z.reshape(z.size(0), -1, 1, 1)
         input = self.input_conv(z)
        # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
