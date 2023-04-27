@@ -86,12 +86,13 @@ class FGenerator(FFCModel):
     
 class FCondGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size, num_classes):
+    def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
         super(FCondGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.5
 
+        self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm 
         self.noise_to_feature = sn_fn()
 
@@ -121,7 +122,7 @@ class FCondGenerator(FFCModel):
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
             nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0),
-            nn.BatchNorm2d(self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
             nn.GELU()
         )
 
@@ -136,7 +137,9 @@ class FCondGenerator(FFCModel):
         embedding = embedding.view(labels.shape[0], -1, 1, 1)
         embedding = self.label_conv(embedding)
 
-        input = self.input_conv(z.view(-1, self.z_size, 1, 1))
+        input = self.input_conv(z)
+        input = fake.reshape(input.size(0), -1, self.mg, self.mg)
+
         input = torch.cat([input, embedding], dim=1)
 
         ## remainder
@@ -256,7 +259,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FCondGenerator(z_size=args.z_size, num_classes=10).to(device).train()
+    G = FCondGenerator(z_size=args.z_size, mg=4, num_classes=10).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
