@@ -22,8 +22,9 @@ class FourierUnitSN(nn.Module):
 
         sn_fn = torch.nn.utils.spectral_norm
         # the convolution layer that will be used in the spectral domain
-        self.conv_layer = sn_fn(torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
-                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False))
+        self.conv_layer = torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
+                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False)
+        # sn_fn()
         # batch normalization for the spectral domain
         self.bn = torch.nn.BatchNorm2d(out_channels * 2)
         # relu for the spectral domain
