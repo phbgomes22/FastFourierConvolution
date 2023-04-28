@@ -49,7 +49,7 @@ class ConditionalBatchNorm2d(nn.Module):
     aux = self.embed(y).chunk(2, 1)
     print(self.num_features, self.num_classes)
     print(aux)
-    print(aux.size())
+    print(aux.shape)
     gamma, beta = aux
     out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
     return out
