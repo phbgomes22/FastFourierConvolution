@@ -40,6 +40,9 @@ class ConditionalBatchNorm2d(nn.Module):
     self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
 
   def forward(self, x, y):
+    ## conditional
+    y = torch.unsqueeze(y, dim=-1)
+    y = torch.unsqueeze(y, dim=-1)
     out = self.bn(x)
     gamma, beta = self.embed(y).chunk(2, 1)
     out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
