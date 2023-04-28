@@ -46,7 +46,7 @@ class ConditionalBatchNorm2d(nn.Module):
     y = torch.unsqueeze(y, dim=-1)
     y = torch.unsqueeze(y, dim=-1)
     out = self.bn(x)
-    print(y.shape())
+    print(y.size())
     aux = self.embed(y).chunk(2, 1)
     print(self.num_features, self.num_classes)
     print(len(aux))
