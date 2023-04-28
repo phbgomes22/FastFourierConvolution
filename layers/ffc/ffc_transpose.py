@@ -79,7 +79,6 @@ class FFCTranspose(nn.Module):
         self.convg2gup = torch.nn.utils.spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg*2, kernel_size,
                               stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
         
-        
         ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
         
@@ -95,7 +94,7 @@ class FFCTranspose(nn.Module):
 
     # receives the signal as a tuple containing the local signal in the first position
     # and the global signal in the second position
-    def forward(self, x):
+    def forward(self, x, y = None):
         # splits the received signal into the local and global signals
         x_l, x_g = x if type(x) is tuple else (x, 0)
         out_xl, out_xg = 0, 0
@@ -120,7 +119,7 @@ class FFCTranspose(nn.Module):
             if type(x_g) is tuple:
                 ## testing upsampling first, then Spectral Transform
                 x_g = self.convg2gup(x_g)
-                out_xg = out_xg + self.convg2g(x_g)
+                out_xg = out_xg + self.convg2g(x_g, y)
                
         
         # returns both signals as a tuple
