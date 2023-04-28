@@ -103,15 +103,15 @@ class FCondGenerator(FFCModel):
         input = torch.cat([input, embedding], dim=1)
 
         ## remainder
-        fake = self.conv2(input)
+        fake = self.conv2(input, labels)
         if self.training:
             fake = self.lcl_noise2(fake[0]), fake[1] 
         
-        fake = self.conv3(fake)
+        fake = self.conv3(fake, labels)
         if self.training:
             fake = self.lcl_noise3(fake[0]), fake[1]
         
-        fake = self.conv4(fake)
+        fake = self.conv4(fake, labels)
         if self.training:
             fake = self.lcl_noise4(fake[0]), fake[1] 
 
