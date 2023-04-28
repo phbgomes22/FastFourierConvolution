@@ -33,9 +33,11 @@ def weights_init(m):
 class ConditionalBatchNorm2d(nn.Module):
   def __init__(self, num_features, num_classes):
     super().__init__()
+    self.num_classes = num_classes
     self.num_features = num_features
     self.bn = nn.BatchNorm2d(num_features, affine=False)
     self.embed = nn.Embedding(num_classes, num_features * 2)
+    
     self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)
     self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
 
@@ -45,6 +47,7 @@ class ConditionalBatchNorm2d(nn.Module):
     # y = torch.unsqueeze(y, dim=-1)
     out = self.bn(x)
     aux = self.embed(y).chunk(2, 1)
+    print(self.num_features, self.num_classes)
     print(aux)
     print(aux.size())
     gamma, beta = aux
