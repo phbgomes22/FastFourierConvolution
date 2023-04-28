@@ -127,7 +127,7 @@ class FCondGenerator(FFCModel):
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
 
-        print(fake.size())
+
         return fake
 
 
