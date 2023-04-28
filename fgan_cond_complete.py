@@ -41,10 +41,13 @@ class ConditionalBatchNorm2d(nn.Module):
 
   def forward(self, x, y):
     ## conditional
-    y = torch.unsqueeze(y, dim=-1)
-    y = torch.unsqueeze(y, dim=-1)
+    # y = torch.unsqueeze(y, dim=-1)
+    # y = torch.unsqueeze(y, dim=-1)
     out = self.bn(x)
-    gamma, beta = self.embed(y).chunk(2, 1)
+    aux = self.embed(y).chunk(2, 1)
+    print(aux)
+    print(aux.size())
+    gamma, beta = aux
     out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
     return out
     
