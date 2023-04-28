@@ -24,7 +24,7 @@ class FFC(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0,
                  dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True,
-                 attention: bool = False):
+                 attention: bool = False, num_classes: int = 1):
 
         super(FFC, self).__init__()
 
@@ -83,7 +83,7 @@ class FFC(nn.Module):
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
         self.convg2g = module(
-            in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu)
+            in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes)
 
 
     # receives the signal as a tuple containing the local signal in the first position
