@@ -88,7 +88,7 @@ class FFC(nn.Module):
 
     # receives the signal as a tuple containing the local signal in the first position
     # and the global signal in the second position
-    def forward(self, x):
+    def forward(self, x, y = None):
         # splits the received signal into the local and global signals
         x_l, x_g = x if type(x) is tuple else (x, 0)
         out_xl, out_xg = 0, 0
@@ -98,7 +98,7 @@ class FFC(nn.Module):
             out_xl = self.convl2l(x_l) + self.convg2l(x_g)
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
-            out_xg = self.convl2g(x_l) + self.convg2g(x_g)
+            out_xg = self.convl2g(x_l) + self.convg2g(x_g, y)
 
         # returns both signals as a tuple
         return out_xl, out_xg

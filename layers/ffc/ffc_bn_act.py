@@ -51,13 +51,13 @@ class FFC_BN_ACT(nn.Module):
             print("Using FFCTranspose with spectral norm by hand!")
             self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding=out_padding)
+                       groups, bias, enable_lfu, out_padding=out_padding, num_classes=num_classes)
         else:
             regular = SNFFC if uses_sn else FFC
             print("Using FFC with spectral norm by hand!")
             self.ffc = FFC(in_channels, out_channels, kernel_size,
                         ratio_gin, ratio_gout, stride, padding, dilation,
-                        groups, bias, enable_lfu)
+                        groups, bias, enable_lfu, num_classes=num_classes)
              
         out_ch_l = int(out_channels * (1 - ratio_gout))
         out_ch_g = int(out_channels * ratio_gout)
@@ -89,7 +89,7 @@ class FFC_BN_ACT(nn.Module):
 
     def forward(self, x, y=None):
         debug_print(" -- FFC_BN_ACT")
-        x_l, x_g = self.ffc(x)
+        x_l, x_g = self.ffc(x, y)
         self.print_size(x_l)
         
         if y is not None:
