@@ -43,8 +43,8 @@ class ConditionalBatchNorm2d(nn.Module):
 
   def forward(self, x, y):
     ## conditional
-    # y = torch.unsqueeze(y, dim=-1)
-    # y = torch.unsqueeze(y, dim=-1)
+    y = torch.unsqueeze(y, dim=-1)
+    y = torch.unsqueeze(y, dim=-1)
     out = self.bn(x)
     aux = self.embed(y).chunk(2, 1)
     print(self.num_features, self.num_classes)
