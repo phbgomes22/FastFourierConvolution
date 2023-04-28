@@ -46,12 +46,7 @@ class ConditionalBatchNorm2d(nn.Module):
     y = torch.squeeze(y)
     ## conditional
     out = self.bn(x)
-    print(y.size())
-    aux = self.embed(y)
-    print(aux.size())
-    aux = aux.chunk(2, 1)
-    print(len(aux))
-    gamma, beta = aux
+    gamma, beta = self.embed(y).chunk(2, 1)
     out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
     return out
     
@@ -132,6 +127,7 @@ class FCondGenerator(FFCModel):
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
 
+        print(fake.size())
         return fake
 
 
