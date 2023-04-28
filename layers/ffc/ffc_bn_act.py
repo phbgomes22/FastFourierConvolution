@@ -35,7 +35,7 @@ class FFC_BN_ACT(nn.Module):
                  stride=1, padding=0, dilation=1, groups=1, bias=False,
                  norm_layer:nn.Module=nn.Identity, activation_layer:nn.Module=nn.Identity,
                  enable_lfu=True, upsampling=False, out_padding=0,
-                 uses_noise: bool = False, uses_sn: bool = False, attention: bool = False):
+                 uses_noise: bool = False, uses_sn: bool = False, num_classes: int = 1):
         '''
         The parameter `upsampling` controls whether the FFC module or the FFCTransposed module will be used. 
         The FFC works for downsampling, while FFCTransposed, for upsampling.
@@ -51,13 +51,13 @@ class FFC_BN_ACT(nn.Module):
             print("Using FFCTranspose with spectral norm by hand!")
             self.ffc = FFCTranspose(in_channels, out_channels, kernel_size,
                        ratio_gin, ratio_gout, stride, padding, dilation,
-                       groups, bias, enable_lfu, out_padding=out_padding, attention=attention)
+                       groups, bias, enable_lfu, out_padding=out_padding)
         else:
             regular = SNFFC if uses_sn else FFC
             print("Using FFC with spectral norm by hand!")
             self.ffc = FFC(in_channels, out_channels, kernel_size,
                         ratio_gin, ratio_gout, stride, padding, dilation,
-                        groups, bias, enable_lfu, attention=attention)
+                        groups, bias, enable_lfu)
              
         out_ch_l = int(out_channels * (1 - ratio_gout))
         out_ch_g = int(out_channels * ratio_gout)
@@ -65,8 +65,12 @@ class FFC_BN_ACT(nn.Module):
         lnorm = nn.Identity if ratio_gout == 1 else norm_layer
         gnorm = nn.Identity if ratio_gout == 0 else norm_layer
 
-        self.bn_l = lnorm(out_ch_l)
-        self.bn_g = gnorm(out_ch_g)
+        if num_classes > 1:
+            self.bn_l = lnorm(out_ch_l, num_classes)
+            self.bn_g = gnorm(out_ch_g, num_classes)
+        else:
+            self.bn_l = lnorm(out_ch_l)
+            self.bn_g = gnorm(out_ch_g)
 
         # create the activation function layers
         lact = nn.Identity if ratio_gout == 1 else activation_layer
@@ -83,15 +87,21 @@ class FFC_BN_ACT(nn.Module):
         self.noise_g = NoiseInjection(out_ch_g) if uses_noise else nn.Identity()
 
 
-    def forward(self, x):
+    def forward(self, x, y=None):
         debug_print(" -- FFC_BN_ACT")
         x_l, x_g = self.ffc(x)
         self.print_size(x_l)
         
-        x_l = self.act_l(self.bn_l(x_l))
+        if y is not None:
+            x_l = self.act_l(self.bn_l(x_l, y))
+        else:
+            x_l = self.act_l(self.bn_l(x_l))
         self.print_size(x_l)
 
-        x_g = self.act_g(self.bn_g(x_g))
+        if y is not None:
+            x_g = self.act_g(self.bn_g(x_g, y))
+        else:
+            x_g = self.act_g(self.bn_g(x_g))
         debug_print(" -- Fim FFC_BN_ACT")
 
         # Add Noise - PG

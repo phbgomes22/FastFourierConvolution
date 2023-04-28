@@ -31,58 +31,20 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
         
 
-class FGenerator(FFCModel):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size, mg: int = 4):
-        super(FGenerator, self).__init__()
-        self.z_size = z_size
-        self.ngf = 64
-        ratio_g = 0.5
-        self.mg = mg
+class ConditionalBatchNorm2d(nn.Module):
+  def __init__(self, num_features, num_classes):
+    super().__init__()
+    self.num_features = num_features
+    self.bn = nn.BatchNorm2d(num_features, affine=False)
+    self.embed = nn.Embedding(num_classes, num_features * 2)
+    self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)
+    self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
 
-        sn_fn = torch.nn.utils.spectral_norm 
-        self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
-
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        self.lcl_noise2 = NoiseInjection(self.ngf*2)
-        
-        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        self.lcl_noise3 = NoiseInjection(self.ngf)
-        
-        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        self.lcl_noise4 = NoiseInjection(self.ngf//2)
-        
-        self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
-
-    def forward(self, z):
-        
-        fake = self.noise_to_feature(z)
-      
-        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
-
-        fake = self.conv2(fake)
-        if self.training:
-            fake = self.lcl_noise2(fake[0]), fake[1] 
-        
-        fake = self.conv3(fake)
-        if self.training:
-            fake = self.lcl_noise3(fake[0]), fake[1]
-        
-        fake = self.conv4(fake)
-        if self.training:
-            fake = self.lcl_noise4(fake[0]), fake[1] 
-
-        fake = self.conv5(fake)
-        fake = self.resizer(fake)
-
-        if not self.training:
-            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
-            fake = fake.to(torch.uint8)
-        return fake
+  def forward(self, x, y):
+    out = self.bn(x)
+    gamma, beta = self.embed(y).chunk(2, 1)
+    out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
+    return out
     
 class FCondGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -94,16 +56,16 @@ class FCondGenerator(FFCModel):
 
         self.mg = mg
 
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+                      norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(self.ngf*2)
         
-        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+                      norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(self.ngf)
         
-        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+                      norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(self.ngf//2)
         
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
