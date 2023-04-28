@@ -13,7 +13,6 @@ import tqdm
 from torch.utils import tensorboard
 
 import torch_fidelity
-from torchmetrics.classification import MulticlassHingeLoss
 
 
 def count_parameters(model):
