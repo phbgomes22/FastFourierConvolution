@@ -174,7 +174,7 @@ class Discriminator(torch.nn.Module):
         print(x.size())
         # input = self.input_conv(x)
         input = torch.cat([x, embedding], dim=1)
-    
+        print(input.size())
         m = self.act(self.conv1(input))
         m = self.act(self.conv2(input))
         m = self.act(self.conv3(m))
