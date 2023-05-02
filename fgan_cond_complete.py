@@ -71,7 +71,7 @@ class FCondGenerator(FFCModel):
         )
 
         self.label_embed = nn.Embedding(num_classes, (self.mg * self.mg) * num_classes)
-        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4)
+        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg))
 
     def forward(self, z, labels):
 
