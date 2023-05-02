@@ -84,12 +84,14 @@ class FCondGenerator(FFCModel):
         embedding = self.label_conv(embedding)
 
         ## conditional z
-        z = self.noise_to_feature(z)
+       # z = self.noise_to_feature(z)
         print(z.size())
-        z = z.reshape(z.size(0), -1, self.mg, self.mg)
-        print(z.size())
-       # z = z.reshape(z.size(0), -1, 1, 1)
+      #  z = z.reshape(z.size(0), -1, self.mg, self.mg)
+       
+        z = z.reshape(z.size(0), -1, 1, 1)
+        print(input.size())
         input = self.input_conv(z)
+        print(input.size())
        # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
         input = torch.cat([input, embedding], dim=1)
