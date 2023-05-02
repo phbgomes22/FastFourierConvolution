@@ -61,7 +61,7 @@ class SpectralTransform(nn.Module):
       #  x = self.act1(self.conv1(x))
        # # - testing spectral norm in spectral transform
         if y is not None: 
-            x = self.act1(self.bn1(self.conv1(x)), y)
+            x = self.act1(self.bn1(self.conv1(x), y))
         else:
             x = self.act1(self.bn1(self.conv1(x)))
         # gets the output from the Fourier Unit (back in pixel domain)
