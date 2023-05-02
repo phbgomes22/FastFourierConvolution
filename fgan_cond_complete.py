@@ -166,7 +166,7 @@ class FDiscriminator(torch.nn.Module):
         # input = self.input_conv(x)
         input = torch.cat([x, embedding], dim=1)
         
-        m = self.main(input)
+        m = self.main(input, labels)
         m = self.resizer(m)
         output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
