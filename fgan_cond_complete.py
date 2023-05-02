@@ -58,30 +58,36 @@ class FCondGenerator(FFCModel):
         ## == Conditional
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, self.mg*self.mg*self.ngf//4 , 4, 1, 0),
-            nn.BatchNorm2d(self.mg*self.mg*self.ngf//4),
+            nn.ConvTranspose2d(num_classes, self.ngf*4 , 4, 1, 0),
+            nn.BatchNorm2d(self.ngf*4),
             nn.GELU()
         )
 
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(z_size, self.mg*self.mg*self.ngf//4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
-            nn.BatchNorm2d( self.mg*self.mg*self.ngf//4 ), #(self.mg * self.mg) *
+            nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
+            nn.BatchNorm2d( self.ngf*4 ), #(self.mg * self.mg) *
             nn.GELU()
         )
 
-        self.label_embed = nn.Embedding(num_classes, num_classes)
+        self.label_embed = nn.Embedding(num_classes, (self.mg * self.mg) * num_classes)
+        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4)
 
     def forward(self, z, labels):
 
-        ## conditional
+        ## conditional labels
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
-        embedding = embedding.view(labels.shape[0], -1, 1, 1)
+        embedding = embedding.reshape(fake.size(0), -1, self.mg, self.mg)
+        #embedding = embedding.view(labels.shape[0], -1, 1, 1)
         embedding = self.label_conv(embedding)
 
-        z = z.reshape(z.size(0), -1, 1, 1)
+        ## conditional z
+        z = self.noise_to_feature(z)
+    
+        z = z.reshape(z.size(0), -1, self.mg, self.mg)
+       # z = z.reshape(z.size(0), -1, 1, 1)
         input = self.input_conv(z)
        # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
