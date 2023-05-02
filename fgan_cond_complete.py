@@ -110,7 +110,7 @@ class FCondGenerator(FFCModel):
 
         return fake
 
-class FDiscriminator(torch.nn.Module):
+class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True, mg: int = 4, num_classes=10):
         super(FDiscriminator, self).__init__()
