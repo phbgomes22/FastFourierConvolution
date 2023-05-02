@@ -87,7 +87,7 @@ class FCondGenerator(FFCModel):
         ## conditional z
         z = z.reshape(z.size(0), -1, 1, 1)
        
-        print(input.size())
+        print(z.size())
         input = self.input_conv(z)
         print(input.size())
         input = fake.reshape(input.size(0), -1, self.mg, self.mg)
