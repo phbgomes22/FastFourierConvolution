@@ -110,77 +110,6 @@ class FCondGenerator(FFCModel):
 
         return fake
 
-class FDiscriminator(FFCModel):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True, mg: int = 4, num_classes=10):
-        super(FDiscriminator, self).__init__()
-        self.mg = mg
-        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        norm_layer=ConditionalBatchNorm2d
-
-        self.conv1 = FFC_BN_ACT(in_channels=3+1, out_channels=64, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=0.5, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
-                norm_layer=norm_layer, num_classes=num_classes)
-        
-        self.conv2 =  FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
-                norm_layer=norm_layer, num_classes=num_classes)
-        
-        self.conv3 =  FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.5, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
-                norm_layer=norm_layer, num_classes=num_classes)
-        
-        self.conv4 =  FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
-                ratio_gin=0.5, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, 
-                norm_layer=norm_layer, num_classes=num_classes)
-            # FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
-            #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
-            #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
-            #     activation_layer=nn.Sigmoid)
-        
-
-        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
-        self.act = torch.nn.LeakyReLU(0.1)
-
-
-        ## == Conditional
-        self.label_embed = nn.Embedding(num_classes, 32*32)
-
-    #     self.label_conv = nn.Sequential(
-    #         nn.ConvTranspose2d(1, 32, 4, 2, 1),
-    #  #       nn.BatchNorm2d(32),
-    #         nn.LeakyReLU(0.1)
-    #     )
-
-    #     self.input_conv = nn.Sequential(
-    #         nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
-    #     #    nn.BatchNorm2d(32),
-    #         nn.LeakyReLU(0.1)
-    #     )
-
-    def forward(self, x, labels):
-        labels = torch.unsqueeze(labels, dim=-1)
-        labels = torch.unsqueeze(labels, dim=-1)
-        embedding = self.label_embed(labels)
-        embedding = embedding.view(labels.shape[0], 1, 32, 32)
-        # embedding = self.label_conv(embedding)
-
-        # input = self.input_conv(x)
-        input = torch.cat([x, embedding], dim=1)
-        
-        m = self.conv1(input, labels)
-        m = self.conv2(m, labels)
-        m = self.conv3(m, labels)
-        m = self.conv4(m, labels)
-        m = self.resizer(m)
-        output = self.fc(m.view(-1, self.mg * self.mg * 512))
- 
-        return output
-    
 
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -189,7 +118,7 @@ class Discriminator(torch.nn.Module):
         self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
 
-        self.conv1 = sn_fn(torch.nn.Conv2d(3 + 1, 64, 3, stride=1, padding=(1,1)))
+    # self.conv1 = sn_fn(torch.nn.Conv2d(3 + 1, 64, 3, stride=1, padding=(1,1)))
         self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
         self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
         self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
@@ -203,30 +132,36 @@ class Discriminator(torch.nn.Module):
         ## == Conditional
         self.label_embed = nn.Embedding(num_classes, 32*32)
 
-    #     self.label_conv = nn.Sequential(
-    #         nn.ConvTranspose2d(1, 32, 4, 2, 1),
-    #  #       nn.BatchNorm2d(32),
-    #         nn.LeakyReLU(0.1)
-    #     )
+        self.label_conv = nn.Sequential(
+            nn.ConvTranspose2d(1, 32, 4, 2, 1),
+     #       nn.BatchNorm2d(32),
+            nn.LeakyReLU(0.1)
+        )
 
-    #     self.input_conv = nn.Sequential(
-    #         nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
-    #     #    nn.BatchNorm2d(32),
-    #         nn.LeakyReLU(0.1)
-    #     )
+        self.input_conv = nn.Sequential(
+            nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
+        #    nn.BatchNorm2d(32),
+            nn.LeakyReLU(0.1)
+        )
 
     def forward(self, x, labels):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 32, 32)
-        # embedding = self.label_conv(embedding)
+        #
+        embedding = self.label_conv(embedding)
 
-        # input = self.input_conv(x)
-        input = torch.cat([x, embedding], dim=1)
-        
-        m = self.act(self.conv1(input))
-        m = self.act(self.conv2(m))
+        #
+        input = self.input_conv(x)
+
+      #  input = torch.cat([x, embedding], dim=1)
+        input = torch.cat([input, embedding], dim=1)
+
+      #  m = self.act(self.conv1(input))
+      #  m = self.act(self.conv2(m))
+
+        m = self.act(self.conv2(input))
         m = self.act(self.conv3(m))
         m = self.act(self.conv4(m))
         m = self.act(self.conv5(m))
