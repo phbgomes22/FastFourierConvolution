@@ -58,7 +58,7 @@ class FCondGenerator(FFCModel):
         ## == Conditional
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, self.ngf*4 , 4, 1, 0),
+            nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
             nn.BatchNorm2d(self.ngf*4),
             nn.GELU()
         )
@@ -92,6 +92,7 @@ class FCondGenerator(FFCModel):
        
         input = self.input_conv(z)
         input = input.reshape(input.size(0), -1, self.mg, self.mg)
+        print(input.size())
         input = torch.cat([input, embedding], dim=1)
 
         ## remainder
