@@ -63,6 +63,7 @@ class FCondGenerator(FFCModel):
             nn.GELU()
         )
 
+        # enters torch.Size([128, 128, 1, 1])
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
             nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
@@ -71,7 +72,7 @@ class FCondGenerator(FFCModel):
         )
 
         self.label_embed = nn.Embedding(num_classes, (self.mg * self.mg) * num_classes)
-        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg))
+        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * z_size)
 
     def forward(self, z, labels):
 
@@ -84,12 +85,12 @@ class FCondGenerator(FFCModel):
         embedding = self.label_conv(embedding)
 
         ## conditional z
-       # z = self.noise_to_feature(z)
+        z = self.noise_to_feature(z)
         print(z.size())
       #  z = z.reshape(z.size(0), -1, self.mg, self.mg)
        
-        z = z.reshape(z.size(0), -1, 1, 1)
-        print(z.size())
+        z = z.reshape(z.size(0), -1, self.mg, self.mg)
+    
         input = self.input_conv(z)
         print(input.size())
        # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
