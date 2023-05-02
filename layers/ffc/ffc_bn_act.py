@@ -92,13 +92,13 @@ class FFC_BN_ACT(nn.Module):
         x_l, x_g = self.ffc(x, y)
         self.print_size(x_l)
         
-        if y is not None:
+        if y is not None and type(self.bn_l) is not nn.Identity:
             x_l = self.act_l(self.bn_l(x_l, y))
         else:
             x_l = self.act_l(self.bn_l(x_l))
         self.print_size(x_l)
 
-        if y is not None:
+        if y is not None and type(self.bn_g) is not nn.Identity:
             x_g = self.act_g(self.bn_g(x_g, y))
         else:
             x_g = self.act_g(self.bn_g(x_g))
