@@ -298,7 +298,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = FDiscriminator(sn=True, num_classes=num_classes).to(device).train() #LargeF
+    D = Discriminator(sn=True, num_classes=num_classes).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
