@@ -141,7 +141,7 @@ class FDiscriminator(torch.nn.Module):
             #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
             #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
             #     activation_layer=nn.Sigmoid)
-        )
+        
 
         self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
         self.act = torch.nn.LeakyReLU(0.1)
