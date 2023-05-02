@@ -58,15 +58,15 @@ class FCondGenerator(FFCModel):
         ## == Conditional
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
-            nn.BatchNorm2d(self.ngf*4),
+            nn.ConvTranspose2d(num_classes, self.mg*self.mg*self.ngf//4 , 4, 1, 0),
+            nn.BatchNorm2d(self.mg*self.mg*self.ngf//4),
             nn.GELU()
         )
 
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
-            nn.BatchNorm2d( self.ngf*4), #(self.mg * self.mg) *
+            nn.ConvTranspose2d(z_size, self.mg*self.mg*self.ngf//4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
+            nn.BatchNorm2d( self.mg*self.mg*self.ngf//4 ), #(self.mg * self.mg) *
             nn.GELU()
         )
 
@@ -220,14 +220,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FCondGenerator(z_size=args.z_size, mg=4, num_classes=num_classes).to(device).train()
+    G = FCondGenerator(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True, num_classes=num_classes).to(device).train() #LargeF
+    D = Discriminator(sn=True, mg=mg, num_classes=num_classes).to(device).train() #LargeF
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
