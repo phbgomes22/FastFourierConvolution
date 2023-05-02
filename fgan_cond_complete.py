@@ -90,7 +90,7 @@ class FCondGenerator(FFCModel):
         print(z.size())
         input = self.input_conv(z)
         print(input.size())
-        input = fake.reshape(input.size(0), -1, self.mg, self.mg)
+        input = input.reshape(input.size(0), -1, self.mg, self.mg)
         print(input.size())
         input = torch.cat([input, embedding], dim=1)
 
