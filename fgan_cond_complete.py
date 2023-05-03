@@ -29,7 +29,8 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
         
-    
+
+
 class FCondGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
@@ -56,39 +57,36 @@ class FCondGenerator(FFCModel):
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
         
         ## == Conditional
-        sn_fn = torch.nn.utils.spectral_norm 
-        self.noise_to_feature = sn_fn(nn.Linear(z_size*2, (self.mg * self.mg) * self.ngf*8))
-        self.embedding = nn.Embedding(num_classes, z_size)
 
-        # self.label_conv = nn.Sequential(
-        #     nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
-        #     nn.BatchNorm2d(self.ngf*4),
-        #     nn.GELU()
-        # )
+        self.label_conv = nn.Sequential(
+            nn.ConvTranspose2d(num_classes, self.ngf * 4 * (self.mg * self.mg), 3, 1, 1),
+            nn.BatchNorm2d(self.ngf * 4 * (self.mg * self.mg)),
+            nn.GELU()
+        )
 
-        # # enters torch.Size([128, 128, 1, 1])
-        # self.input_conv = nn.Sequential(
-        #     # input is Z, going into a convolution
-        #     nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
-        #     nn.BatchNorm2d( self.ngf*4), #(self.mg * self.mg) *
-        #     nn.GELU()
-        # )
+        self.input_conv = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d(z_size, self.ngf * 4 * (self.mg * self.mg), 3, 1, 1), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
+            nn.BatchNorm2d( self.ngf * 4 * (self.mg * self.mg) ), #(self.mg * self.mg) *
+            nn.GELU()
+        )
 
-      #  self.label_embed = nn.Embedding(num_classes, (self.mg * self.mg) * num_classes)
-       # self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * z_size)
+        self.label_embed = nn.Embedding(num_classes, num_classes)
 
     def forward(self, z, labels):
 
-        ## conditional labels
-        embedding = self.embedding(labels)
-      
-        ## conditional input
-        
-        input = torch.cat([z, embedding], dim=1)
+        ## conditional
+        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(labels, dim=-1)
+        embedding = self.label_embed(labels)
+        embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
+        embedding = self.label_conv(embedding)
 
-        input = self.noise_to_feature(input)
-      
-        input = input.reshape(input.size(0), -1, self.mg, self.mg)
+        z = z.reshape(z.size(0), -1, 1, 1)
+        input = self.input_conv(z)
+        input = fake.reshape(input.size(0), -1, self.mg, self.mg)
+
+        input = torch.cat([input, embedding], dim=1)
 
         ## remainder
         fake = self.conv2(input, labels)
@@ -112,6 +110,7 @@ class FCondGenerator(FFCModel):
 
 
         return fake
+
 
 
 class Discriminator(torch.nn.Module):
