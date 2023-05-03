@@ -88,9 +88,10 @@ class FCondGenerator(FFCModel):
       #  embedding = embedding.reshape(embedding.size(0), -1, self.mg, self.mg)
         embedding = embedding.view(labels.shape[0], -1, 1, 1)
         # embedding = self.label_conv(embedding)
+        ## conditional input
+        z = z.view(z.shape[0], -1, 1, 1)
         print(embedding.size())
         print(z.size())
-        ## conditional input
         input = torch.cat([z, embedding], dim=1)
        # input = input.view(labels.shape[0], -1, 1, 1)
         print(input.size())
