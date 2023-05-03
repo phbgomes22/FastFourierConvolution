@@ -59,8 +59,10 @@ class FCondGenerator(FFCModel):
         ## == Conditional
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, self.ngf * 4 * (self.mg * self.mg), 3, 1, 1),
-            nn.BatchNorm2d(self.ngf * 4 * (self.mg * self.mg)),
+            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),
+         #   nn.ConvTranspose2d(num_classes, self.ngf * 4 * (self.mg * self.mg), 3, 1, 1),
+         #   nn.BatchNorm2d(self.ngf * 4 * (self.mg * self.mg)),
+            nn.BatchNorm1d(self.ngf * 4 * (self.mg * self.mg)),
             nn.GELU()
         )
 
