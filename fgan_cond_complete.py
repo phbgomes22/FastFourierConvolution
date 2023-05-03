@@ -94,8 +94,9 @@ class FCondGenerator(FFCModel):
         print(z.size())
       #  input = torch.cat([z, embedding], dim=1)
        # input = input.view(labels.shape[0], -1, 1, 1)
+        
+        input = self.noise_to_feature(z)
         print(input.size())
-        input = self.noise_to_feature(input)
       #  input = self.input_conv(z)
        # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
