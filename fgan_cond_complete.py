@@ -86,7 +86,7 @@ class FCondGenerator(FFCModel):
         embedding = self.embedding(labels)
       
       #  embedding = embedding.reshape(embedding.size(0), -1, self.mg, self.mg)
-        #embedding = embedding.view(labels.shape[0], -1, 1, 1)
+        embedding = embedding.view(labels.shape[0], -1, 1, 1)
         # embedding = self.label_conv(embedding)
         print(embedding.size())
         print(z.size())
