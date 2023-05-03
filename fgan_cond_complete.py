@@ -139,13 +139,13 @@ class Discriminator(torch.nn.Module):
 
 
         ## == Conditional
-        self.label_embed = nn.Embedding(num_classes, 32*32)
+        self.label_embed = nn.Embedding(num_classes, 8*8*self.mg*self.mg)
 
     def forward(self, x, labels):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
-        embedding = embedding.view(labels.shape[0], 1, 32, 32)
+        embedding = embedding.view(labels.shape[0], 1, 8*self.mg, 8*self.mg)
     
         input = torch.cat([x, embedding], dim=1)
         
