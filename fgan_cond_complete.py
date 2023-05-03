@@ -57,7 +57,7 @@ class FCondGenerator(FFCModel):
         
         ## == Conditional
         sn_fn = torch.nn.utils.spectral_norm 
-        self.noise_to_feature = sn_fn(nn.Linear(z_size*2, (self.mg * self.mg) * self.ngf*8))
+        self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
         self.embedding = nn.Embedding(num_classes, z_size)
 
         # self.label_conv = nn.Sequential(
@@ -89,7 +89,7 @@ class FCondGenerator(FFCModel):
         embedding = embedding.view(labels.shape[0], -1, 1, 1)
         # embedding = self.label_conv(embedding)
         ## conditional input
-        z = z.view(z.shape[0], -1, 1, 1)
+     #   z = z.view(z.shape[0], -1, 1, 1)
         print(embedding.size())
         print(z.size())
         input = torch.cat([z, embedding], dim=1)
