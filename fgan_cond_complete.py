@@ -79,8 +79,9 @@ class FCondGenerator(FFCModel):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
-        embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
+        embedding = embedding.view(labels.shape[0], -1, 1, 1)
         embedding = self.label_conv(embedding)
+        embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
 
         z = z.reshape(z.size(0), -1, 1, 1)
         input = self.input_conv(z)
