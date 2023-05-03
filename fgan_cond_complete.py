@@ -82,8 +82,8 @@ class FCondGenerator(FFCModel):
         # labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
         print(embedding.size())
-        embedding = embedding.view(labels.shape[0], -1, 1, 1)
-        print(embedding.size())
+        # embedding = embedding.view(labels.shape[0], -1, 1, 1)
+        # print(embedding.size())
 
         embedding = self.label_conv(embedding)
         print(embedding.size())
