@@ -56,22 +56,25 @@ class FCondGenerator(FFCModel):
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
         
         ## == Conditional
+        sn_fn = torch.nn.utils.spectral_norm 
+        self.noise_to_feature = sn_fn(nn.Linear(z_size*2, (self.mg * self.mg) * self.ngf*8))
+        self.embedding = nn.Embedding(num_classes, z_size)
 
-        self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(num_classes, self.ngf*4, 3, 1, 1),
-            nn.BatchNorm2d(self.ngf*4),
-            nn.GELU()
-        )
+        # self.label_conv = nn.Sequential(
+        #     nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
+        #     nn.BatchNorm2d(self.ngf*4),
+        #     nn.GELU()
+        # )
 
-        # enters torch.Size([128, 128, 1, 1])
-        self.input_conv = nn.Sequential(
-            # input is Z, going into a convolution
-            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
-            nn.BatchNorm1d( (self.mg * self.mg)*self.ngf*4 ), #(self.mg * self.mg) *
-            nn.GELU()
-        )
+        # # enters torch.Size([128, 128, 1, 1])
+        # self.input_conv = nn.Sequential(
+        #     # input is Z, going into a convolution
+        #     nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), # nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),#
+        #     nn.BatchNorm2d( self.ngf*4), #(self.mg * self.mg) *
+        #     nn.GELU()
+        # )
 
-        self.label_embed = nn.Embedding(num_classes, (self.mg * self.mg) * num_classes)
+      #  self.label_embed = nn.Embedding(num_classes, (self.mg * self.mg) * num_classes)
        # self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * z_size)
 
     def forward(self, z, labels):
@@ -79,20 +82,18 @@ class FCondGenerator(FFCModel):
         ## conditional labels
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
-        embedding = self.label_embed(labels)
+       # embedding = self.label_embed(labels)
+        embedding = self.embedding(labels)
       
         embedding = embedding.reshape(embedding.size(0), -1, self.mg, self.mg)
         #embedding = embedding.view(labels.shape[0], -1, 1, 1)
-        embedding = self.label_conv(embedding)
-   
+        # embedding = self.label_conv(embedding)
 
-        ## conditional z
-      #  z = z.reshape(z.size(0), -1, 1, 1)
-       
-        input = self.input_conv(z)
-        input = input.reshape(input.size(0), -1, self.mg, self.mg)
-
-        input = torch.cat([input, embedding], dim=1)
+        ## conditional input
+        input = torch.cat([z, embedding], dim=1)
+        self.noise_to_feature(input)
+      #  input = self.input_conv(z)
+       # input = fake.reshape(input.size(0), -1, self.mg, self.mg)
 
         ## remainder
         fake = self.conv2(input, labels)
@@ -139,26 +140,12 @@ class Discriminator(torch.nn.Module):
         ## == Conditional
         self.label_embed = nn.Embedding(num_classes, 32*32)
 
-    #     self.label_conv = nn.Sequential(
-    #         nn.ConvTranspose2d(1, 32, 4, 2, 1),
-    #  #       nn.BatchNorm2d(32),
-    #         nn.LeakyReLU(0.1)
-    #     )
-
-    #     self.input_conv = nn.Sequential(
-    #         nn.ConvTranspose2d(3, 32, 4, 2, 1, bias=False),
-    #     #    nn.BatchNorm2d(32),
-    #         nn.LeakyReLU(0.1)
-    #     )
-
     def forward(self, x, labels):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 32, 32)
-        # embedding = self.label_conv(embedding)
-
-        # input = self.input_conv(x)
+    
         input = torch.cat([x, embedding], dim=1)
         
         m = self.act(self.conv1(input))
