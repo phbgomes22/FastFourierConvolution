@@ -80,15 +80,16 @@ class FCondGenerator(FFCModel):
     def forward(self, z, labels):
 
         ## conditional labels
-        labels = torch.unsqueeze(labels, dim=-1)
-        labels = torch.unsqueeze(labels, dim=-1)
+        # labels = torch.unsqueeze(labels, dim=-1)
+        # labels = torch.unsqueeze(labels, dim=-1)
        # embedding = self.label_embed(labels)
         embedding = self.embedding(labels)
       
-        embedding = embedding.reshape(embedding.size(0), -1, self.mg, self.mg)
+      #  embedding = embedding.reshape(embedding.size(0), -1, self.mg, self.mg)
         #embedding = embedding.view(labels.shape[0], -1, 1, 1)
         # embedding = self.label_conv(embedding)
-
+        print(z.size())
+        print(embedding.size())
         ## conditional input
         input = torch.cat([z, embedding], dim=1)
         self.noise_to_feature(input)
