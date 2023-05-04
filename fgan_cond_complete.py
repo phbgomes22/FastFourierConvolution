@@ -68,12 +68,12 @@ class FCondGenerator(FFCModel):
         self.label_to_feature =  nn.Sequential(
             nn.Linear(num_classes, (self.mg * self.mg) * self.ngf*4),
             nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
-            nn.GELU(),
-            nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
-            nn.GELU(),
-            nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            # nn.GELU(),
+            # nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
+            # nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            # nn.GELU(),
+            # nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
+            # nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
             nn.GELU()
         )
 
@@ -82,12 +82,12 @@ class FCondGenerator(FFCModel):
         ## conditional labels
         embedding = self.embedding(labels)
         embedding = self.label_to_feature(embedding)
-        print(embedding.size())
+        
         ## conditional input
         z = self.noise_to_feature(z)
-        print(z.size())
+     
         input = torch.cat([z, embedding], dim=1)
-        print(input.size())
+        
       
         input = input.reshape(input.size(0), -1, self.mg, self.mg)
 
