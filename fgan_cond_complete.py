@@ -71,6 +71,19 @@ class FCondGenerator(FFCModel):
             nn.GELU()
         )
 
+        # self.label_conv = nn.Sequential(
+        #     nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
+        #     nn.BatchNorm2d(self.ngf*4),
+        #     nn.GELU()
+        # )
+
+        # self.input_conv = nn.Sequential(
+        #     # input is Z, going into a convolution
+        #     nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), 
+        #     nn.BatchNorm2d( self.ngf*4), 
+        #     nn.GELU()
+        # )
+
     def forward(self, z, labels):
 
         ## conditional labels

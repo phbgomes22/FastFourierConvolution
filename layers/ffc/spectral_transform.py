@@ -65,6 +65,7 @@ class SpectralTransform(nn.Module):
             print("Entering here!")
             x = self.act1(self.bn1(self.conv1(x)), y)
         else:
+            print("Actually entering here!")
             x = self.act1(self.bn1(self.conv1(x)))
         # gets the output from the Fourier Unit (back in pixel domain)
         output = self.fu(x, y)
