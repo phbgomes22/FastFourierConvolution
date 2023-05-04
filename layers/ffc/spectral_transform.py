@@ -62,6 +62,7 @@ class SpectralTransform(nn.Module):
 
        # # - testing spectral norm in spectral transform
         if y is not None: 
+            print("Entering here!")
             x = self.act1(self.bn1(self.conv1(x)), y)
         else:
             x = self.act1(self.bn1(self.conv1(x)))
