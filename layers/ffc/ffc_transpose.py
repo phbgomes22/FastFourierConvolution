@@ -124,9 +124,9 @@ class FFCTranspose(nn.Module):
                 ## testing upsampling first, then Spectral Transform
                 # print("X_G")
                 # print("input x_g", x_g.size())
-                # print("out_xg after l2g", out_xg.size())
+                print("out_xg after l2g", out_xg.size())
                 g2g = self.convg2g(x_g, y)
-                # print("after global sp", g2g.size())
+                print("after global sp", g2g.size())
                # g2g = self.convg2gup(g2g) -- removing upsample layer to test upsample in ST
                 # print("after global sp up", g2g.size())
                 out_xg = out_xg + g2g
