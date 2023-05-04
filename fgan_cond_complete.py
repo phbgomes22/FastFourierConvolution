@@ -60,14 +60,14 @@ class FCondGenerator(FFCModel):
         # sn_fn()
         self.noise_to_feature = nn.Sequential(
             nn.Linear(z_size, (self.mg * self.mg // 4) * self.ngf*2),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg // 4) * self.ngf*2),
             nn.GELU()
         )
         self.embedding = nn.Embedding(num_classes, num_classes)
 
         self.label_to_feature =  nn.Sequential(
             nn.Linear(num_classes, (self.mg * self.mg // 4) * self.ngf*2),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg // 4) * self.ngf*2),
             nn.GELU()
         )
 
