@@ -119,8 +119,11 @@ class FFCTranspose(nn.Module):
             out_xg = self.convl2g(x_l)
             if type(x_g) is not int:
                 ## testing upsampling first, then Spectral Transform
-              
-                out_xg = out_xg + self.convg2g(x_g, y)
+            
+                g2g = self.convg2g(x_g, y)
+                print(g2g.size())
+                print(out_xg.size())
+                out_xg = out_xg + g2g
                 out_xg = self.convg2gup(out_xg)
                 
         
