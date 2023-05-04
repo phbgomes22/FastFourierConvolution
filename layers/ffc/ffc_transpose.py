@@ -77,8 +77,6 @@ class FFCTranspose(nn.Module):
      
         self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes)
             # Upsample with convolution
-        self.convg2gup = torch.nn.utils.spectral_norm(nn.ConvTranspose2d(out_cg,  out_cg, kernel_size,
-                              stride, padding, output_padding=out_padding, groups=groups, bias=bias, dilation=dilation))
         
         ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
@@ -127,7 +125,6 @@ class FFCTranspose(nn.Module):
                 # print("out_xg after l2g", out_xg.size())
                 g2g = self.convg2g(x_g, y)
                 # print("after global sp", g2g.size())
-               # g2g = self.convg2gup(g2g) -- removing upsample layer to test upsample in ST
                 # print("after global sp up", g2g.size())
                 out_xg = out_xg + g2g
                 
