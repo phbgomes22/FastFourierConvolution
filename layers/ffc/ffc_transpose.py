@@ -121,10 +121,10 @@ class FFCTranspose(nn.Module):
                 ## testing upsampling first, then Spectral Transform
             
                 g2g = self.convg2g(x_g, y)
+                g2g = self.convg2gup(g2g)
                 print(g2g.size())
                 print(out_xg.size())
                 out_xg = out_xg + g2g
-                out_xg = self.convg2gup(out_xg)
                 
         
         # returns both signals as a tuple
