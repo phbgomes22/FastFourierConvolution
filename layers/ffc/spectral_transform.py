@@ -58,7 +58,8 @@ class SpectralTransform(nn.Module):
         # the default behavior is no downsample - so this is an identity
         x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
-      #  x = self.act1(self.conv1(x))
+        assert y is not None, "no class in Spectral Transform"
+        
        # # - testing spectral norm in spectral transform
         if y is not None: 
             x = self.act1(self.bn1(self.conv1(x), y))
