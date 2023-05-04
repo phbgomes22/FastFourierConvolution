@@ -72,14 +72,14 @@ class FCondGenerator(FFCModel):
         )
 
         self.label_conv = nn.Sequential(
-            nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 1, 0),
+            nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 2, 1),
             nn.BatchNorm2d(self.ngf*4),
             nn.GELU()
         )
 
         self.input_conv = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 1, 0), 
+            nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 2, 1), 
             nn.BatchNorm2d(self.ngf*4), 
             nn.GELU()
         )
