@@ -59,10 +59,10 @@ class SpectralTransform(nn.Module):
         x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
         assert y is not None, "no class in Spectral Transform"
-        
+
        # # - testing spectral norm in spectral transform
         if y is not None: 
-            x = self.act1(self.bn1(self.conv1(x), y))
+            x = self.act1(self.bn1(self.conv1(x)), y)
         else:
             x = self.act1(self.bn1(self.conv1(x)))
         # gets the output from the Fourier Unit (back in pixel domain)
