@@ -127,7 +127,7 @@ class FFCTranspose(nn.Module):
                 # print("out_xg after l2g", out_xg.size())
                 g2g = self.convg2g(x_g, y)
                 # print("after global sp", g2g.size())
-                g2g = self.convg2gup(g2g)
+               # g2g = self.convg2gup(g2g) -- removing upsample layer to test upsample in ST
                 # print("after global sp up", g2g.size())
                 out_xg = out_xg + g2g
                 
