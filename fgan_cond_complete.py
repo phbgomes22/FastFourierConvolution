@@ -68,12 +68,6 @@ class FCondGenerator(FFCModel):
         self.label_to_feature =  nn.Sequential(
             nn.Linear(num_classes, (self.mg * self.mg) * self.ngf*4),
             nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
-            nn.GELU(),
-            nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
-            nn.GELU(),
-            nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
-            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
             nn.GELU()
         )
 
@@ -88,7 +82,6 @@ class FCondGenerator(FFCModel):
      
         input = torch.cat([z, embedding], dim=1)
         
-      
         input = input.reshape(input.size(0), -1, self.mg, self.mg)
 
         ## remainder
