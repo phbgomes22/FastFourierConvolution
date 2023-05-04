@@ -59,43 +59,47 @@ class FCondGenerator(FFCModel):
         sn_fn = torch.nn.utils.spectral_norm 
         # sn_fn()
         self.noise_to_feature = nn.Sequential(
-            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),
+            nn.Linear(z_size, (self.mg * self.mg // 4) * self.ngf*2),
             nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
             nn.GELU()
         )
         self.embedding = nn.Embedding(num_classes, num_classes)
 
         self.label_to_feature =  nn.Sequential(
-            nn.Linear(num_classes, (self.mg * self.mg) * self.ngf*4),
+            nn.Linear(num_classes, (self.mg * self.mg // 4) * self.ngf*2),
             nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
             nn.GELU()
         )
 
-        # self.label_conv = nn.Sequential(
-        #     nn.ConvTranspose2d(num_classes, self.ngf*4, 4, 1, 0),
-        #     nn.BatchNorm2d(self.ngf*4),
-        #     nn.GELU()
-        # )
+        self.label_conv = nn.Sequential(
+            nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 1, 0),
+            nn.BatchNorm2d(self.ngf*4),
+            nn.GELU()
+        )
 
-        # self.input_conv = nn.Sequential(
-        #     # input is Z, going into a convolution
-        #     nn.ConvTranspose2d(z_size, self.ngf*4, 4, 1, 0), 
-        #     nn.BatchNorm2d( self.ngf*4), 
-        #     nn.GELU()
-        # )
+        self.input_conv = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 1, 0), 
+            nn.BatchNorm2d(self.ngf*4), 
+            nn.GELU()
+        )
 
     def forward(self, z, labels):
 
         ## conditional labels
         embedding = self.embedding(labels)
         embedding = self.label_to_feature(embedding)
+        embedding = embedding.reshape(embedding.size(0), -1, self.mg // 2, self.mg // 2)
+        embedding = self.label_conv(embedding)
         
         ## conditional input
         z = self.noise_to_feature(z)
+        z = z.reshape(z.size(0), -1, self.mg // 2, self.mg // 2)
+        z = self.input_conv(z)
      
         input = torch.cat([z, embedding], dim=1)
         
-        input = input.reshape(input.size(0), -1, self.mg, self.mg)
+       # input = input.reshape(input.size(0), -1, self.mg, self.mg)
 
         ## remainder
         fake = self.conv2(input, labels)
