@@ -71,6 +71,7 @@ class FFCTranspose(nn.Module):
 
         # defines the module as the Spectral Transform unless the channels output are zero
         module = nn.Identity if in_cg == 0 or out_cg == 0 else SpectralTransform
+        print(in_cg == 0 or out_cg == 0)
         # (Fourier)
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
@@ -118,6 +119,7 @@ class FFCTranspose(nn.Module):
             out_xg = self.convl2g(x_l)
             if type(x_g) is tuple:
                 ## testing upsampling first, then Spectral Transform
+                print("Entering here!!")
                 x_g = self.convg2gup(x_g)
                 out_xg = out_xg + self.convg2g(x_g, y)
                
