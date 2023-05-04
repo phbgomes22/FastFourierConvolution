@@ -58,19 +58,36 @@ class FCondGenerator(FFCModel):
         ## == Conditional
         sn_fn = torch.nn.utils.spectral_norm 
         # sn_fn()
-        self.noise_to_feature = nn.Linear(z_size*2, (self.mg * self.mg) * self.ngf*8)
-        self.embedding = nn.Embedding(num_classes, z_size)
+        self.noise_to_feature = nn.Sequential(
+            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.GELU()
+        )
+        self.embedding = nn.Embedding(num_classes, num_classes)
+
+        self.label_to_feature =  nn.Sequential(
+            nn.Linear(num_classes, (self.mg * self.mg) * self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.GELU(),
+            nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.GELU(),
+            nn.Linear((self.mg * self.mg) * self.ngf*4, (self.mg * self.mg) * self.ngf*4),
+            nn.BatchNorm1d((self.mg * self.mg) * self.ngf*4),
+            nn.GELU()
+        )
 
     def forward(self, z, labels):
 
         ## conditional labels
         embedding = self.embedding(labels)
-      
+        embedding = self.label_to_feature(embedding)
+        print(embedding.size())
         ## conditional input
-        
+        z = self.noise_to_feature(z)
+        print(z.size())
         input = torch.cat([z, embedding], dim=1)
-
-        input = self.noise_to_feature(input)
+        print(input.size())
       
         input = input.reshape(input.size(0), -1, self.mg, self.mg)
 
