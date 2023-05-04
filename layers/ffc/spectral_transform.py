@@ -56,20 +56,19 @@ class SpectralTransform(nn.Module):
 
     def forward(self, x, y = None):
         # the default behavior is no downsample - so this is an identity
-        x = self.downsample(x)
+       # x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
         assert y is not None, "no class in Spectral Transform"
    
        # # - testing spectral norm in spectral transform
         if y is not None: 
-            print("Entering here!")
             x = self.act1(self.bn1(self.conv1(x), y))
         else:
-            print("Actually entering here!")
             x = self.act1(self.bn1(self.conv1(x)))
         # gets the output from the Fourier Unit (back in pixel domain)
+        print("-- before fu", x.size())
         output = self.fu(x, y)
-
+        print("-- after fu", output.size())
         # lfu is optional
         if self.enable_lfu:
             n, c, h, w = x.shape
@@ -88,4 +87,5 @@ class SpectralTransform(nn.Module):
         # does the final 1x1 convolution with the residual connection (x + output)
         output = self.conv2(x + output + xs)
 
+        print("-- end", output.size())
         return output
