@@ -24,7 +24,7 @@ class SpectralTransform(nn.Module):
         
         # sets a downsample if the stride is set to 2 (default is one)
         if stride == 2:
-            self.downsample = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
+            self.downsample = nn.Upsample(scale_factor=2, mode='nearest')#nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         else:
             self.downsample = nn.Identity()
 
@@ -56,7 +56,7 @@ class SpectralTransform(nn.Module):
 
     def forward(self, x, y = None):
         # the default behavior is no downsample - so this is an identity
-     #   x = self.downsample(x)
+        x = self.downsample(x)
         # the initial convolution with conv2(1x1), BN and ReLU
         assert y is not None, "no class in Spectral Transform"
    
