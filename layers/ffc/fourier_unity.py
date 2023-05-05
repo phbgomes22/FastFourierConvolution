@@ -66,10 +66,9 @@ class FourierUnitSN(nn.Module):
             0, 1, 3, 4, 2).contiguous()  # (batch, c, t, h, w/2+1, 2)
         ffted = torch.complex(ffted[..., 0], ffted[..., 1]) # added from LaMa
 
-        print(ffted.size())
         # with irfftn, dim = (-2, -1)
         output = torch.fft.irfftn(ffted, s=x.shape[-2:], dim=(-2,-1), norm="ortho")
-        print(output.size())
+ 
         return output
 
 '''
