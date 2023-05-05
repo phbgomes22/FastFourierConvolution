@@ -32,9 +32,12 @@ class FourierUnitSN(nn.Module):
     def __init__(self, in_channels, out_channels, groups: int = 1, num_classes: int = 1):
         # bn_layer not used
         super(FourierUnitSN, self).__init__()
+
+        sn_fn = torch.nn.utils.spectral_norm
+
         self.groups = groups
-        self.conv_layer = torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
-                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False)
+        self.conv_layer = sn_fn(torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
+                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False))
         if num_classes > 1:
             self.bn = ConditionalBatchNorm2d(out_channels * 2, num_classes)
         else: 
