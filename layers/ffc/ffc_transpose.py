@@ -22,7 +22,7 @@ class FFCTranspose(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0, 
                  dilation: int = 1, groups: int = 1, bias: bool = False, 
-                 enable_lfu: bool = True, out_padding: int = 0, attention: bool = False, num_classes: int = 1):
+                 enable_lfu: bool = True, out_padding: int = 0, num_classes: int = 1):
         '''
         in_channels: number of channels that the FFCTranspose receives,
         out_channels: number of channes that the FFCTranspose returns in the output tensor,
@@ -75,7 +75,7 @@ class FFCTranspose(nn.Module):
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
      
-        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes)
+        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, False, num_classes)
             # Upsample with convolution
         
         ## -- for debugging
@@ -111,21 +111,12 @@ class FFCTranspose(nn.Module):
 
             self.print_size(out_xl)
             debug_print(".  --- Fim FFC Transp")
-            # print("X_L")
-            # print(x_l.size())
-            # print(out_xl.size())
 
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l)
             if type(x_g) is not int:
-                ## testing upsampling first, then Spectral Transform
-                # print("X_G")
-                # print("input x_g", x_g.size())
-                # print("out_xg after l2g", out_xg.size())
                 g2g = self.convg2g(x_g, y)
-                # print("after global sp", g2g.size())
-                # print("after global sp up", g2g.size())
                 out_xg = out_xg + g2g
                 
         
