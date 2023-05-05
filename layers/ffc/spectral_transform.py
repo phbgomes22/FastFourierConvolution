@@ -24,7 +24,7 @@ class SpectralTransform(nn.Module):
         
         # sets a downsample if the stride is set to 2 (default is one)
         if stride == 2:
-            self.downsample = nn.Upsample(scale_factor=2, mode='nearest')#nn.AvgPool2d(kernel_size=(2, 2), stride=2)
+            self.downsample = nn.Upsample(scale_factor=2, mode='bilinear')#nn.AvgPool2d(kernel_size=(2, 2), stride=2)
         else:
             self.downsample = nn.Identity()
 
