@@ -23,8 +23,8 @@ class FourierUnitSN(nn.Module):
 
         sn_fn = torch.nn.utils.spectral_norm
         # the convolution layer that will be used in the spectral domain
-        self.conv_layer = torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
-                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False)
+        self.conv_layer = sn_fn(torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
+                                          kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False))
         # sn_fn()
         # batch normalization for the spectral domain
         if num_classes > 1:
@@ -54,37 +54,3 @@ class FourierUnitSN(nn.Module):
         output = torch.fft.irfftn(ffted,s=(h,w),dim=(2,3),norm='ortho')
 
         return output 
-    
-
-# class FourierUnit(nn.Module):
-
-#     def __init__(self, in_channels: int, out_channels: int, groups: int = 1):
-#         # bn_layer not used
-#         super(FourierUnit, self).__init__()
-#         self.groups = groups
-
-#         # the convolution layer that will be used in the spectral domain
-#         self.conv_layer = torch.nn.Conv2d(in_channels=in_channels * 2, out_channels=out_channels * 2,
-#                                           kernel_size=1, stride=1, padding=0, groups=self.groups, bias=False)
-#         # batch normalization for the spectral domain
-#         self.bn = torch.nn.BatchNorm2d(out_channels * 2)
-#         # relu for the spectral domain
-#         self.relu = torch.nn.ReLU(inplace=True)
-
-
-#     def forward(self, x):
-#         batch, c, h, w = x.size()
-#         r_size = x.size()
-
-#         # (batch, c, h, w/2+1) complex number
-#         ffted = torch.fft.rfftn(x,s=(h,w),dim=(2,3),norm='ortho')
-#         ffted = torch.cat([ffted.real,ffted.imag],dim=1)
-
-#         ffted = self.conv_layer(ffted)  # (batch, c*2, h, w/2+1)
-#         ffted = self.relu(self.bn(ffted))
-
-#         ffted = torch.tensor_split(ffted,2,dim=1)
-#         ffted = torch.complex(ffted[0],ffted[1])
-#         output = torch.fft.irfftn(ffted,s=(h,w),dim=(2,3),norm='ortho')
-
-#         return output 
