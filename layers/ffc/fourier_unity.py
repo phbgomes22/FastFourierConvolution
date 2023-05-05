@@ -7,6 +7,26 @@ import torch
 import torch.nn as nn
 from ..cond.cond_bn import *
 
+## LaMA model uses this, what is this?
+## Test, if it improves, study!
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(SELayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel // reduction, channel, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        res = x * y.expand_as(x)
+        return res
+
 
 class FourierUnitSN(nn.Module):
     def __init__(self, in_channels, out_channels, groups: int = 1, num_classes: int = 1):
@@ -21,15 +41,18 @@ class FourierUnitSN(nn.Module):
             self.bn = torch.nn.BatchNorm2d(out_channels * 2)
         self.relu = torch.nn.ReLU(inplace=True)
 
+        self.se = SELayer(self.conv_layer.in_channels)
+
     def forward(self, x, y = None):
         batch, c, h, w = x.size()
         r_size = x.size()
 
         # (batch, c, h, w/2+1, 2)
-        ffted = torch.fft.rfft(x, signal_ndim=2, normalized=True)
+        ffted = torch.fft.rfft(x, dim=(-2, -1), norm="ortho")
         # (batch, c, 2, h, w/2+1)
         ffted = ffted.permute(0, 1, 4, 2, 3).contiguous()
         ffted = ffted.view((batch, -1,) + ffted.size()[3:])
+        ffted = self.se(ffted)
 
         ffted = self.conv_layer(ffted)  # (batch, c*2, h, w/2+1)
         if y is not None: 
@@ -40,8 +63,7 @@ class FourierUnitSN(nn.Module):
         ffted = ffted.view((batch, -1, 2,) + ffted.size()[2:]).permute(
             0, 1, 3, 4, 2).contiguous()  # (batch,c, t, h, w/2+1, 2)
 
-        output = torch.fft.irfft(ffted, signal_ndim=2,
-                             signal_sizes=r_size[2:], normalized=True)
+        output = torch.fft.irfft(ffted, dim=(-2, -1), norm="ortho")
 
         return output
 
