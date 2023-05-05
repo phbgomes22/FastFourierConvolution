@@ -51,7 +51,7 @@ class FourierUnitSN(nn.Module):
         # (batch, c, h, w/2+1, 2)
         ffted = torch.fft.rfftn(x, dim=(-2,-1), norm="ortho")
         # (batch, c, 2, h, w/2+1)
-        ffted = torch.stack((ffted.real, ffted.imag), dim=-1)
+        ffted = torch.stack((ffted.real, ffted.imag), dim=-1) # added from LaMa
         ffted = ffted.permute(0, 1, 4, 2, 3).contiguous()
         ffted = ffted.view((batch, -1,) + ffted.size()[3:])
         #ffted = self.se(ffted)
@@ -64,6 +64,7 @@ class FourierUnitSN(nn.Module):
 
         ffted = ffted.view((batch, -1, 2,) + ffted.size()[2:]).permute(
             0, 1, 3, 4, 2).contiguous()  # (batch, c, t, h, w/2+1, 2)
+        ffted = torch.complex(ffted[..., 0], ffted[..., 1]) # added from LaMa
 
         print(ffted.size())
         # with irfftn, dim = (-2, -1)
