@@ -65,19 +65,17 @@ class SpectralTransform(nn.Module):
             x = self.act1(self.bn1(self.conv1(x), y))
         else:
             x = self.act1(self.bn1(self.conv1(x)))
-        # gets the output from the Fourier Unit (back in pixel domain)
-     #   print("-- before fu", x.size())
+            
         output = self.fu(x, y)
-     #   print("-- after fu", output.size())
+        
         # lfu is optional
         if self.enable_lfu:
             n, c, h, w = x.shape
             split_no = 2
-            split_s_h = h // split_no
-            split_s_w = w // split_no
+            split_s = h // split_no
             xs = torch.cat(torch.split(
-                x[:, :c // 4], split_s_h, dim=-2), dim=1).contiguous()
-            xs = torch.cat(torch.split(xs, split_s_w, dim=-1),
+                x[:, :c // 4], split_s, dim=-2), dim=1).contiguous()
+            xs = torch.cat(torch.split(xs, split_s, dim=-1),
                            dim=1).contiguous()
             xs = self.lfu(xs, y)
             xs = xs.repeat(1, 1, split_no, split_no).contiguous()
@@ -86,6 +84,5 @@ class SpectralTransform(nn.Module):
 
         # does the final 1x1 convolution with the residual connection (x + output)
         output = self.conv2(x + output + xs)
-
-      #  print("-- end", output.size())
+        
         return output
