@@ -51,6 +51,7 @@ class FourierUnitSN(nn.Module):
         # (batch, c, h, w/2+1, 2)
         ffted = torch.fft.rfft(x, dim=2, norm="ortho")
         # (batch, c, 2, h, w/2+1)
+        ffted = torch.stack((ffted.real, ffted.imag), dim=-1)
         ffted = ffted.permute(0, 1, 4, 2, 3).contiguous()
         ffted = ffted.view((batch, -1,) + ffted.size()[3:])
         ffted = self.se(ffted)
