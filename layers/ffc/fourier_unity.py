@@ -49,12 +49,12 @@ class FourierUnitSN(nn.Module):
 
         # with rfftn, dim = (-2, -1)
         # (batch, c, h, w/2+1, 2)
-        ffted = torch.fft.rfft(x, dim=2, norm="ortho")
+        ffted = torch.fft.rfftn(x, dim=(-2,-1), norm="ortho")
         # (batch, c, 2, h, w/2+1)
         ffted = torch.stack((ffted.real, ffted.imag), dim=-1)
         ffted = ffted.permute(0, 1, 4, 2, 3).contiguous()
         ffted = ffted.view((batch, -1,) + ffted.size()[3:])
-        ffted = self.se(ffted)
+        #ffted = self.se(ffted)
 
         ffted = self.conv_layer(ffted)  # (batch, c*2, h, w/2+1)
         if y is not None: 
@@ -63,11 +63,11 @@ class FourierUnitSN(nn.Module):
             ffted = self.relu(self.bn(ffted))
 
         ffted = ffted.view((batch, -1, 2,) + ffted.size()[2:]).permute(
-            0, 1, 3, 4, 2).contiguous()  # (batch,c, t, h, w/2+1, 2)
+            0, 1, 3, 4, 2).contiguous()  # (batch, c, t, h, w/2+1, 2)
 
         print(ffted.size())
         # with irfftn, dim = (-2, -1)
-        output = torch.fft.irfft(ffted, n=len(r_size[2:]), dim=2, norm="ortho")
+        output = torch.fft.irfftn(ffted, s=x.shape[-2:], dim=(-2,-1), norm="ortho")
         print(output.size())
         return output
 
