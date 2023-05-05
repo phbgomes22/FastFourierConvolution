@@ -65,8 +65,9 @@ class FourierUnitSN(nn.Module):
         ffted = ffted.view((batch, -1, 2,) + ffted.size()[2:]).permute(
             0, 1, 3, 4, 2).contiguous()  # (batch,c, t, h, w/2+1, 2)
 
+        print(ffted.size())
         # with irfftn, dim = (-2, -1)
-        output = torch.fft.irfft(ffted, n=r_size[2:], dim=2, norm="ortho")
+        output = torch.fft.irfft(ffted, n=len(r_size[2:]), dim=2, norm="ortho")
         print(output.size())
         return output
 
