@@ -54,7 +54,7 @@ class FourierUnitSN(nn.Module):
         ffted = torch.stack((ffted.real, ffted.imag), dim=-1) # added from LaMa
         ffted = ffted.permute(0, 1, 4, 2, 3).contiguous()
         ffted = ffted.view((batch, -1,) + ffted.size()[3:])
-        ffted = self.se(ffted) # SE module from LaMa
+      #  ffted = self.se(ffted) # SE module from LaMa
 
         ffted = self.conv_layer(ffted)  # (batch, c*2, h, w/2+1)
         if y is not None: 
