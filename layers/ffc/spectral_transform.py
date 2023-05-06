@@ -37,7 +37,7 @@ class SpectralTransform(nn.Module):
             self.bn1 = ConditionalBatchNorm2d(out_channels // 2, num_classes)
         else:
             self.bn1 = nn.BatchNorm2d(out_channels // 2)
-        self.act1 = nn.GELU(inplace=True)
+        self.act1 = nn.GELU() #inplace=True
 
         # creates the Fourier Unit that will do convolutions in the spectral domain.
         self.fu = FourierUnitSN(
