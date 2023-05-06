@@ -31,8 +31,8 @@ class SpectralTransform(nn.Module):
         self.stride = stride
 
         # sets the initial 1x1 convolution, batch normalization and relu flow.
-        self.conv1 = nn.Conv2d(in_channels, out_channels //
-                      2, kernel_size=1, groups=groups, bias=False)
+        self.conv1 = sn_fn(nn.Conv2d(in_channels, out_channels //
+                      2, kernel_size=1, groups=groups, bias=False))
         if num_classes > 1:
             self.bn1 = ConditionalBatchNorm2d(out_channels // 2, num_classes)
         else:
@@ -49,8 +49,8 @@ class SpectralTransform(nn.Module):
                 out_channels // 2, out_channels // 2, groups, num_classes=num_classes)
         
         ## sets the convolution that will occur at the end of the Spectral Transform
-        self.conv2 = torch.nn.Conv2d(
-            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
+        self.conv2 = sn_fn(torch.nn.Conv2d(
+            out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False))
         #sn_fn()
 
 
