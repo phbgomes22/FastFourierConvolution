@@ -79,6 +79,11 @@ class FFCTranspose(nn.Module):
         
         ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
+
+        self.gated = True # testing!
+        module = nn.Identity if in_cg == 0 or out_cl == 0 or not self.gated else nn.Conv2d
+        self.gate = module(in_channels, 2, 1)
+
         
     def convtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
                  stride: int, padding: int, output_padding: int, groups: int, bias: int, dilation: int):
@@ -97,26 +102,29 @@ class FFCTranspose(nn.Module):
         x_l, x_g = x if type(x) is tuple else (x, 0)
         out_xl, out_xg = 0, 0
 
-        ## -- esses ifs estao estranhos
+        if self.gated:
+            total_input_parts = [x_l]
+            if torch.is_tensor(x_g):
+                total_input_parts.append(x_g)
+            total_input = torch.cat(total_input_parts, dim=1)
+
+            gates = torch.sigmoid(self.gate(total_input))
+            g2l_gate, l2g_gate = gates.chunk(2, dim=1)
+        else:
+            g2l_gate, l2g_gate = 1, 1
+            
         if self.ratio_gout != 1:
             # creates the output local signal passing the right signals to the right convolutions
-            debug_print(".  --- FFC Transp")
             out_xl = self.convl2l(x_l) 
-            debug_print(".  --- Conv2l2")
 
-            self.print_size(out_xl)
-            out_xl = out_xl + self.convg2l(x_g)
-            debug_print(".  --- Convgl2")
-
-            self.print_size(out_xl)
-            debug_print(".  --- Fim FFC Transp")
+            out_xl = out_xl + self.convg2l(x_g) * g2l_gate
 
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
-            out_xg = self.convl2g(x_l)
-            # if type(x_g) is not int:
-            #     g2g = self.convg2g(x_g, y)
-            #     out_xg = out_xg + g2g
+            out_xg = self.convl2g(x_l) * l2g_gate
+            if type(x_g) is not int:
+                g2g = self.convg2g(x_g, y)
+                out_xg = out_xg + g2g
                 
         
         # returns both signals as a tuple
