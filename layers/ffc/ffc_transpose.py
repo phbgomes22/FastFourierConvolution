@@ -114,9 +114,9 @@ class FFCTranspose(nn.Module):
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l)
-            if type(x_g) is not int:
-                g2g = self.convg2g(x_g, y)
-                out_xg = out_xg + g2g
+            # if type(x_g) is not int:
+            #     g2g = self.convg2g(x_g, y)
+            #     out_xg = out_xg + g2g
                 
         
         # returns both signals as a tuple
