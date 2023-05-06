@@ -80,7 +80,7 @@ class FFCTranspose(nn.Module):
         ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
 
-        self.gated = True # testing!
+        self.gated = False # testing!
         module = nn.Identity if in_cg == 0 or out_cl == 0 or not self.gated else nn.Conv2d
         self.gate = module(in_channels, 2, 1)
 
