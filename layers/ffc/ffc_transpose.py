@@ -110,6 +110,7 @@ class FFCTranspose(nn.Module):
 
             gates = torch.sigmoid(self.gate(total_input))
             g2l_gate, l2g_gate = gates.chunk(2, dim=1)
+            print(g2l_gate.size())
         else:
             g2l_gate, l2g_gate = 1, 1
             
