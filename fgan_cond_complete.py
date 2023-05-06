@@ -133,7 +133,7 @@ class FCondGenerator(FFCModel):
         super(FCondGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
-        ratio_g = 0.5
+        ratio_g = 0.25
 
         self.mg = mg
 
