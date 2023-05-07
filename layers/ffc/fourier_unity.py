@@ -40,7 +40,7 @@ class FourierUnitSN(nn.Module):
             self.bn = ConditionalBatchNorm2d(out_channels * 2, num_classes)
         else: 
             self.bn = torch.nn.BatchNorm2d(out_channels * 2)
-        self.relu = torch.nn.GELU() #inplace=True
+        self.relu = torch.nn.ReLU(inplace=True)
 
         self.se = SELayer(self.conv_layer.in_channels)
 
