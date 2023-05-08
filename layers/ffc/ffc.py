@@ -83,7 +83,7 @@ class FFC(nn.Module):
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
         self.convg2g = module(
-            in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes)
+            in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, False, num_classes)
 
 
     # receives the signal as a tuple containing the local signal in the first position

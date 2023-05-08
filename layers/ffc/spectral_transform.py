@@ -15,19 +15,20 @@ Within, the Fourier Unit
 '''
 class SpectralTransform(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, 
-                stride: int = 1, groups: int = 1, enable_lfu: bool = True, num_classes: int = 1):
+                stride: int = 1, groups: int = 1, enable_lfu: bool = True, upsample: bool = False, num_classes: int = 1):
         # bn_layer not used
         super(SpectralTransform, self).__init__()
         self.enable_lfu = enable_lfu
 
         sn_fn = torch.nn.utils.spectral_norm
         
+        self.downsample = nn.Identity()
         # sets a downsample if the stride is set to 2 (default is one)
-        if stride == 2:
-            self.downsample = nn.Upsample(scale_factor=2, mode='nearest')#nn.AvgPool2d(kernel_size=(2, 2), stride=2)
-        else:
-            self.downsample = nn.Identity()
-
+        if stride == 2 and upsample:
+            self.downsample = nn.Upsample(scale_factor=2, mode='nearest')
+        if stride == 2 and not upsample:
+            self.downsample = nn.AvgPool2d(kernel_size=(2, 2), stride=2)
+        
         self.stride = stride
 
         # sets the initial 1x1 convolution, batch normalization and relu flow.
