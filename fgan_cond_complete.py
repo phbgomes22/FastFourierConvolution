@@ -11,6 +11,7 @@ import torchvision
 import tqdm
 
 from torch.utils import tensorboard
+import torchvision.transforms.functional as F
 
 import torch_fidelity
 
@@ -236,7 +237,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True, mg=mg, num_classes=num_classes).to(device).train() #LargeF
+    D = Discriminator(sn=True, mg=mg, num_classes=num_classes).to(device).train() 
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
