@@ -14,6 +14,20 @@ from torch.utils import tensorboard
 
 import torch_fidelity
 
+# class TransformPILtoRGBTensor:
+#     def __call__(self, img):
+#        # vassert(type(img) is Image.Image, 'Input is not a PIL.Image')
+#         return F.pil_to_tensor(img)
+    
+# class STL10_RGB(STL10):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#     def __getitem__(self, index):
+#         img, target = super().__getitem__(index)
+#         return img
+    
+
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -270,7 +284,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' else 48
+    image_size = 32 if args.dataset == 'cifar10' else 32#48
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(image_size),
@@ -285,7 +299,7 @@ def train(args):
         mg = 4
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
-        mg = 6
+        mg = 4#6
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
