@@ -75,7 +75,7 @@ class FFCTranspose(nn.Module):
         # this is the convolution that processes the global signal and contributes (in the spectral domain)
         # for the formation of the outputted global signal 
      
-        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, num_classes)
+        self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, True, num_classes)
         
         ## -- for debugging
         self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
