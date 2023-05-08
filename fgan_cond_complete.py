@@ -14,20 +14,17 @@ from torch.utils import tensorboard
 
 import torch_fidelity
 
-# class TransformPILtoRGBTensor:
-#     def __call__(self, img):
-#        # vassert(type(img) is Image.Image, 'Input is not a PIL.Image')
-#         return F.pil_to_tensor(img)
-    
-# class STL10_RGB(STL10):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
+class TransformPILtoRGBTensor:
+    def __call__(self, img):
+        return F.pil_to_tensor(img)
 
-#     def __getitem__(self, index):
-#         img, target = super().__getitem__(index)
-#         return img
-    
+class STL10(Dataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+        return img
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -42,104 +39,6 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
-        
-
-# class FCondGenerator(FFCModel):
-#     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-#     def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
-#         super(FCondGenerator, self).__init__()
-#         self.z_size = z_size
-#         self.ngf = 64
-#         ratio_g = 0.5
-
-#         self.mg = mg
-
-#         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-#                       norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
-#         self.lcl_noise2 = NoiseInjection(self.ngf*2)
-        
-#         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-#                       norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
-#         self.lcl_noise3 = NoiseInjection(self.ngf)
-        
-#         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-#                       norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
-#         self.lcl_noise4 = NoiseInjection(self.ngf//2)
-        
-#         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-#                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
-        
-#         ## == Conditional
-#         sn_fn = torch.nn.utils.spectral_norm 
-#         # sn_fn()
-#         self.noise_to_feature = nn.Sequential(
-#             nn.Linear(z_size, (self.mg * self.mg // 4) * self.ngf*2),
-#             nn.BatchNorm1d((self.mg * self.mg // 4) * self.ngf*2),
-#             nn.GELU()
-#         )
-#         self.embedding = nn.Embedding(num_classes, num_classes)
-
-#         self.label_to_feature =  nn.Sequential(
-#             nn.Linear(num_classes, (self.mg * self.mg // 4) * self.ngf*2),
-#             nn.BatchNorm1d((self.mg * self.mg // 4) * self.ngf*2),
-#             nn.GELU()
-#         )
-
-#         self.label_conv = nn.Sequential(
-#             nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 2, 1),
-#             nn.BatchNorm2d(self.ngf*4),
-#             nn.GELU()
-#         )
-
-#         self.input_conv = nn.Sequential(
-#             # input is Z, going into a convolution
-#             nn.ConvTranspose2d(self.ngf*2, self.ngf*4, 4, 2, 1), 
-#             nn.BatchNorm2d(self.ngf*4), 
-#             nn.GELU()
-#         )
-
-#     def forward(self, z, labels):
-
-#         ## conditional labels
-#         embedding = self.embedding(labels)
-#         embedding = self.label_to_feature(embedding)
-   
-#         embedding = embedding.reshape(embedding.size(0), -1, self.mg // 2, self.mg // 2)
-#         embedding = self.label_conv(embedding)
-    
-        
-#         ## conditional input
-#         z = self.noise_to_feature(z)
-#         z = z.reshape(z.size(0), -1, self.mg // 2, self.mg // 2)
-#         z = self.input_conv(z)
-
-     
-#         input = torch.cat([z, embedding], dim=1)
-        
-#        # input = input.reshape(input.size(0), -1, self.mg, self.mg)
-
-#         ## remainder
-#         fake = self.conv2(input, labels)
-#         if self.training:
-#             fake = self.lcl_noise2(fake[0]), fake[1] 
-        
-#         fake = self.conv3(fake, labels)
-#         if self.training:
-#             fake = self.lcl_noise3(fake[0]), fake[1]
-        
-#         fake = self.conv4(fake, labels)
-#         if self.training:
-#             fake = self.lcl_noise4(fake[0]), fake[1] 
-
-#         fake = self.conv5(fake)
-#         fake = self.resizer(fake)
-
-#         if not self.training:
-#             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
-#             fake = fake.to(torch.uint8)
-
-
-#         return fake
 
 class FCondGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -278,13 +177,25 @@ def hinge_loss_gen(fake):
 
 #criterion = MulticlassHingeLoss(num_classes=10)
 
+def register_dataset(image_size):
+    transform = torchvision.transforms.Compose(
+        [
+            torchvision.transforms.Resize(image_size),
+            torchvision.transforms.CenterCrop(image_size),
+            TransformPILtoRGBTensor()
+        ]
+    )
+
+torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL10(root, split='train', transform=transform, download=download)),
+
+
 def train(args):
     # set up dataset loader
     dir = os.getcwd()
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' else 32#48
+    image_size = 32 if args.dataset == 'cifar10' else 48
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(image_size),
@@ -299,7 +210,8 @@ def train(args):
         mg = 4
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
-        mg = 4#6
+        mg = 6
+        register_dataset(image_size=image_size)
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
@@ -420,7 +332,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2= args.dataset + '-train',
+            input2= 'stl-10-32',#args.dataset + '-train',
             isc=True,
             fid=True,
             kid=True,
