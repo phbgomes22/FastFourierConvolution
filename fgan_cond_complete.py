@@ -195,7 +195,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' else 48
+    image_size = 32 if args.dataset == 'cifar10' else 32#48
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(image_size),
@@ -210,7 +210,7 @@ def train(args):
         mg = 4
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
-        mg = 6
+        mg = 4#6
         register_dataset(image_size=image_size)
 
     loader = torch.utils.data.DataLoader(
@@ -322,7 +322,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps) != 0:
+        if next_step % (args.num_epoch_steps)/100 != 0:
             continue
         pbar.close()
         G.eval()
