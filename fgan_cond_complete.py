@@ -194,7 +194,7 @@ class FDiscriminator(FFCModel):
         # self.act = torch.nn.LeakyReLU(0.1)
 
     def forward(self, x, labels):
-      #  x = self.gaus_noise(x)
+        x = self.gaus_noise(x)
 
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
