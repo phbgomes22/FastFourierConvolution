@@ -54,14 +54,17 @@ class FCondGenerator(FFCModel):
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
         self.lcl_noise2 = NoiseInjection(int(self.ngf*4*(1-ratio_g))) # only local receives noise
-        
+        self.glb_noise2 = NoiseInjection(int(self.ngf*4*(ratio_g)))
+
         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
         self.lcl_noise3 = NoiseInjection(int(self.ngf*2*(1-ratio_g))) # only local receives noise
+        self.glb_noise3 = NoiseInjection(int(self.ngf*4*(ratio_g)))
         
         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
         self.lcl_noise4 = NoiseInjection(int(self.ngf*(1-ratio_g))) # only local receives noise
+        self.glb_noise4 = NoiseInjection(int(self.ngf*4*(ratio_g)))
         
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
@@ -101,16 +104,15 @@ class FCondGenerator(FFCModel):
         ## remainder
         fake = self.conv2(input, labels)
         if self.training:
-
-            fake = self.lcl_noise2(fake[0]), fake[1] 
+            fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1])
         
         fake = self.conv3(fake, labels)
         if self.training:
-            fake = self.lcl_noise3(fake[0]), fake[1]
+            fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
         
         fake = self.conv4(fake, labels)
         if self.training:
-            fake = self.lcl_noise4(fake[0]), fake[1] 
+            fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1])
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
@@ -333,7 +335,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2= 'stl-10-32',#args.dataset + '-train',
+            input2= args.dataset + '-train',
             isc=True,
             fid=True,
             kid=True,
