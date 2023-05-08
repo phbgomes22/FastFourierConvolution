@@ -164,7 +164,52 @@ class Discriminator(torch.nn.Module):
  
         return output
     
+class FDiscriminator(FFCModel):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, sn=True, mg: int = 4, num_classes=10):
+        super(FDiscriminator, self).__init__()
+        self.mg = mg
+        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
+        norm_layer = nn.BatchNorm2d
+        ratio_g = 0.25
+        # 3, 4, 3, 4, 3, 4, 3
+        self.main = torch.nn.Sequential(
+            FFC_BN_ACT(in_channels=3 + 1, out_channels=64, kernel_size=3,
+                ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=nn.Identity),
+            FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
+                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
+            FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
+                ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
+            FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
+                ratio_gin=ratio_g, ratio_gout=0.0, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
+        )
+
+        self.label_embed = nn.Embedding(num_classes, 8*8*self.mg*self.mg)
+
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
+      #  self.print_size = Print(debug=True)
+        self.gaus_noise = GaussianNoise(0.05)
+        # self.act = torch.nn.LeakyReLU(0.1)
+
+    def forward(self, x):
+      #  x = self.gaus_noise(x)
+
+        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(labels, dim=-1)
+        embedding = self.label_embed(labels)
+        embedding = embedding.view(labels.shape[0], 1, 8*self.mg, 8*self.mg)
     
+        input = torch.cat([x, embedding], dim=1)
+
+        self.print_size(x)
+        m = self.main(x)
+        m = self.resizer(m)
+       
+        return self.fc(m.view(-1, self.mg * self.mg * 512))
 
 def hinge_loss_dis(fake, real):
     assert fake.dim() == 2 and fake.shape[1] == 1 and real.shape == fake.shape, f'{fake.shape} {real.shape}'
@@ -239,7 +284,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True, mg=mg, num_classes=num_classes).to(device).train() 
+    D = FDiscriminator(sn=True, mg=mg, num_classes=num_classes).to(device).train() 
  #   D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
