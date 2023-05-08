@@ -175,16 +175,16 @@ class FDiscriminator(FFCModel):
         # 3, 4, 3, 4, 3, 4, 3
         self.conv1 = FFC_BN_ACT(in_channels=3 + 1, out_channels=64, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer, num_classes=num_classes)
         self.conv2 = FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer, num_classes=num_classes)
         self.conv3 = FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer, num_classes=num_classes)
         self.conv4 = FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer, num_classes=num_classes)
 
         self.label_embed = nn.Embedding(num_classes, 8*8*self.mg*self.mg)
 
