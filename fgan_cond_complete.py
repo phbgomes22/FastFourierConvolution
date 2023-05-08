@@ -186,7 +186,7 @@ def register_dataset(image_size):
         ]
     )
 
-torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL10(root, split='train', transform=transform, download=download)),
+    torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL10(root, split='train', transform=transform, download=download)),
 
 
 def train(args):
@@ -322,7 +322,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps)/100 != 0:
+        if next_step % (args.num_epoch_steps/100) != 0:
             continue
         pbar.close()
         G.eval()
