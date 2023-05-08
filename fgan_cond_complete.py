@@ -46,7 +46,7 @@ class FCondGenerator(FFCModel):
     def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
         super(FCondGenerator, self).__init__()
         self.z_size = z_size
-        self.ngf = 64
+        self.ngf = 64 * 2
         ratio_g = 0.25
 
         self.mg = mg
