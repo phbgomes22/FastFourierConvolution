@@ -18,7 +18,7 @@ class TransformPILtoRGBTensor:
     def __call__(self, img):
         return F.pil_to_tensor(img)
 
-class STL10(Dataset):
+class STL_10(Dataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -186,7 +186,7 @@ def register_dataset(image_size):
         ]
     )
 
-    torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL10(root, split='train', transform=transform, download=download)),
+    torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL_10(root, split='train', transform=transform, download=download)),
 
 
 def train(args):
