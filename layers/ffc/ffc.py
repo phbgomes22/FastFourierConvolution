@@ -100,7 +100,7 @@ class FFC(nn.Module):
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l) 
             if type(self.convg2g) is not nn.Identity:
-              out_xg = out_xg + self.convg2g(x_g, y)
+                out_xg = out_xg + self.convg2g(x_g, y)
 
         # returns both signals as a tuple
         return out_xl, out_xg

@@ -170,23 +170,21 @@ class FDiscriminator(FFCModel):
         super(FDiscriminator, self).__init__()
         self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        norm_layer = nn.BatchNorm2d
+        norm_layer = ConditionalBatchNorm2d#nn.BatchNorm2d
         ratio_g = 0.25
         # 3, 4, 3, 4, 3, 4, 3
-        self.main = torch.nn.Sequential(
-            FFC_BN_ACT(in_channels=3 + 1, out_channels=64, kernel_size=3,
+        self.conv1 = FFC_BN_ACT(in_channels=3 + 1, out_channels=64, kernel_size=3,
                 ratio_gin=0.0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=nn.Identity),
-            FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+        self.conv2 = FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+        self.conv3 = FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=ratio_g, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
+        self.conv4 = FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
                 ratio_gin=ratio_g, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
-        )
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer)
 
         self.label_embed = nn.Embedding(num_classes, 8*8*self.mg*self.mg)
 
@@ -205,8 +203,10 @@ class FDiscriminator(FFCModel):
     
         input = torch.cat([x, embedding], dim=1)
 
-        self.print_size(input)
-        m = self.main(input, labels)
+        m = self.conv1(input, labels)
+        m = self.conv2(m, labels)
+        m = self.conv3(m, labels)
+        m = self.conv4(m, labels)
         m = self.resizer(m)
        
         return self.fc(m.view(-1, self.mg * self.mg * 512))
