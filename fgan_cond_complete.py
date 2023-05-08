@@ -18,7 +18,7 @@ class TransformPILtoRGBTensor:
     def __call__(self, img):
         return F.pil_to_tensor(img)
 
-class STL_10(Dataset):
+class STL_10(torchvision.datasets.STL10):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
