@@ -206,7 +206,7 @@ class FDiscriminator(FFCModel):
         input = torch.cat([x, embedding], dim=1)
 
         self.print_size(input)
-        m = self.main(input)
+        m = self.main(input, labels)
         m = self.resizer(m)
        
         return self.fc(m.view(-1, self.mg * self.mg * 512))
