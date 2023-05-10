@@ -1,6 +1,7 @@
 # https://github.com/toshas/torch-fidelity/blob/master/examples/sngan_cifar10.py
 
 from models import *
+from util import *
 
 import argparse
 import os
@@ -15,17 +16,6 @@ import torchvision.transforms.functional as F
 
 import torch_fidelity
 
-class TransformPILtoRGBTensor:
-    def __call__(self, img):
-        return F.pil_to_tensor(img)
-
-class STL_10(torchvision.datasets.STL10):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __getitem__(self, index):
-        img, target = super().__getitem__(index)
-        return img
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -123,6 +113,81 @@ class FCondGenerator(FFCModel):
 
 
         return fake
+
+
+class FCondGenerator2(FFCModel):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
+        super(FCondGenerator, self).__init__()
+        self.z_size = z_size
+        self.ngf = 64
+        ratio_g = 0.25
+
+        self.mg = mg
+
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
+        self.lcl_noise2 = NoiseInjection(int(self.ngf*4*(1-ratio_g))) # only local receives noise
+        self.glb_noise2 = NoiseInjection(int(self.ngf*4*(ratio_g)))
+
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
+        self.lcl_noise3 = NoiseInjection(int(self.ngf*2*(1-ratio_g))) # only local receives noise
+        self.glb_noise3 = NoiseInjection(int(self.ngf*2*(ratio_g)))
+        
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=ConditionalBatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True, num_classes=num_classes)
+        self.lcl_noise4 = NoiseInjection(int(self.ngf*(1-ratio_g))) # only local receives noise
+        self.glb_noise4 = NoiseInjection(int(self.ngf*(ratio_g)))
+        
+        self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
+        
+        ## == Conditional
+
+        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4)
+
+        self.label_embed = nn.Embedding(num_classes, num_classes)
+        self.embed_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4)
+
+    def forward(self, z, labels):
+
+        ## conditional
+        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(labels, dim=-1)
+        embedding = self.label_embed(labels)
+        embedding = self.embed_to_feature(embedding)
+        embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
+
+        z = z.reshape(z.size(0), -1, 1, 1)
+        input = self.noise_to_feature(z)
+        input = input.reshape(input.size(0), -1, self.mg, self.mg)
+
+        input = torch.cat([input, embedding], dim=1)
+
+        ## remainder
+        fake = self.conv2(input, labels)
+        if self.training:
+            fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1])
+        
+        fake = self.conv3(fake, labels)
+        if self.training:
+            fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
+        
+        fake = self.conv4(fake, labels)
+        if self.training:
+            fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1])
+
+        fake = self.conv5(fake)
+        fake = self.resizer(fake)
+
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+
+
+        return fake
+
 
 class Discriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -243,7 +308,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' else 32#48
+    image_size = 32 if args.dataset == 'cifar10' else 48
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(image_size),
@@ -259,7 +324,7 @@ def train(args):
         input2_dataset = args.dataset + '-train'
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
-        mg = 4#6
+        mg = 6
         register_dataset(image_size=image_size)
         input2_dataset = 'stl-10-32'
 
@@ -279,7 +344,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FCondGenerator(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
+    G = FCondGenerator2(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
