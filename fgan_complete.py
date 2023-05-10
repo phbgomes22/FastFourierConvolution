@@ -152,31 +152,6 @@ class Discriminator(torch.nn.Module):
         output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
-    
-class DCGANDiscrimnator(nn.Module):
-    def __init__(self, sn: bool):
-        super(DCGANDiscrimnator, self).__init__()
-        sn_fn = torch.nn.utils.spectral_norm
-        self.conv1 = sn_fn(torch.nn.Conv2d(3, 32, 3, stride=1, padding=(1,1)))
-        self.conv2 = sn_fn(torch.nn.Conv2d(32, 32, 4, stride=2, padding=(1,1)))
-        self.conv3 = sn_fn(torch.nn.Conv2d(32, 64, 3, stride=1, padding=(1,1)))
-        self.conv4 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
-        self.conv5 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
-        self.conv6 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
-        self.conv7 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
-
-        self.act = torch.nn.LeakyReLU(0.1)
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * 256, 1))
-
-    def forward(self, x):
-        m = self.act(self.conv1(x))
-        m = self.act(self.conv2(m))
-        m = self.act(self.conv3(m))
-        m = self.act(self.conv4(m))
-        m = self.act(self.conv5(m))
-        m = self.act(self.conv6(m))
-        m = self.act(self.conv7(m))
-        return self.fc(m.view(-1, 4 * 4 * 256))
 
 class FDiscriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -221,54 +196,181 @@ class FDiscriminator(FFCModel):
        
         return self.fc(m.view(-1, self.mg * self.mg * 512))
 
-class LargeFDiscriminator(FFCModel):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True):
-        super(LargeFDiscriminator, self).__init__()
-        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        # 3, 4, 3, 4, 3, 4, 3
-        ratio_g = 0.5 #0.5
-        act_func = nn.LeakyReLU
-        norm_layer = nn.BatchNorm2d
-        ndf = 64 # 32
-        self.ndf = ndf
-        self.main = torch.nn.Sequential(
-            FFC_BN_ACT(in_channels=3, out_channels=ndf, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func),
-            FFC_BN_ACT(in_channels=ndf, out_channels=ndf, kernel_size=4,
-                ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=ndf, out_channels=ndf*2, kernel_size=3,
-                ratio_gin=0, ratio_gout=ratio_g, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*2, kernel_size=4,
-                ratio_gin=ratio_g, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=ndf*2, out_channels=ndf*4, kernel_size=3,
-                ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*4, kernel_size=4,
-                ratio_gin=0, ratio_gout=0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=ndf*4, out_channels=ndf*8, kernel_size=3,
-                ratio_gin=0, ratio_gout=0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=act_func, norm_layer=norm_layer),
-        )
 
-        self.fc = sn_fn(torch.nn.Linear(4 * 4 * ndf*8, 1))
+class GenBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, hidden_channels=None, ksize=3, pad=1,
+                 activation=nn.ReLU(), upsample=False, n_classes=0):
+        super(GenBlock, self).__init__()
+        self.activation = activation
+        self.upsample = upsample
+        self.learnable_sc = in_channels != out_channels or upsample
+        hidden_channels = out_channels if hidden_channels is None else hidden_channels
+        self.n_classes = n_classes
+        self.c1 = nn.Conv2d(in_channels, hidden_channels, kernel_size=ksize, padding=pad)
+        self.c2 = nn.Conv2d(hidden_channels, out_channels, kernel_size=ksize, padding=pad)
 
-      #  self.gaus_noise = GaussianNoise(0.01)
+        self.b1 = nn.BatchNorm2d(in_channels)
+        self.b2 = nn.BatchNorm2d(hidden_channels)
+        if self.learnable_sc:
+            self.c_sc = nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0)
+
+    def upsample_conv(self, x, conv):
+        return conv(nn.UpsamplingNearest2d(scale_factor=2)(x))
+
+    def residual(self, x):
+        h = x
+        h = self.b1(h)
+        h = self.activation(h)
+        h = self.upsample_conv(h, self.c1) if self.upsample else self.c1(h)
+        h = self.b2(h)
+        h = self.activation(h)
+        h = self.c2(h)
+        return h
+
+    def shortcut(self, x):
+        if self.learnable_sc:
+            x = self.upsample_conv(x, self.c_sc) if self.upsample else self.c_sc(x)
+            return x
+        else:
+            return x
 
     def forward(self, x):
-        debug_print("Começando Discriminador...")
-      #  x = self.gaus_noise(x)
-        # self.print_size(x)
-        m = self.main(x)
-        m = self.resizer(m)
-        # self.print_size(m)
-        # debug_print(m.size())
-        return self.fc(m.view(-1, 4 * 4 * self.ndf * 8))
+        return self.residual(x) + self.shortcut(x)
+
+
+class Generator(nn.Module):
+    def __init__(self, args, activation=nn.ReLU(), n_classes=0, mg: int = 0):
+        super(Generator, self).__init__()
+        self.bottom_width = mg
+        self.activation = activation
+        self.n_classes = n_classes
+        self.ch = 512
+        self.l1 = nn.Linear(args.latent_dim, (self.bottom_width ** 2) * self.ch)
+        self.block2 = GenBlock(512, 256, activation=activation, upsample=True, n_classes=n_classes)
+        self.block3 = GenBlock(256, 128, activation=activation, upsample=True, n_classes=n_classes)
+        self.block4 = GenBlock(128, 64, activation=activation, upsample=True, n_classes=n_classes)
+        self.b5 = nn.BatchNorm2d(64)
+        self.c5 = nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1)
+
+    def forward(self, z):
+        h = z
+        h = self.l1(h).view(-1, self.ch, self.bottom_width, self.bottom_width)
+        h = self.block2(h)
+        h = self.block3(h)
+        h = self.block4(h)
+        h = self.b5(h)
+        h = self.activation(h)
+        h = nn.Tanh()(self.c5(h))
+        return h
+
+
+"""Discriminator"""
+
+
+def _downsample(x):
+    # Downsample (Mean Avg Pooling with 2x2 kernel)
+    return nn.AvgPool2d(kernel_size=2)(x)
+
+
+class OptimizedDisBlock(nn.Module):
+    def __init__(self, args, in_channels, out_channels, ksize=3, pad=1, activation=nn.ReLU()):
+        super(OptimizedDisBlock, self).__init__()
+        self.activation = activation
+
+        self.c1 = nn.Conv2d(in_channels, out_channels, kernel_size=ksize, padding=pad)
+        self.c2 = nn.Conv2d(out_channels, out_channels, kernel_size=ksize, padding=pad)
+        self.c_sc = nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0)
+        
+        self.c1 = nn.utils.spectral_norm(self.c1)
+        self.c2 = nn.utils.spectral_norm(self.c2)
+        self.c_sc = nn.utils.spectral_norm(self.c_sc)
+
+    def residual(self, x):
+        h = x
+        h = self.c1(h)
+        h = self.activation(h)
+        h = self.c2(h)
+        h = _downsample(h)
+        return h
+
+    def shortcut(self, x):
+        return self.c_sc(_downsample(x))
+
+    def forward(self, x):
+        return self.residual(x) + self.shortcut(x)
+
+
+class DisBlock(nn.Module):
+    def __init__(self, args, in_channels, out_channels, hidden_channels=None, ksize=3, pad=1,
+                 activation=nn.ReLU(), downsample=False):
+        super(DisBlock, self).__init__()
+        self.activation = activation
+        self.downsample = downsample
+        self.learnable_sc = (in_channels != out_channels) or downsample
+        hidden_channels = in_channels if hidden_channels is None else hidden_channels
+        self.c1 = nn.Conv2d(in_channels, hidden_channels, kernel_size=ksize, padding=pad)
+        self.c2 = nn.Conv2d(hidden_channels, out_channels, kernel_size=ksize, padding=pad)
+        
+        self.c1 = nn.utils.spectral_norm(self.c1)
+        self.c2 = nn.utils.spectral_norm(self.c2)
+
+        if self.learnable_sc:
+            self.c_sc = nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0)
+            
+            self.c_sc = nn.utils.spectral_norm(self.c_sc)
+
+    def residual(self, x):
+        h = x
+        h = self.activation(h)
+        h = self.c1(h)
+        h = self.activation(h)
+        h = self.c2(h)
+        if self.downsample:
+            h = _downsample(h)
+        return h
+
+    def shortcut(self, x):
+        if self.learnable_sc:
+            x = self.c_sc(x)
+            if self.downsample:
+                return _downsample(x)
+            else:
+                return x
+        else:
+            return x
+
+    def forward(self, x):
+        return self.residual(x) + self.shortcut(x)
+
+
+class Discriminator(nn.Module):
+    def __init__(self, args, activation=nn.ReLU(), mg:int=4):
+        super(Discriminator, self).__init__()
+        self.activation = activation
+        self.block1 = OptimizedDisBlock(args, 3, 64)
+        self.block2 = DisBlock(args, 64, 128, activation=activation, downsample=True)
+        self.block3 = DisBlock(args, 128, 256, activation=activation, downsample=True)
+        self.block4 = DisBlock(args, 256, 512, activation=activation, downsample=True)
+        self.block5 = DisBlock(args, 512, 1024, activation=activation, downsample=False)
+
+        self.l6 = nn.Linear(1024, 1, bias=False)
+        
+        self.l6 = nn.utils.spectral_norm(self.l6)
+
+    def forward(self, x):
+        h = x
+        h = self.block1(h)
+        h = self.block2(h)
+        h = self.block3(h)
+        h = self.block4(h)
+        h = self.block5(h)
+        h = self.activation(h)
+        # Global average pooling
+        h = h.sum(2).sum(2)
+        output = self.l6(h)
+
+        return output
+
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
@@ -295,8 +397,8 @@ def train(args):
     image_size = 32 if args.dataset == 'cifar10' else 48
     ds_transform = torchvision.transforms.Compose(
         [
-            torchvision.transforms.Resize(image_size),
-            torchvision.transforms.CenterCrop(image_size),
+            torchvision.transforms.Resize(size=(image_size, image_size)),
+           # torchvision.transforms.CenterCrop(image_size),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
@@ -306,15 +408,16 @@ def train(args):
         ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
         mg = 4
         input2_dataset = args.dataset + '-train'
+        loader = torch.utils.data.DataLoader(
+            ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True
+        )
     else:
-        ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
+       # ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 6
         register_dataset(image_size=image_size)
-        input2_dataset = 'stl-10-32'
+        input2_dataset = 'stl-10-48'
+        loader = load_stl(args.batch_size, ds_transform)
 
-    loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
-    )
     loader_iter = iter(loader)
 
     # reinterpret command line inputs

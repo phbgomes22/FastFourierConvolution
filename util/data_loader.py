@@ -48,7 +48,7 @@ def register_dataset(image_size):
     transform_dts = transforms.Compose(
         [
             transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
+        #    transforms.CenterCrop(image_size),
             TransformPILtoRGBTensor()
         ]
     )
@@ -57,6 +57,27 @@ def register_dataset(image_size):
     torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
     torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=True, transform=transform_dts))
 
+def load_stl(batch_size, trans):
+   
+    # train + test (# 13000)
+    dataset = dset.STL10(root="./data", split="train", transform=trans, download=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
+    imgs, labels = [], []
+    for x, y in dataloader:
+        imgs.append(x)
+        labels.append(y)
+    dataset = dset.STL10(root="./data", split="test", transform=trans)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
+    for x, y in dataloader:
+        imgs.append(x)
+        labels.append(y)
+    # as tensor
+    all_imgs = torch.cat(imgs, dim=0)
+    all_labels = torch.cat(labels, dim=0)
+    # as dataset
+    dataset = torch.utils.data.TensorDataset(all_imgs, all_labels)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    return dataloader
 
 def load_data(color_channels: int = -1):
     ''''
