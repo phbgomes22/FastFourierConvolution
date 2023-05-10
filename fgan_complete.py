@@ -195,7 +195,7 @@ class FDiscriminator(FFCModel):
       #  self.print_size(m)
        
         return self.fc(m.view(-1, self.mg * self.mg * 512))
-
+'''
 
 class GenBlock(nn.Module):
     def __init__(self, in_channels, out_channels, hidden_channels=None, ksize=3, pad=1,
@@ -371,6 +371,7 @@ class Discriminator(nn.Module):
 
         return output
 
+'''
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
