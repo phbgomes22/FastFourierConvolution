@@ -14,6 +14,7 @@ from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, Stan
 from config import Config, Datasets
 
 from .tar_loader import TarImageFolder
+import torchvision.transforms.functional as F
 import torch_fidelity
 
 
