@@ -25,7 +25,12 @@ def weights_init(m):
     '''
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        nn.init.normal_(m.weight.data, 0.0, 0.02)
+        if hasattr(m, "weight"):
+            torch.nn.init.xavier_uniform_(m.weight)
+        if hasattr(m, "bias"):
+            if hasattr(m.bias, "data"):       
+                m.bias.data.fill_(0)
+        # nn.init.normal_(m.weight.data, 0.0, 0.02)
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
@@ -296,8 +301,8 @@ def train(args):
     image_size = 32 if args.dataset == 'cifar10' or args.dataset == 'svhn' else 48
     ds_transform = torchvision.transforms.Compose(
         [
-            torchvision.transforms.Resize(image_size),
-            torchvision.transforms.CenterCrop(image_size),
+            torchvision.transforms.Resize(size=(image_size, image_size)),
+         #   torchvision.transforms.CenterCrop(image_size),
             torchvision.transforms.ToTensor(), 
             torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
@@ -320,7 +325,7 @@ def train(args):
     register_dataset(image_size=image_size)
 
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
+        ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True
     )
     loader_iter = iter(loader)
 
@@ -336,14 +341,14 @@ def train(args):
 
     # create Generator and Discriminator models
     G = FCondGeneratorSTL(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
-   # G.apply(weights_init)
+    G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
     D = Discriminator(sn=True, mg=mg, num_classes=num_classes).to(device).train() 
- #   D.apply(weights_init)
+    D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
     print(D)
@@ -389,8 +394,6 @@ def train(args):
         output = D(fake, real_label)
         ## - update hinge loss
 
-     #  label = torch.full((args.batch_size,), 0, device=device)
-      #  loss_G = criterion(output, label.float())
         loss_G = hinge_loss_gen(output)
         loss_G.backward()
         optim_G.step()
@@ -406,8 +409,6 @@ def train(args):
             output_dg = D(fake, real_label)
             output_dreal = D(real_img, real_label)
             ## - hinge loss with criterion
-           # label.fill_(0)
-           # loss_D = criterion()
             ## - update hinge loss
             loss_D = hinge_loss_dis(output_dg, output_dreal)
             loss_D.backward()
