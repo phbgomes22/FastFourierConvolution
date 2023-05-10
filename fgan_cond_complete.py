@@ -145,23 +145,24 @@ class FCondGenerator2(FFCModel):
         
         ## == Conditional
 
-        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4)
+      #  self.embed_to_feature = nn.Linear(num_classes, (self.mg * self.mg) * self.ngf*4)
 
         self.label_embed = nn.Embedding(num_classes, num_classes)
-        self.embed_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4)
+        self.noise_to_feature = nn.Linear(z_size + num_classes, (self.mg * self.mg) * self.ngf*8)
 
     def forward(self, z, labels):
 
         ## conditional
         embedding = self.label_embed(labels)
-        embedding = self.embed_to_feature(embedding)
-        embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
+       # embedding = self.embed_to_feature(embedding)
+     #   embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
 
-        z = z.reshape(z.size(0), -1, 1, 1)
-        input = self.noise_to_feature(z)
+        input = torch.cat([z, embedding], dim=1)
+        input = self.noise_to_feature(input)
+
+        # z = z.reshape(z.size(0), -1, 1, 1)
         input = input.reshape(input.size(0), -1, self.mg, self.mg)
 
-        input = torch.cat([input, embedding], dim=1)
 
         ## remainder
         fake = self.conv2(input, labels)
