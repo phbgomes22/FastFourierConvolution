@@ -256,10 +256,12 @@ def train(args):
     if args.dataset == 'cifar10':
         ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
         mg = 4
+        input2_dataset = args.dataset + '-train'
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 4#6
         register_dataset(image_size=image_size)
+        input2_dataset = 'stl-10-32'
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
@@ -380,7 +382,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2= args.dataset + '-train',
+            input2= input2_dataset,
             isc=True,
             fid=True,
             kid=True,
