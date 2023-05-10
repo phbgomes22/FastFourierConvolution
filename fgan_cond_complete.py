@@ -153,8 +153,6 @@ class FCondGenerator2(FFCModel):
     def forward(self, z, labels):
 
         ## conditional
-        labels = torch.unsqueeze(labels, dim=-1)
-        labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
         embedding = self.embed_to_feature(embedding)
         embedding = embedding.view(labels.shape[0], -1, self.mg, self.mg)
