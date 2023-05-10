@@ -1,6 +1,7 @@
 # https://github.com/toshas/torch-fidelity/blob/master/examples/sngan_cifar10.py
 
 from models import *
+from util import *
 
 import argparse
 import os
@@ -312,9 +313,12 @@ def train(args):
     if args.dataset == 'cifar10':
         ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
         mg = 4
+        input2_dataset = args.dataset + '-train'
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 6
+        register_dataset(image_size=image_size)
+        input2_dataset = 'stl-10-32'
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
@@ -332,14 +336,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True, mg=mg).to(device).train() #LargeF
+    D = Discriminator(sn=True, mg=mg).to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
@@ -418,7 +422,7 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2= args.dataset + '-train',
+            input2= input2_dataset,
             isc=True,
             fid=True,
             kid=True,

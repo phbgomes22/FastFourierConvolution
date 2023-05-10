@@ -14,12 +14,36 @@ from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, Stan
 from config import Config, Datasets
 
 from .tar_loader import TarImageFolder
+import torch_fidelity
 
+
+class TransformPILtoRGBTensor:
+    def __call__(self, img):
+        return F.pil_to_tensor(img)
+
+class STL_10(dset.STL10):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+        return img
 
 def get_device():
     # Decide which device we want to run on
     device = torch.device("cuda:0" if (torch.cuda.is_available() and Config.shared().ngpu > 0) else "cpu")
     return device 
+
+def register_dataset(image_size):
+    transform = transforms.Compose(
+        [
+            transforms.Resize(image_size),
+            transforms.CenterCrop(image_size),
+            TransformPILtoRGBTensor()
+        ]
+    )
+
+    torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL_10(root, split='train', transform=transform, download=download)),
 
 
 def load_data(color_channels: int = -1):
