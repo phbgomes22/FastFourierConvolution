@@ -410,7 +410,7 @@ def train(args):
         mg = 4
         input2_dataset = args.dataset + '-train'
         loader = torch.utils.data.DataLoader(
-            ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True
+            ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
         )
     else:
        # ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
@@ -489,7 +489,11 @@ def train(args):
             optim_D.zero_grad()
             optim_G.zero_grad()
             fake = G(z)
-            loss_D = hinge_loss_dis(D(fake), D(real_img))
+            output_dg = D(fake)
+            output_dreal = D(real_img)
+            ## - hinge loss with criterion
+            ## - update hinge loss
+            loss_D = hinge_loss_dis(output_dg, output_dreal)
             loss_D.backward()
             optim_D.step()
 

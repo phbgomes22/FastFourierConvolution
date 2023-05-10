@@ -325,7 +325,7 @@ def train(args):
     register_dataset(image_size=image_size)
 
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True
+        ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
     )
     loader_iter = iter(loader)
 
