@@ -12,7 +12,6 @@ import torchvision
 import tqdm
 
 from torch.utils import tensorboard
-import torchvision.transforms.functional as F
 
 import torch_fidelity
 
@@ -324,7 +323,7 @@ def train(args):
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 6
         register_dataset(image_size=image_size)
-        input2_dataset = 'stl-10-32'
+        input2_dataset = 'stl-10-48'
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
