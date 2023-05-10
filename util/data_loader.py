@@ -76,7 +76,7 @@ def load_stl(batch_size, trans):
     all_labels = torch.cat(labels, dim=0)
     # as dataset
     dataset = torch.utils.data.TensorDataset(all_imgs, all_labels)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     return dataloader
 
 def load_data(color_channels: int = -1):
