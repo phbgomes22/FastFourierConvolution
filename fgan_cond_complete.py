@@ -293,7 +293,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' else 48
+    image_size = 32 if args.dataset == 'cifar10' or args.dataset == 'svhn' else 48
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(image_size),
@@ -307,13 +307,17 @@ def train(args):
         ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
         mg = 4
        # input2_dataset = args.dataset + '-train'
-        register_dataset(image_size=image_size)
         input2_dataset = 'cifar-10-32'
+    elif args.dataset == 'svhn':
+        ds_instance = torchvision.datasets.SVHN(root=dir_dataset, split='train', download=True, transform=ds_transform)
+        mg = 4
+        input2_dataset = 'svhn-32'
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 6
-        register_dataset(image_size=image_size)
         input2_dataset = 'stl-10-48'
+
+    register_dataset(image_size=image_size)
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
@@ -478,7 +482,7 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
-    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10'))
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10', 'svhn'))
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
@@ -488,7 +492,7 @@ def main():
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_cond'))
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
-  #  assert not args.conditional, 'Conditional mode not implemented'
+    
     train(args)
 
 
