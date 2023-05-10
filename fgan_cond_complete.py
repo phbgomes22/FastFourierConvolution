@@ -118,7 +118,7 @@ class FCondGenerator(FFCModel):
 class FCondGenerator2(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
-        super(FCondGenerator, self).__init__()
+        super(FCondGenerator2, self).__init__()
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.25
