@@ -287,18 +287,6 @@ def hinge_loss_gen(fake):
 
 #criterion = MulticlassHingeLoss(num_classes=10)
 
-def register_dataset(image_size):
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.Resize(image_size),
-            torchvision.transforms.CenterCrop(image_size),
-            TransformPILtoRGBTensor()
-        ]
-    )
-
-    torch_fidelity.register_dataset('stl-10-32', lambda root, download: STL_10(root, split='train', transform=transform, download=download)),
-
-
 def train(args):
     # set up dataset loader
     dir = os.getcwd()
@@ -318,7 +306,9 @@ def train(args):
     if args.dataset == 'cifar10':
         ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
         mg = 4
-        input2_dataset = args.dataset + '-train'
+       # input2_dataset = args.dataset + '-train'
+        register_dataset(image_size=image_size)
+        input2_dataset = 'cifar-10-32'
     else:
         ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 6
