@@ -53,8 +53,9 @@ def register_dataset(image_size):
         ]
     )
 
-    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train', transform=transform_dts, download=download)),
-    torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=True, download=download, transform=transform_dts)),
+    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train', transform=transform_dts, download=download))
+    torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
+    torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=True, transform=transform_dts))
 
 
 def load_data(color_channels: int = -1):
