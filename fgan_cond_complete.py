@@ -115,10 +115,10 @@ class FCondGenerator(FFCModel):
         return fake
 
 
-class FCondGenerator2(FFCModel):
+class FCondGeneratorSTL(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4, num_classes: int = 10):
-        super(FCondGenerator2, self).__init__()
+        super(FCondGeneratorSTL, self).__init__()
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.25
@@ -162,7 +162,6 @@ class FCondGenerator2(FFCModel):
 
         # z = z.reshape(z.size(0), -1, 1, 1)
         input = input.reshape(input.size(0), -1, self.mg, self.mg)
-
 
         ## remainder
         fake = self.conv2(input, labels)
@@ -343,7 +342,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FCondGenerator2(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
+    G = FCondGeneratorSTL(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
