@@ -336,7 +336,7 @@ def train(args):
 
     # create Generator and Discriminator models
     G = FCondGeneratorSTL(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
-    G.apply(weights_init)
+   # G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
