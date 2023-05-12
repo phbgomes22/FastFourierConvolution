@@ -83,17 +83,17 @@ class FGenerator(FFCModel):
       #      nn.BatchNorm1d((self.mg * self.mg) * self.ngf*8)
         )
 
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise2 = NoiseInjection(int(self.ngf*4*(1-ratio_g)))
         self.glb_noise2 = NoiseInjection(int(self.ngf*4*(ratio_g)))
         
-        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise3 = NoiseInjection(int(self.ngf*2*(1-ratio_g)))
         self.glb_noise3 = NoiseInjection(int(self.ngf*2*(ratio_g)))
         
-        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.ReLU, 
+        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(int(self.ngf*(1-ratio_g)))
         self.glb_noise4 = NoiseInjection(int(self.ngf*(ratio_g)))
@@ -452,8 +452,8 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
     
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    optim_D = torch.optim.Adam(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
