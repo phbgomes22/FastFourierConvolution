@@ -384,6 +384,12 @@ def hinge_loss_dis(fake, real):
            torch.nn.functional.relu(1.0 + fake).mean()
     return loss
 
+def hinge_loss_real(real):
+    loss = torch.nn.functional.relu(1.0 - real).mean()
+    return loss
+
+def hinge_loss_fake(fake):
+    return torch.nn.functional.relu(1.0 + fake).mean()
 
 def hinge_loss_gen(fake):
    # fake = fake.squeeze(-1).squeeze(-1)
@@ -496,7 +502,13 @@ def train(args):
             output_dreal = D(real_img)
             ## - hinge loss with criterion
             ## - update hinge loss
-            loss_D = hinge_loss_dis(output_dg, output_dreal)
+
+            hinge_loss_real = hinge_loss_real(output_dreal)
+            hinge_loss_fake = hinge_loss_fake(output_dg)
+            # testing Adaptative Weight Loss Method
+            loss_D = aw_method().aw_loss(Dloss_real= hinge_loss_real, Dloss_fake= hinge_loss_fake, Dis_opt=optim_D, 
+                                Dis_Net=D, real_validity=output_dreal, fake_validity=output_dg)
+         #   loss_D = hinge_loss_dis(output_dg, output_dreal)
             loss_D.backward()
             optim_D.step()
 

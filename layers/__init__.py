@@ -17,3 +17,6 @@ from .resizer import *
 from .print_layer import *
 from .gaussian_noise import *
 from .cond.cond_bn import *
+
+
+from .aw_loss import *
