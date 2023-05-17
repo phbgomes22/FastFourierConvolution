@@ -325,14 +325,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = GeneratorCIFAR10(z_size=args.z_size, mg=mg).to(device).train()
+    G = GeneratorCIFAR10(z_dim=args.z_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = DiscriminatorCIFAR10(sn=True, mg=mg).to(device).train() 
+    D = DiscriminatorCIFAR10().to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
