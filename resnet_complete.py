@@ -229,7 +229,7 @@ class GeneratorCIFAR10(nn.Module):
 
     def forward(self, z):
         input = self.dense(z)
-        input = input.reshape(fake.size(0), -1, self.mg, self.mg)
+        input = input.reshape(input.size(0), -1, self.mg, self.mg)
         fake = self.model(input)
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
