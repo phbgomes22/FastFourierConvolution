@@ -14,6 +14,7 @@ import tqdm
 from torch.utils import tensorboard
 
 import torch_fidelity
+import torch.nn.functional as F
 
 
 def count_parameters(model):
@@ -29,75 +30,201 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
+
+
+### Implementation 2 - Testing now   
+
+def init_xavier_uniform(layer):
+    if hasattr(layer, "weight"):
+        torch.nn.init.xavier_uniform_(layer.weight)
+    if hasattr(layer, "bias"):
+        if hasattr(layer.bias, "data"):       
+            layer.bias.data.fill_(0)
+
+## Generator block
+class DeconvBNRelu(nn.Module):
+    def __init__(self, in_ch, out_ch, kernel, stride, padding=0, n_classes=0):
+        super().__init__()
+        self.conv = nn.ConvTranspose2d(in_ch, out_ch, kernel, stride, padding=padding)
+        if n_classes == 0:
+            self.bn = nn.BatchNorm2d(out_ch)
+        else:
+            self.bn = ConditionalBatchNorm2d(out_ch, n_classes)
+        self.relu = nn.ReLU(True)
+
+        self.conv.apply(init_xavier_uniform)
+
+    def forward(self, inputs, label_onehots=None):
+        x = self.conv(inputs)
+        if label_onehots is not None:
+            x = self.bn(x, label_onehots)
+        else:
+            x = self.bn(x)
+        return self.relu(x)
+
+class GeneratorResidualBlock(nn.Module):
+    def __init__(self, in_ch, out_ch, upsampling, n_classes=0):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
+        self.upsampling = upsampling
+        if n_classes == 0:
+            self.bn1 = nn.BatchNorm2d(in_ch)
+            self.bn2 = nn.BatchNorm2d(out_ch)
+        else:
+            self.bn1 = ConditionalBatchNorm2d(in_ch, n_classes)
+            self.bn2 = ConditionalBatchNorm2d(out_ch, n_classes)
+        if in_ch != out_ch or upsampling > 1:
+            self.shortcut_conv = nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
+        else:
+            self.shortcut_conv = None
+
+        self.conv1.apply(init_xavier_uniform)
+        self.conv2.apply(init_xavier_uniform)
+
+    def forward(self, inputs, label_onehots=None):
+        # main
+        if label_onehots is not None:
+            x = self.bn1(inputs, label_onehots)
+        else:
+            x = self.bn1(inputs)
+        x = F.relu(x)
+
+        if self.upsampling > 1:
+            x = F.interpolate(x, scale_factor=self.upsampling)
+        x = self.conv1(x)
+
+        if label_onehots is not None:
+            x = self.bn2(x, label_onehots)
+        else:
+            x = self.bn2(x)
+        x = F.relu(x)
+
+        x = self.conv2(x)
+
+        # short cut
+        if self.upsampling > 1:
+            shortcut = F.interpolate(inputs, scale_factor=self.upsampling)
+        else:
+            shortcut = inputs
+        if self.shortcut_conv is not None:
+            shortcut = self.shortcut_conv(shortcut)
+        # residual add
+        return x + shortcut
         
+## Discriminator Block
+class ConvSNLRelu(nn.Module):
+    def __init__(self, in_ch, out_ch, kernel, stride, padding=0, lrelu_slope=0.1):
+        super().__init__()
+        sn_fn = torch.nn.utils.spectral_norm
 
-class CNNGenerator(torch.nn.Module):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size, mg: int = 4):
-        super(CNNGenerator, self).__init__()
-        self.z_size = z_size
-        self.mg = mg
-        self.ngf = 64
+        self.conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel, stride, padding=padding))
+        self.lrelu = nn.LeakyReLU(lrelu_slope, True)
+        
+        self.conv.apply(init_xavier_uniform)
 
-        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8)
-      
-        self.model = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(256),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(128),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(64),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
-            torch.nn.Tanh()
+    def forward(self, inputs):
+        return self.lrelu(self.conv(inputs))
+
+class SNEmbedding(nn.Module):
+    def __init__(self, n_classes, out_dims):
+        super().__init__()
+        sn_fn = torch.nn.utils.spectral_norm
+
+        self.linear = sn_fn(nn.Linear(n_classes, out_dims, bias=False))
+
+        self.linear.apply(init_xavier_uniform)
+
+    def forward(self, base_features, output_logits, label_onehots):
+        wy = self.linear(label_onehots)
+        weighted = torch.sum(base_features * wy, dim=1, keepdim=True)
+        return output_logits + weighted
+
+class DiscriminatorSNResidualBlock(nn.Module):
+    def __init__(self, in_ch, out_ch, downsampling):
+        super().__init__()
+        sn_fn = torch.nn.utils.spectral_norm
+
+        self.conv1 = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1))
+        self.conv2 = sn_fn(nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1))
+        self.downsampling = downsampling
+        if in_ch != out_ch or downsampling > 1:
+            self.shortcut_conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0))
+        else:
+            self.shortcut_conv = None
+
+        self.conv1.apply(init_xavier_uniform)
+        self.conv2.apply(init_xavier_uniform)
+
+    def forward(self, inputs):
+        x = F.relu(inputs)
+        x = F.relu(self.conv1(x))
+        x = self.conv2(x)
+        # short cut
+        if self.shortcut_conv is not None:
+            shortcut = self.shortcut_conv(inputs)
+        else:
+            shortcut = inputs
+        if self.downsampling > 1:
+            x = F.avg_pool2d(x, kernel_size=self.downsampling)
+            shortcut = F.avg_pool2d(shortcut, kernel_size=self.downsampling)
+        # residual add
+        return x + shortcut
+
+
+class Generator(nn.Module):
+    def __init__(self, z_dim, enable_conditional=False):
+        super().__init__()
+        n_classes = 10 if enable_conditional else 0
+        self.z_dim = z_dim
+        self.dense = nn.Linear(self.z_dim, 4 * 4 * 256)
+        self.block1 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
+        self.block2 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
+        self.block3 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
+        self.bn_out = ConditionalBatchNorm2d(256, n_classes) if enable_conditional else nn.BatchNorm2d(256)
+        self.out = nn.Sequential(
+            nn.ReLU(True),
+            nn.Conv2d(256, 3, kernel_size=3, padding=1),
+            nn.Tanh()
         )
 
-    def forward(self, z):
-
-        fake = self.noise_to_feature(z)
-        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
-
-        fake = self.model(fake)
+    def forward(self, inputs, y=None):
+        x = self.dense(inputs).view(inputs.size(0), 256, 4, 4)
+        x = self.block3(self.block2(self.block1(x, y), y), y)
+        x = self.bn_out(x, y) if y is not None else self.bn_out(x)
+        fake = self.out(x)
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
 
         return fake
 
+class Discriminator(nn.Module):
+    def __init__(self, enable_conditional=False):
+        super().__init__()
+        n_classes = 10 if enable_conditional else 0
+        self.block1 = DiscriminatorSNResidualBlock(3, 128, 2)
+        self.block2 = DiscriminatorSNResidualBlock(128, 128, 2)
+        self.block3 = DiscriminatorSNResidualBlock(128, 128, 1)
+        self.block4 = DiscriminatorSNResidualBlock(128, 128, 1)
+        self.dense = nn.Linear(128, 1)
+        if n_classes > 0:
+            self.sn_embedding = SNEmbedding(n_classes, 128)
+        else:
+            self.sn_embedding = None
 
-class CNNDiscriminator(torch.nn.Module):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True, mg: int = 4):
-        super(CNNDiscriminator, self).__init__()
-        self.mg = mg
-        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
-        self.conv2 = sn_fn(torch.nn.Conv2d(64, 64, 4, stride=2, padding=(1,1)))
-        self.conv3 = sn_fn(torch.nn.Conv2d(64, 128, 3, stride=1, padding=(1,1)))
-        self.conv4 = sn_fn(torch.nn.Conv2d(128, 128, 4, stride=2, padding=(1,1)))
-        self.conv5 = sn_fn(torch.nn.Conv2d(128, 256, 3, stride=1, padding=(1,1)))
-        self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
-        self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
-    #    self.print_layer = Print(debug=True)
-        self.act = torch.nn.LeakyReLU(0.1)
-
-    def forward(self, x):
-        m = self.act(self.conv1(x))
-        m = self.act(self.conv2(m))
-        m = self.act(self.conv3(m))
-        m = self.act(self.conv4(m))
-        m = self.act(self.conv5(m))
-        m = self.act(self.conv6(m))
-        m = self.act(self.conv7(m))
-        output = self.fc(m.view(-1, self.mg * self.mg * 512))
+    def forward(self, inputs, y=None):
+        x = self.block4(self.block3(self.block2(self.block1(inputs))))
+        x = F.relu(x)
+        features = torch.sum(x, dim=(2,3)) # global sum pooling
+        x = self.dense(features)
+        if self.sn_embedding is not None:
+            x = self.sn_embedding(features, x, y)
+        return x
  
-        return output
 
-
+'''
+### Implementation 1 - Test - didn't work
 
 class ResBlockGenerator(nn.Module):
 
@@ -260,6 +387,8 @@ class DiscriminatorCIFAR10(nn.Module):
     def forward(self, x):
         return self.fc(self.model(x).view(-1, self.ndf))
 
+'''
+
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
   #  real = real.squeeze(-1).squeeze(-1)
@@ -325,14 +454,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = GeneratorCIFAR10(z_dim=args.z_size).to(device).train()
+    G = Generator(z_dim=args.z_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = DiscriminatorCIFAR10().to(device).train() 
+    D = Discriminator().to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
