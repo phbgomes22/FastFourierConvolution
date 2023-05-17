@@ -31,10 +31,10 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
         
 
-class Generator(torch.nn.Module):
+class CNNGenerator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4):
-        super(Generator, self).__init__()
+        super(CNNGenerator, self).__init__()
         self.z_size = z_size
         self.mg = mg
         self.ngf = 64
@@ -68,10 +68,10 @@ class Generator(torch.nn.Module):
         return fake
 
 
-class Discriminator(torch.nn.Module):
+class CNNDiscriminator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True, mg: int = 4):
-        super(Discriminator, self).__init__()
+        super(CNNDiscriminator, self).__init__()
         self.mg = mg
         sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
         self.conv1 = sn_fn(torch.nn.Conv2d(3, 64, 3, stride=1, padding=(1,1)))
@@ -97,48 +97,168 @@ class Discriminator(torch.nn.Module):
  
         return output
 
-class FDiscriminator(FFCModel):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, sn=True, mg: int = 4):
-        super(FDiscriminator, self).__init__()
-        self.mg = mg
-        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
-        norm_layer = nn.BatchNorm2d
-        # 3, 4, 3, 4, 3, 4, 3
-        self.main = torch.nn.Sequential(
-            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=3,
-                ratio_gin=0.0, ratio_gout=0.0, stride=1, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=nn.Identity),
-            FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
-                ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
-                ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
-            FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
-                ratio_gin=0, ratio_gout=0.0, stride=2, padding=1, bias=True, 
-                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
-            # FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
-            #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
-            #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
-            #     activation_layer=nn.Sigmoid)
-        )
 
-        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
-      #  self.print_size = Print(debug=True)
-        self.gaus_noise = GaussianNoise(0.05)
-        # self.act = torch.nn.LeakyReLU(0.1)
+
+class ResBlockGenerator(nn.Module):
+
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(ResBlockGenerator, self).__init__()
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
+        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+
+        self.model = nn.Sequential(
+            nn.BatchNorm2d(in_channels),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2),
+            self.conv1,
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(),
+            self.conv2
+            )
+        self.bypass = nn.Sequential()
+        if stride != 1:
+            self.bypass = nn.Upsample(scale_factor=2)
 
     def forward(self, x):
-      #  x = self.gaus_noise(x)
-        self.print_size(x)
-        m = self.main(x)
-        m = self.resizer(m)
-       # self.print_size(m)
-       # m = m.view(-1, 1)
-      #  self.print_size(m)
-       
-        return self.fc(m.view(-1, self.mg * self.mg * 512))
+        return self.model(x) + self.bypass(x)
+
+
+class ResBlockDiscriminator(nn.Module):
+
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(ResBlockDiscriminator, self).__init__()
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
+        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+
+        sn_fn = torch.nn.utils.spectral_norm
+
+        if stride == 1:
+            self.model = nn.Sequential(
+                nn.ReLU(),
+                sn_fn(self.conv1),
+                nn.ReLU(),
+                sn_fn(self.conv2)
+            )
+        else:
+            self.model = nn.Sequential(
+                nn.ReLU(),
+                sn_fn(self.conv1),
+                nn.ReLU(),
+                sn_fn(self.conv2),
+                nn.AvgPool2d(2, stride=stride, padding=0)
+            )
+        self.bypass = nn.Sequential()
+
+        if stride != 1:
+            self.bypass_conv = nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)
+            nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
+
+            self.bypass = nn.Sequential(
+                sn_fn(self.bypass_conv),
+                nn.AvgPool2d(2, stride=stride, padding=0)
+            )
+            # if in_channels == out_channels:
+            #     self.bypass = nn.AvgPool2d(2, stride=stride, padding=0)
+            # else:
+            #     self.bypass = nn.Sequential(
+            #         SpectralNorm(nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)),
+            #         nn.AvgPool2d(2, stride=stride, padding=0)
+            #     )
+
+
+    def forward(self, x):
+        return self.model(x) + self.bypass(x)
+
+# special ResBlock just for the first layer of the discriminator
+class FirstResBlockDiscriminator(nn.Module):
+
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(FirstResBlockDiscriminator, self).__init__()
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
+        self.bypass_conv = nn.Conv2d(in_channels, out_channels, 1, 1, padding=0)
+        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+        nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
+
+        sn_fn = torch.nn.utils.spectral_norm
+
+        # we don't want to apply ReLU activation to raw image before convolution transformation.
+        self.model = nn.Sequential(
+            sn_fn(self.conv1),
+            nn.ReLU(),
+            sn_fn(self.conv2),
+            nn.AvgPool2d(2)
+        )
+        self.bypass = nn.Sequential(
+            nn.AvgPool2d(2),
+            sn_fn(self.bypass_conv),
+        )
+
+    def forward(self, x):
+        return self.model(x) + self.bypass(x)
+
+
+class GeneratorCIFAR10(nn.Module):
+    def __init__(self, z_dim):
+        super(GeneratorCIFAR10, self).__init__()
+        self.ngf = 256
+        self.z_dim = z_dim
+        self.mg = 4
+        self.dense = nn.Linear(self.z_dim, self.mg * self.mg * self.ngf)
+        self.final = nn.Conv2d(self.ngf, 3, 3, stride=1, padding=1)
+        nn.init.xavier_uniform(self.dense.weight.data, 1.)
+        nn.init.xavier_uniform(self.final.weight.data, 1.)
+
+        self.model = nn.Sequential(
+            ResBlockGenerator(self.ngf, self.ngf, stride=2),
+            ResBlockGenerator(self.ngf, self.ngf, stride=2),
+            ResBlockGenerator(self.ngf, self.ngf, stride=2),
+            nn.BatchNorm2d(self.ngf),
+            nn.ReLU(),
+            self.final,
+            nn.Tanh()
+        )
+
+    def forward(self, z):
+        input = self.dense(z)
+        input = input.reshape(fake.size(0), -1, self.mg, self.mg)
+        fake = self.model(input)
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+
+        return fake
+
+class DiscriminatorCIFAR10(nn.Module):
+    def __init__(self):
+        super(DiscriminatorCIFAR10, self).__init__()
+
+        self.ndf = 128
+        sn_fn = torch.nn.utils.spectral_norm
+
+        self.model = nn.Sequential(
+                FirstResBlockDiscriminator(3, self.ndf, stride=2),
+                ResBlockDiscriminator(self.ndf, self.ndf, stride=2),
+                ResBlockDiscriminator(self.ndf, self.ndf),
+                ResBlockDiscriminator(self.ndf, self.ndf),
+                nn.ReLU(),
+                nn.AvgPool2d(8),
+            )
+        
+        self.fc = nn.Linear(self.ndf, 1)
+        nn.init.xavier_uniform(self.fc.weight.data, 1.)
+        self.fc = sn_fn(self.fc)
+
+    def forward(self, x):
+        return self.fc(self.model(x).view(-1, self.ndf))
 
 def hinge_loss_dis(fake, real):
    # fake = fake.squeeze(-1).squeeze(-1)
@@ -205,14 +325,14 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
+    G = GeneratorCIFAR10(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     print(G)
     
     print("- Parameters on generator: ", params)
 
-    D = Discriminator(sn=True, mg=mg).to(device).train() 
+    D = DiscriminatorCIFAR10(sn=True, mg=mg).to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
