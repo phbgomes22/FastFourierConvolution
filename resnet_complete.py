@@ -249,6 +249,7 @@ class Discriminator(nn.Module):
  
 
 '''
+## https://github.com/christiancosgrove/pytorch-spectral-normalization-gan/tree/master
 ### Implementation 1 - Test - didn't work
 
 class ResBlockGenerator(nn.Module):
@@ -496,17 +497,18 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
     
     # prepare optimizer and learning rate schedulers (linear decay)
-    # optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999)) #0.999
-    # optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999)) #0.999
-    # scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
-    # scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
+    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999)) #0.999
+    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999)) #0.999
+    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
+    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
-    optim_D = torch.optim.Adam(filter(lambda p: p.requires_grad, D.parameters()), lr=args.lr, betas=(0.0,0.9))
-    optim_G  = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.0,0.9))
+    # optim_D = torch.optim.Adam(filter(lambda p: p.requires_grad, D.parameters()), lr=args.lr, betas=(0.0,0.9))
+    # optim_G  = torch.optim.Adam(G.parameters(), lr=args.lr, betas=(0.0,0.9))
 
-    # use an exponentially decaying learning rate
-    scheduler_D = torch.optim.lr_scheduler.ExponentialLR(optim_D, gamma=0.99)
-    scheduler_G = torch.optim.lr_scheduler.ExponentialLR(optim_G, gamma=0.99)
+    # # use an exponentially decaying learning rate
+    # scheduler_D = torch.optim.lr_scheduler.ExponentialLR(optim_D, gamma=0.99)
+    # scheduler_G = torch.optim.lr_scheduler.ExponentialLR(optim_G, gamma=0.99)
+
     # initialize logging
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
