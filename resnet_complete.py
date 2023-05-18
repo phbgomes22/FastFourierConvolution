@@ -63,7 +63,7 @@ class GeneratorResidualBlock(nn.Module):
             nn.ReLU(),
             nn.Upsample(scale_factor=2),
             self.conv1,
-            nn.bn2,
+            self.bn2,
             nn.ReLU(),
             self.conv2
         )
