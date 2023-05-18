@@ -41,76 +41,42 @@ def init_xavier_uniform(layer):
         if hasattr(layer.bias, "data"):       
             layer.bias.data.fill_(0)
 
-## Generator block
-class DeconvBNRelu(nn.Module):
-    def __init__(self, in_ch, out_ch, kernel, stride, padding=0, n_classes=0):
-        super().__init__()
-        self.conv = nn.ConvTranspose2d(in_ch, out_ch, kernel, stride, padding=padding)
-        if n_classes == 0:
-            self.bn = nn.BatchNorm2d(out_ch)
-        else:
-            self.bn = ConditionalBatchNorm2d(out_ch, n_classes)
-        self.relu = nn.ReLU(True)
-
-        self.conv.apply(init_xavier_uniform)
-
-    def forward(self, inputs, label_onehots=None):
-        x = self.conv(inputs)
-        if label_onehots is not None:
-            x = self.bn(x, label_onehots)
-        else:
-            x = self.bn(x)
-        return self.relu(x)
-
 class GeneratorResidualBlock(nn.Module):
-    def __init__(self, in_ch, out_ch, upsampling, n_classes=0):
+    def __init__(self, in_ch, out_ch, stride, n_classes=0):
         super().__init__()
+        self.stride = stride
+
         self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.upsampling = upsampling
-        if n_classes == 0:
-            self.bn1 = nn.BatchNorm2d(in_ch)
-            self.bn2 = nn.BatchNorm2d(out_ch)
-        else:
-            self.bn1 = ConditionalBatchNorm2d(in_ch, n_classes)
-            self.bn2 = ConditionalBatchNorm2d(out_ch, n_classes)
-        if in_ch != out_ch or upsampling > 1:
-            self.shortcut_conv = nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
-        else:
-            self.shortcut_conv = None
+        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
 
-        self.conv1.apply(init_xavier_uniform)
-        self.conv2.apply(init_xavier_uniform)
+        # if n_classes == 0:
+        self.bn1 = nn.BatchNorm2d(in_ch)
+        self.bn2 = nn.BatchNorm2d(out_ch)
+        # else:
+        #     self.bn1 = ConditionalBatchNorm2d(in_ch, n_classes)
+        #     self.bn2 = ConditionalBatchNorm2d(out_ch, n_classes)
+
+        self.model = nn.Sequential(
+            self.bn1,
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2),
+            self.conv1,
+            nn.bn2,
+            nn.ReLU(),
+            self.conv2
+        )
+
+        if self.stride > 1:
+            self.bypass = nn.Upsample(scale_factor=2)#nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
+        else:
+            self.bypass = nn.Identity()
+
 
     def forward(self, inputs, label_onehots=None):
-        # main
-        if label_onehots is not None:
-            x = self.bn1(inputs, label_onehots)
-        else:
-            x = self.bn1(inputs)
-        x = F.relu(x)
-
-        if self.upsampling > 1:
-            x = F.interpolate(x, scale_factor=self.upsampling)
-        x = self.conv1(x)
-
-        if label_onehots is not None:
-            x = self.bn2(x, label_onehots)
-        else:
-            x = self.bn2(x)
-        x = F.relu(x)
-
-        x = self.conv2(x)
-
-        # short cut
-        if self.upsampling > 1:
-            shortcut = F.interpolate(inputs, scale_factor=self.upsampling)
-        else:
-            shortcut = inputs
-        if self.shortcut_conv is not None:
-            shortcut = self.shortcut_conv(shortcut)
         # residual add
-        return x + shortcut
+        return self.model(inputs) + self.bypas(inputs)
         
 ## Discriminator Block
 class ConvSNLRelu(nn.Module):
@@ -126,6 +92,7 @@ class ConvSNLRelu(nn.Module):
     def forward(self, inputs):
         return self.lrelu(self.conv(inputs))
 
+
 class SNEmbedding(nn.Module):
     def __init__(self, n_classes, out_dims):
         super().__init__()
@@ -139,37 +106,75 @@ class SNEmbedding(nn.Module):
         wy = self.linear(label_onehots)
         weighted = torch.sum(base_features * wy, dim=1, keepdim=True)
         return output_logits + weighted
+    
+    
+class FirstDiscriminatorSNResidualBlock(nn.Module):
+
+    def __init__(self, in_ch, out_ch, stride=1):
+        sn_fn = torch.nn.utils.spectral_norm
+
+        self.conv1 = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1))
+        self.conv2 = sn_fn(nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1))
+        self.shortcut_conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0))
+
+        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+        nn.init.xavier_uniform(self.shortcut_conv.weight.data, np.sqrt(2))
+
+        self.model = nn.Sequential(
+            self.conv1,
+            nn.ReLU(),
+            self.conv2,
+            nn.AvgPool2d(2)
+        )
+        self.bypass = nn.Sequential(
+            nn.AvgPool2d(2),
+            self.shortcut_conv
+        )
+
+    def forward(self, inputs):
+        return self.model(inputs) + self.bypass(inputs)
+
 
 class DiscriminatorSNResidualBlock(nn.Module):
-    def __init__(self, in_ch, out_ch, downsampling):
+    def __init__(self, in_ch, out_ch, stride):
         super().__init__()
         sn_fn = torch.nn.utils.spectral_norm
 
         self.conv1 = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1))
         self.conv2 = sn_fn(nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1))
-        self.downsampling = downsampling
-        if in_ch != out_ch or downsampling > 1:
-            self.shortcut_conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0))
-        else:
-            self.shortcut_conv = None
+        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
 
-        self.conv1.apply(init_xavier_uniform)
-        self.conv2.apply(init_xavier_uniform)
+        self.stride = stride
+        if self.stride > 1:
+            self.model = nn.Sequential(
+                nn.ReLU(),
+                self.conv1,
+                nn.ReLU(),
+                self.conv2,
+                nn.AvgPool2d(2, stride=stride, padding=0)
+            )
+
+            self.shortcut_conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0))
+            nn.init.xavier_uniform(self.shortcut_conv.weight.data, np.sqrt(2))
+
+            self.bypass = nn.Sequential(
+                self.shortcut_conv,
+                nn.AvgPool2d(2, stride=stride, padding=0)
+            )
+        else:
+            self.model = nn.Sequential(
+                nn.ReLU(),
+                self.conv1,
+                nn.ReLU(),
+                self.conv2
+            )
+            self.bypass = nn.Identity()
+
 
     def forward(self, inputs):
-        x = F.relu(inputs)
-        x = F.relu(self.conv1(x))
-        x = self.conv2(x)
-        # short cut
-        if self.shortcut_conv is not None:
-            shortcut = self.shortcut_conv(inputs)
-        else:
-            shortcut = inputs
-        if self.downsampling > 1:
-            x = F.avg_pool2d(x, kernel_size=self.downsampling)
-            shortcut = F.avg_pool2d(shortcut, kernel_size=self.downsampling)
-        # residual add
-        return x + shortcut
+        return self.model(inputs) + self.bypass(inputs)
 
 
 class Generator(nn.Module):
@@ -177,19 +182,27 @@ class Generator(nn.Module):
         super().__init__()
         n_classes = 10 if enable_conditional else 0
         self.z_dim = z_dim
+
         self.dense = nn.Linear(self.z_dim, 4 * 4 * 256)
+        nn.init.xavier_uniform(self.dense.weight.data, 1.)
+
         self.block1 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
         self.block2 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
         self.block3 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
         self.bn_out = ConditionalBatchNorm2d(256, n_classes) if enable_conditional else nn.BatchNorm2d(256)
+
+        self.final = nn.Conv2d(256, 3, kernel_size=3, padding=1)
+        nn.init.xavier_uniform(self.final.weight.data, 1.)
+        
         self.out = nn.Sequential(
             nn.ReLU(True),
-            nn.Conv2d(256, 3, kernel_size=3, padding=1),
+            self.final,
             nn.Tanh()
         )
 
     def forward(self, inputs, y=None):
-        x = self.dense(inputs).view(inputs.size(0), 256, 4, 4)
+        x = self.dense(inputs).view(inputs.size(0), -1, 4, 4)
+
         x = self.block3(self.block2(self.block1(x, y), y), y)
         x = self.bn_out(x, y) if y is not None else self.bn_out(x)
         fake = self.out(x)
@@ -203,11 +216,14 @@ class Discriminator(nn.Module):
     def __init__(self, enable_conditional=False):
         super().__init__()
         n_classes = 10 if enable_conditional else 0
-        self.block1 = DiscriminatorSNResidualBlock(3, 128, 2)
+        self.block1 = FirstDiscriminatorSNResidualBlock(3, 128, 2)
         self.block2 = DiscriminatorSNResidualBlock(128, 128, 2)
         self.block3 = DiscriminatorSNResidualBlock(128, 128, 1)
         self.block4 = DiscriminatorSNResidualBlock(128, 128, 1)
         self.dense = nn.Linear(128, 1)
+        nn.init.xavier_uniform(self.dense.weight.data, 1.)
+
+        self.avg_pool = nn.AvgPool2d(8)
         if n_classes > 0:
             self.sn_embedding = SNEmbedding(n_classes, 128)
         else:
@@ -216,10 +232,11 @@ class Discriminator(nn.Module):
     def forward(self, inputs, y=None):
         x = self.block4(self.block3(self.block2(self.block1(inputs))))
         x = F.relu(x)
-        features = torch.sum(x, dim=(2,3)) # global sum pooling
+       # features = torch.sum(x, dim=(2,3)) # global sum pooling
+        features = self.avg_pool(x)
         x = self.dense(features)
-        if self.sn_embedding is not None:
-            x = self.sn_embedding(features, x, y)
+        # if self.sn_embedding is not None:
+        #     x = self.sn_embedding(features, x, y)
         return x
  
 
@@ -471,8 +488,8 @@ def train(args):
     z_vis = torch.randn(64, args.z_size, device=device)
     
     # prepare optimizer and learning rate schedulers (linear decay)
-    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
+    optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.9)) #0.999
+    optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.9)) #0.999
     scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
