@@ -111,6 +111,7 @@ class SNEmbedding(nn.Module):
 class FirstDiscriminatorSNResidualBlock(nn.Module):
 
     def __init__(self, in_ch, out_ch, stride=1):
+        super().__init__()
         sn_fn = torch.nn.utils.spectral_norm
 
         self.conv1 = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1))
