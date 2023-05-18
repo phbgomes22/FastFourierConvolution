@@ -48,8 +48,8 @@ class GeneratorResidualBlock(nn.Module):
 
         self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+        nn.init.xavier_uniform_(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform_(self.conv2.weight.data, 1.)
 
         # if n_classes == 0:
         self.bn1 = nn.BatchNorm2d(in_ch)
@@ -76,7 +76,7 @@ class GeneratorResidualBlock(nn.Module):
 
     def forward(self, inputs, label_onehots=None):
         # residual add
-        return self.model(inputs) + self.bypas(inputs)
+        return self.model(inputs) + self.bypass(inputs)
         
 ## Discriminator Block
 class ConvSNLRelu(nn.Module):
@@ -118,9 +118,9 @@ class FirstDiscriminatorSNResidualBlock(nn.Module):
         self.conv2 = sn_fn(nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1))
         self.shortcut_conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0))
 
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
-        nn.init.xavier_uniform(self.shortcut_conv.weight.data, np.sqrt(2))
+        nn.init.xavier_uniform_(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform_(self.conv2.weight.data, 1.)
+        nn.init.xavier_uniform_(self.shortcut_conv.weight.data, np.sqrt(2))
 
         self.model = nn.Sequential(
             self.conv1,
@@ -144,8 +144,8 @@ class DiscriminatorSNResidualBlock(nn.Module):
 
         self.conv1 = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1))
         self.conv2 = sn_fn(nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1))
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+        nn.init.xavier_uniform_(self.conv1.weight.data, 1.)
+        nn.init.xavier_uniform_(self.conv2.weight.data, 1.)
 
         self.stride = stride
         if self.stride > 1:
@@ -158,7 +158,7 @@ class DiscriminatorSNResidualBlock(nn.Module):
             )
 
             self.shortcut_conv = sn_fn(nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0))
-            nn.init.xavier_uniform(self.shortcut_conv.weight.data, np.sqrt(2))
+            nn.init.xavier_uniform_(self.shortcut_conv.weight.data, np.sqrt(2))
 
             self.bypass = nn.Sequential(
                 self.shortcut_conv,
@@ -185,7 +185,7 @@ class Generator(nn.Module):
         self.z_dim = z_dim
 
         self.dense = nn.Linear(self.z_dim, 4 * 4 * 256)
-        nn.init.xavier_uniform(self.dense.weight.data, 1.)
+        nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
         self.block1 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
         self.block2 = GeneratorResidualBlock(256, 256, 2, n_classes=n_classes)
@@ -193,7 +193,7 @@ class Generator(nn.Module):
         self.bn_out = ConditionalBatchNorm2d(256, n_classes) if enable_conditional else nn.BatchNorm2d(256)
 
         self.final = nn.Conv2d(256, 3, kernel_size=3, padding=1)
-        nn.init.xavier_uniform(self.final.weight.data, 1.)
+        nn.init.xavier_uniform_(self.final.weight.data, 1.)
         
         self.out = nn.Sequential(
             nn.ReLU(True),
@@ -222,7 +222,7 @@ class Discriminator(nn.Module):
         self.block3 = DiscriminatorSNResidualBlock(128, 128, 1)
         self.block4 = DiscriminatorSNResidualBlock(128, 128, 1)
         self.dense = nn.Linear(128, 1)
-        nn.init.xavier_uniform(self.dense.weight.data, 1.)
+        nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
         self.avg_pool = nn.AvgPool2d(8)
         if n_classes > 0:
