@@ -217,25 +217,32 @@ class Discriminator(nn.Module):
     def __init__(self, enable_conditional=False):
         super().__init__()
         n_classes = 10 if enable_conditional else 0
-        self.block1 = FirstDiscriminatorSNResidualBlock(3, 128, 2)
-        self.block2 = DiscriminatorSNResidualBlock(128, 128, 2)
-        self.block3 = DiscriminatorSNResidualBlock(128, 128, 1)
-        self.block4 = DiscriminatorSNResidualBlock(128, 128, 1)
-        self.dense = nn.Linear(128, 1)
+        
+        sn_fn = torch.nn.utils.spectral_norm
+
+
+        self.model = nn.Sequential(
+            FirstDiscriminatorSNResidualBlock(3, 128, 2),
+            DiscriminatorSNResidualBlock(128, 128, 2),
+            DiscriminatorSNResidualBlock(128, 128, 1),
+            DiscriminatorSNResidualBlock(128, 128, 1),
+            nn.ReLU(),
+            nn.AvgPool2d(8)
+        )
+
+
+        self.dense = sn_fn(nn.Linear(128, 1))
         nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
-        self.avg_pool = nn.AvgPool2d(8)
-        if n_classes > 0:
-            self.sn_embedding = SNEmbedding(n_classes, 128)
-        else:
-            self.sn_embedding = None
+        # if n_classes > 0:
+        #     self.sn_embedding = SNEmbedding(n_classes, 128)
+        # else:
+        #     self.sn_embedding = None
 
     def forward(self, inputs, y=None):
-        x = self.block4(self.block3(self.block2(self.block1(inputs))))
-        x = F.relu(x)
+        x = self.model(inputs).view(-1, 128)
        # features = torch.sum(x, dim=(2,3)) # global sum pooling
-        features = self.avg_pool(x)
-        x = self.dense(features)
+        x = self.dense(x)
         # if self.sn_embedding is not None:
         #     x = self.sn_embedding(features, x, y)
         return x
