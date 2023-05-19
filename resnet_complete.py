@@ -549,8 +549,8 @@ def train(args):
             ## - hinge loss with criterion
             ## - update hinge loss
 
-            hg_loss_real = hinge_loss_real(output_dreal)
-            hg_loss_fake = hinge_loss_fake(output_dg)
+            # hg_loss_real = hinge_loss_real(output_dreal)
+            # hg_loss_fake = hinge_loss_fake(output_dg)
             # testing Adaptative Weight Loss Method
             # loss_D = aw_method().aw_loss(Dloss_real= hg_loss_real, Dloss_fake= hg_loss_fake, Dis_opt=optim_D, 
                                 # Dis_Net=D, real_validity=output_dreal, fake_validity=output_dg)

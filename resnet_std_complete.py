@@ -254,6 +254,27 @@ def train(epoch):
 
         if batch_idx % 100 == 0:
             print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
+
+        if batch_idx % 1000:
+            evaluate(batch_idx)
+            # generator.eval()
+            # print('Evaluating the generator...')
+
+            # # compute and log generative metrics
+            # metrics = torch_fidelity.calculate_metrics(
+            #     input1=torch_fidelity.GenerativeModelModuleWrapper(generator, args.z_size, args.z_type, 1),
+            #     input1_model_num_samples=args.num_samples_for_metrics,
+            #     input2= 'cifar10-train',
+            #     isc=True,
+            #     fid=True,
+            #     kid=True,
+            #     ppl=False,
+            #     ppl_epsilon=1e-2,
+            #     ppl_sample_similarity_resize=64,
+            # )
+            
+
+
     scheduler_d.step()
     scheduler_g.step()
 
@@ -261,7 +282,6 @@ fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
 def evaluate(epoch):
 
     samples = generator(fixed_z).cpu().data.numpy()[:64]
-
 
     fig = plt.figure(figsize=(8, 8))
     gs = gridspec.GridSpec(8, 8)
