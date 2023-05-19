@@ -15,6 +15,8 @@ import matplotlib.gridspec as gridspec
 import os
 
 
+import torch_fidelity
+
 # ResNet generator and discriminator
 from torch import nn
 import torch.nn.functional as F
@@ -150,7 +152,12 @@ class Generator(nn.Module):
             nn.Tanh())
 
     def forward(self, z):
-        return self.model(self.dense(z).view(-1, GEN_SIZE, 4, 4))
+        fake = self.model(self.dense(z).view(-1, GEN_SIZE, 4, 4))
+
+        if not self.training:
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+        return fake
 
 class Discriminator(nn.Module):
     def __init__(self):
@@ -205,6 +212,13 @@ optim_gen  = optim.Adam(generator.parameters(), lr=args.lr, betas=(0.0,0.9))
 scheduler_d = optim.lr_scheduler.ExponentialLR(optim_disc, gamma=0.99)
 scheduler_g = optim.lr_scheduler.ExponentialLR(optim_gen, gamma=0.99)
 
+leading_metric, last_best_metric, metric_greater_cmp = {
+        'ISC': (torch_fidelity.KEY_METRIC_ISC_MEAN, 0.0, float.__gt__),
+        'FID': (torch_fidelity.KEY_METRIC_FID, float('inf'), float.__lt__),
+        'KID': (torch_fidelity.KEY_METRIC_KID_MEAN, float('inf'), float.__lt__),
+        'PPL': (torch_fidelity.KEY_METRIC_PPL_MEAN, float('inf'), float.__lt__),
+    }['ISC']
+
 def train(epoch):
     for batch_idx, (data, target) in enumerate(loader):
         if data.size()[0] != args.batch_size:
@@ -239,7 +253,7 @@ def train(epoch):
         optim_gen.step()
 
         if batch_idx % 100 == 0:
-            print('disc loss', disc_loss.data[0], 'gen loss', gen_loss.data[0])
+            print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
     scheduler_d.step()
     scheduler_g.step()
 
