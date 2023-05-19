@@ -255,7 +255,7 @@ def train(epoch):
         if batch_idx % 100 == 0:
             print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
 
-        if batch_idx % 1000:
+        if batch_idx % 100:
             evaluate(batch_idx)
             # generator.eval()
             # print('Evaluating the generator...')
