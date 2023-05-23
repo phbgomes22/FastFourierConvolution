@@ -277,7 +277,7 @@ def train(epoch):
 
         next_step = step + 1
 
-        if next_step % 1000 == 0:
+        if next_step  % 500 == 0:
             step_info = {'disc loss': disc_loss.cpu().item(), 'gen loss': gen_loss.cpu().item()}
             pbar.set_postfix(step_info)
         pbar.update(1)
