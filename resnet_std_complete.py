@@ -13,6 +13,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import os
+import tqdm
+
 
 
 import torch_fidelity
@@ -220,6 +222,9 @@ leading_metric, last_best_metric, metric_greater_cmp = {
         'PPL': (torch_fidelity.KEY_METRIC_PPL_MEAN, float('inf'), float.__lt__),
     }['ISC']
 
+
+pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
+
 def train(epoch):
     loader_iter = iter(loader)
 
@@ -262,10 +267,14 @@ def train(epoch):
         optim_gen.step()
 
         next_step = step + 1
-        if next_step % 5000 == 0:
-            print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
+
+        if next_step % 1000 == 0:
+            step_info = {'disc loss': disc_loss.cpu().item(), 'gen loss': gen_loss.cpu().item()}
+            pbar.set_postfix(step_info)
+        pbar.update(1)
 
         if next_step % 50000 == 0:
+            pbar.close()
             generator.eval()
             evaluate(next_step)
             print('Evaluating the generator...')
@@ -282,7 +291,8 @@ def train(epoch):
                 ppl_epsilon=1e-2,
                 ppl_sample_similarity_resize=64,
             )
-
+            
+            pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             generator.train()
 
     scheduler_d.step()
