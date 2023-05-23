@@ -255,23 +255,27 @@ def train(epoch):
         if batch_idx % 100 == 0:
             print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
 
-        if batch_idx % 1000 == 0:
+        if batch_idx % 100 == 0:
             evaluate(batch_idx)
-            # generator.eval()
-            # print('Evaluating the generator...')
+            generator.eval()
+            print('Evaluating the generator...')
 
-            # # compute and log generative metrics
-            # metrics = torch_fidelity.calculate_metrics(
-            #     input1=torch_fidelity.GenerativeModelModuleWrapper(generator, args.z_size, args.z_type, 1),
-            #     input1_model_num_samples=args.num_samples_for_metrics,
-            #     input2= 'cifar10-train',
-            #     isc=True,
-            #     fid=True,
-            #     kid=True,
-            #     ppl=False,
-            #     ppl_epsilon=1e-2,
-            #     ppl_sample_similarity_resize=64,
-            # )
+            # compute and log generative metrics
+            metrics = torch_fidelity.calculate_metrics(
+                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, args.z_size, 'normal', 1),
+                input1_model_num_samples=10000,
+                input2= 'cifar10-train',
+                isc=True,
+                fid=True,
+                kid=True,
+                ppl=False,
+                ppl_epsilon=1e-2,
+                ppl_sample_similarity_resize=64,
+            )
+
+            generator.train()
+
+           
             
 
 
