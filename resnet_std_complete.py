@@ -297,7 +297,7 @@ def evaluate(epoch):
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         ax.set_aspect('equal')
-        plt.imshow(sample) #.transpose((1,2,0)) * 0.5 + 0.5
+        plt.imshow(sample.transpose((1,2,0))) # * 0.5 + 0.5
 
     if not os.path.exists('out/'):
         os.makedirs('out/')
