@@ -262,7 +262,7 @@ def train(epoch):
 
             # compute and log generative metrics
             metrics = torch_fidelity.calculate_metrics(
-                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 1),
+                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
                 input1_model_num_samples=10000,
                 input2= 'cifar10-train',
                 isc=True,
