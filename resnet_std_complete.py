@@ -252,10 +252,10 @@ def train(epoch):
         gen_loss.backward()
         optim_gen.step()
 
-        if batch_idx % 100 == 0:
+        if batch_idx % 1000 == 0:
             print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
 
-        if batch_idx % 100 == 0:
+        if batch_idx % 4000 == 0:
             generator.eval()
             evaluate(batch_idx)
             print('Evaluating the generator...')
