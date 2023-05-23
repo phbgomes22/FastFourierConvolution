@@ -261,12 +261,13 @@ def train(epoch):
         gen_loss.backward()
         optim_gen.step()
 
-        if step % 5000 == 0:
+        next_step = step + 1
+        if next_step % 5000 == 0:
             print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
 
-        if step % 50000 == 0:
+        if next_step % 50000 == 0:
             generator.eval()
-            evaluate(step)
+            evaluate(next_step)
             print('Evaluating the generator...')
 
             # compute and log generative metrics
