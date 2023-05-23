@@ -29,6 +29,9 @@ SpectralNorm = torch.nn.utils.spectral_norm
 
 channels = 3
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 class ResBlockGenerator(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1):
@@ -205,6 +208,10 @@ disc_iters = 5
 discriminator = Discriminator().cuda()
 generator = Generator(Z_dim).cuda()
 
+d_params = count_parameters(discriminator)
+g_params = count_parameters(generator)
+print("Parameters on Discriminator: ", d_params, " \nParameters on Generator: ", g_params)
+
 # because the spectral normalization module creates parameters that don't require gradients (u and v), we don't want to 
 # optimize these using sgd. We only let the optimizer operate on parameters that _do_ require gradients
 # TODO: replace Parameters with buffers, which aren't returned from .parameters() method.
@@ -275,7 +282,7 @@ def train(epoch):
             pbar.set_postfix(step_info)
         pbar.update(1)
 
-        if next_step % 50000 == 0:
+        if next_step % 5000 == 0:
             pbar.close()
             generator.eval()
             evaluate(next_step)
