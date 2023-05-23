@@ -183,6 +183,7 @@ parser.add_argument('--batch_size', type=int, default=64)
 parser.add_argument('--lr', type=float, default=2e-4)
 parser.add_argument('--loss', type=str, default='hinge')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoints')
+parser.add_argument('--num_total_steps', type=int, default=100000)
 
 parser.add_argument('--model', type=str, default='resnet')
 
@@ -193,7 +194,7 @@ loader = torch.utils.data.DataLoader(
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
-        batch_size=args.batch_size, shuffle=True, num_workers=1, pin_memory=True)
+        batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
@@ -220,10 +221,18 @@ leading_metric, last_best_metric, metric_greater_cmp = {
     }['ISC']
 
 def train(epoch):
-    for batch_idx, (data, target) in enumerate(loader):
-        if data.size()[0] != args.batch_size:
-            continue
-        data, target = Variable(data.cuda()), Variable(target.cuda())
+    loader_iter = iter(loader)
+
+    for step in range(args.num_total_steps):
+    #for batch_idx, (data, target) in enumerate(loader):
+        try:
+            real_img, real_label = next(loader_iter)
+        except StopIteration:
+            loader_iter = iter(loader)
+            real_img, real_label = next(loader_iter)
+
+        data = Variable(real_img.cuda())
+        target = Variable(real_label.cuda())
 
         # update discriminator
         for _ in range(disc_iters):
@@ -252,12 +261,12 @@ def train(epoch):
         gen_loss.backward()
         optim_gen.step()
 
-        if batch_idx % 1000 == 0:
+        if step % 5000 == 0:
             print('disc loss', disc_loss.item(), 'gen loss', gen_loss.item())
 
-        if batch_idx % 4000 == 0:
+        if step % 50000 == 0:
             generator.eval()
-            evaluate(batch_idx)
+            evaluate(step)
             print('Evaluating the generator...')
 
             # compute and log generative metrics
@@ -275,16 +284,12 @@ def train(epoch):
 
             generator.train()
 
-           
-            
-
-
     scheduler_d.step()
     scheduler_g.step()
 
 fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
-def evaluate(epoch):
 
+def evaluate(epoch):
     samples = generator(fixed_z).cpu().data.numpy()[:64]
 
     fig = plt.figure(figsize=(8, 8))
