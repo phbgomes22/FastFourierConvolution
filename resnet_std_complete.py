@@ -282,24 +282,26 @@ def train(epoch):
             pbar.set_postfix(step_info)
         pbar.update(1)
 
-        if next_step % 5000 == 0:
+        if next_step % 1000 == 0: 
             pbar.close()
             generator.eval()
             evaluate(next_step)
-            print('Evaluating the generator...')
 
-            # compute and log generative metrics
-            metrics = torch_fidelity.calculate_metrics(
-                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
-                input1_model_num_samples=10000,
-                input2= 'cifar10-train',
-                isc=True,
-                fid=True,
-                kid=True,
-                ppl=False,
-                ppl_epsilon=1e-2,
-                ppl_sample_similarity_resize=64,
-            )
+            if next_step % 5000 == 0:
+                print('Evaluating the generator...')
+
+                # compute and log generative metrics
+                metrics = torch_fidelity.calculate_metrics(
+                    input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
+                    input1_model_num_samples=10000,
+                    input2= 'cifar10-train',
+                    isc=True,
+                    fid=True,
+                    kid=True,
+                    ppl=False,
+                    ppl_epsilon=1e-2,
+                    ppl_sample_similarity_resize=64,
+                )
 
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             generator.train()
