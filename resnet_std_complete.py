@@ -223,9 +223,11 @@ leading_metric, last_best_metric, metric_greater_cmp = {
     }['ISC']
 
 
-pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
 
 def train(epoch):
+
+    pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
+
     loader_iter = iter(loader)
 
     for step in range(args.num_total_steps):
@@ -291,7 +293,7 @@ def train(epoch):
                 ppl_epsilon=1e-2,
                 ppl_sample_similarity_resize=64,
             )
-            
+
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             generator.train()
 
