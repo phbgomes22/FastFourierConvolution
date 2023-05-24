@@ -183,7 +183,7 @@ class FGenerator(nn.Module):
         self.final_relu = nn.ReLU()
         self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
 
-        nn.init.xavier_uniform_(self.final.weight.data, 1.)
+        nn.init.xavier_uniform_(self.final_conv.weight.data, 1.)
         self.final = nn.Sequential(
             self.final_conv,
             nn.Tanh()
