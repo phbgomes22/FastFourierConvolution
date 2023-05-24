@@ -36,20 +36,20 @@ def count_parameters(model):
 
 class FFCResBlockGenerator(FFCModel):
 
-    def __init__(self, channels: int, gin: float, gout: float, stride: int = 1):
+    def __init__(self, in_ch: int, out_ch: int, gin: float, gout: float, stride: int = 1):
         super(FFCResBlockGenerator, self).__init__()
         self.gin = gin
         self.gout = gout
         middle_g = 0.5
 
-        in_ch_l = int(channels * (1 - gin))
-        in_ch_g = int(channels * gin)
-        mid_ch_l = int(channels * middle_g)
-        mid_ch_g = int(channels * middle_g)
+        in_ch_l = int(in_ch * (1 - gin))
+        in_ch_g = int(in_ch * gin)
+        mid_ch_l = int(out_ch * middle_g)
+        mid_ch_g = int(out_ch * middle_g)
 
         kernel_size = 3
-        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, middle_g, stride=1, padding=1)
-        self.ffc_conv2 = FFC(channels, channels, kernel_size, middle_g, gout, stride=1, padding=1)
+        self.ffc_conv1 = FFC(in_ch, out_ch, kernel_size, gin, middle_g, stride=1, padding=1)
+        self.ffc_conv2 = FFC(out_ch, out_ch, kernel_size, middle_g, gout, stride=1, padding=1)
         ## init xavier uniform now inside of FFC
 
         self.bnl1 = nn.Identity() if gin == 1 else nn.BatchNorm2d(in_ch_l)
@@ -184,9 +184,9 @@ class FGenerator(nn.Module):
         self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
         nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
-        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, 0, 0.5, stride=2)
-        self.resblock2 = FFCResBlockGenerator(GEN_SIZE, 0.5, 0.5, stride=2)
-        self.resblock3 = FFCResBlockGenerator(GEN_SIZE, 0.5, 0, stride=2)
+        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, 2*GEN_SIZE, 0, 0.5, stride=2)
+        self.resblock2 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0.5, stride=2)
+        self.resblock3 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0, stride=2)
 
         self.final_bn = nn.BatchNorm2d(GEN_SIZE)
         self.final_relu = nn.ReLU()
@@ -206,7 +206,7 @@ class FGenerator(nn.Module):
         fake = self.resblock1(features)
         fake = self.resblock2(fake)
         fake = self.resblock3(fake)
-        fake = self.resizer(fake)
+        fake = fake[0] # instead of resizing!
 
         # last batch norm and relu 
         # -- TODO: only resize after local and global BN and ReLU
