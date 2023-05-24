@@ -52,19 +52,19 @@ class FFCResBlockGenerator(FFCModel):
         self.ffc_conv2 = FFC(channels, channels, kernel_size, middle_g, gout, stride=stride, padding=1)
         ## init xavier uniform now inside of FFC
 
-        self.bnl1 = nn.Identity if gin == 1 else nn.BatchNorm2d(in_ch_l)
+        self.bnl1 = nn.Identity() if gin == 1 else nn.BatchNorm2d(in_ch_l)
         self.bnl2 = nn.BatchNorm2d(mid_ch_l)
         
-        self.bng1 = nn.Identity if gin == 0 else nn.BatchNorm2d(in_ch_g)
+        self.bng1 = nn.Identity() if gin == 0 else nn.BatchNorm2d(in_ch_g)
         self.bng2 = nn.BatchNorm2d(mid_ch_g)
         
-        self.relul1 = nn.Identity if gin == 1 else nn.ReLU(inplace=True)
+        self.relul1 = nn.Identity() if gin == 1 else nn.ReLU(inplace=True)
         self.relul2 = nn.ReLU(inplace=True)
-        self.relug1 = nn.Identity if gin == 0 else nn.ReLU(inplace=True)
+        self.relug1 = nn.Identity() if gin == 0 else nn.ReLU(inplace=True)
         self.relug2 = nn.ReLU(inplace=True)
 
         self.upsample_l = nn.Upsample(scale_factor=2)
-        self.upsample_g = nn.Identity if gin == 0 else nn.Upsample(scale_factor=2)
+        self.upsample_g = nn.Identity() if gin == 0 else nn.Upsample(scale_factor=2)
         
         self.bypass = nn.Sequential()
         if stride != 1:
@@ -82,7 +82,8 @@ class FFCResBlockGenerator(FFCModel):
         x_g_out = self.upsample_g(x_g_out)
 
         # first convolution
-        input = tuple(x_l_out, x_g_out)
+        print(type(x_g_out))
+        input = (x_l_out, x_g_out)
         x_l_out, x_g_out = self.ffc_conv1(input)
 
         # local and global BN and ReLU after the first convolution
@@ -90,7 +91,7 @@ class FFCResBlockGenerator(FFCModel):
         x_g_out = self.relug2(self.bng2(x_g_out))
         
         # second convolution
-        input = tuple(x_l_out, x_g_out)
+        input = (x_l_out, x_g_out)
         x_l_out, x_g_out = self.ffc_conv2(input)
     
         # adds the residual connection for both global and local
