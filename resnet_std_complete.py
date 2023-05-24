@@ -94,13 +94,6 @@ class ResBlockDiscriminator(nn.Module):
                 SpectralNorm(self.bypass_conv),
                 nn.AvgPool2d(2, stride=stride, padding=0)
             )
-            # if in_channels == out_channels:
-            #     self.bypass = nn.AvgPool2d(2, stride=stride, padding=0)
-            # else:
-            #     self.bypass = nn.Sequential(
-            #         SpectralNorm(nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)),
-            #         nn.AvgPool2d(2, stride=stride, padding=0)
-            #     )
 
 
     def forward(self, x):
@@ -293,7 +286,7 @@ def train(epoch):
                 # compute and log generative metrics
                 metrics = torch_fidelity.calculate_metrics(
                     input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
-                    input1_model_num_samples=10000,
+                    input1_model_num_samples=5000,
                     input2= 'cifar10-train',
                     isc=True,
                     fid=True,

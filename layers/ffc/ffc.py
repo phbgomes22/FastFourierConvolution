@@ -23,8 +23,8 @@ class FFC(nn.Module):
     '''
     def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
                  ratio_gin: float, ratio_gout: float, stride: int = 1, padding: int = 0,
-                 dilation: int = 1, groups: int = 1, bias: bool = False, enable_lfu: bool = True,
-                 attention: bool = False, num_classes: int = 1):
+                 dilation: int = 1, groups: int = 1, bias: bool = False, 
+                 enable_lfu: bool = True, num_classes: int = 1):
 
         super(FFC, self).__init__()
 
@@ -56,6 +56,7 @@ class FFC(nn.Module):
         self.convl2l = module(in_cl, out_cl, kernel_size,
                               stride, padding, dilation, groups, bias)
         if not condition:
+            nn.init.xavier_uniform_(self.convl2l.weight.data, 1.)
             self.convl2l = torch.nn.utils.spectral_norm(self.convl2l)
 
         condition = in_cl == 0 or out_cg == 0
@@ -65,6 +66,7 @@ class FFC(nn.Module):
         self.convl2g = module(in_cl, out_cg, kernel_size,
                               stride, padding, dilation, groups, bias)
         if not condition:
+            nn.init.xavier_uniform_(self.convl2g.weight.data, 1.)
             self.convl2g = torch.nn.utils.spectral_norm(self.convl2g)
 
         condition = in_cg == 0 or out_cl == 0
@@ -74,6 +76,7 @@ class FFC(nn.Module):
         self.convg2l = module(in_cg, out_cl, kernel_size,
                               stride, padding, dilation, groups, bias)
         if not condition:
+            nn.init.xavier_uniform_(self.convg2l.weight.data, 1.)
             self.convg2l = torch.nn.utils.spectral_norm(self.convg2l)
 
         # defines the module as the Spectral Transform unless the channels output are zero
