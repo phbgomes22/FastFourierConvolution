@@ -48,8 +48,8 @@ class FFCResBlockGenerator(FFCModel):
         mid_ch_g = int(channels * middle_g)
 
         kernel_size = 3
-        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, middle_g, stride=stride, padding=1)
-        self.ffc_conv2 = FFC(channels, channels, kernel_size, middle_g, gout, stride=stride, padding=1)
+        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, middle_g, stride=1, padding=1)
+        self.ffc_conv2 = FFC(channels, channels, kernel_size, middle_g, gout, stride=1, padding=1)
         ## init xavier uniform now inside of FFC
 
         self.bnl1 = nn.Identity() if gin == 1 else nn.BatchNorm2d(in_ch_l)
