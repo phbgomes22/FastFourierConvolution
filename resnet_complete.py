@@ -210,7 +210,7 @@ class FGenerator(nn.Module):
         fake = self.resblock1(features)
         fake = self.resblock2(fake)
         fake = self.resblock3(fake)
-        fake = fake[0] # instead of resizing!
+        fake = self.resizer(fake) # instead of resizing!
 
         # last batch norm and relu 
         # -- TODO: only resize after local and global BN and ReLU
