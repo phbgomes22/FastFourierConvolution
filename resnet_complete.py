@@ -185,7 +185,7 @@ class FGenerator(nn.Module):
 
         self.resblock1 = FFCResBlockGenerator(GEN_SIZE, 2*GEN_SIZE, 0, 0.5, stride=2)
         self.resblock2 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0.5, stride=2)
-        self.resblock3 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0, stride=2)
+        self.resblock3 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0.5, stride=2)
 
         self.final_bn = nn.BatchNorm2d(GEN_SIZE)
         self.final_relu = nn.ReLU()
