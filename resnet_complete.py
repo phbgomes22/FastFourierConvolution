@@ -62,7 +62,8 @@ class FFCResBlockGenerator(FFCModel):
         self.relug1 = nn.Identity if gin == 0 else nn.ReLU(inplace=True)
         self.relug2 = nn.ReLU(inplace=True)
 
-        self.upsample = nn.Upsample(scale_factor=2)
+        self.upsample_l = nn.Upsample(scale_factor=2)
+        self.upsample_g = nn.Identity if gin == 0 else nn.Upsample(scale_factor=2)
         
         self.bypass = nn.Sequential()
         if stride != 1:
@@ -74,10 +75,10 @@ class FFCResBlockGenerator(FFCModel):
         
         # local BN and ReLU before first convolution
         x_l_out = self.relul1(self.bnl1(x_l))
-        x_l_out = self.upsample(x_l_out)
+        x_l_out = self.upsample_l(x_l_out)
         # global BN and ReLU before first convolution
         x_g_out = self.relug1(self.bng1(x_g))
-        x_g_out = self.upsample(x_g_out)
+        x_g_out = self.upsample_g(x_g_out)
 
         # first convolution
         x_l_out, x_g_out = self.ffc_conv1(x_l_out, x_g_out)
