@@ -47,19 +47,19 @@ class FFCResBlockGenerator(FFCModel):
         out_ch_g = int(channels * gout)
 
         kernel_size = 3
-        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, gout, stride=stride, padding=1)
-        self.ffc_conv2 = FFC(channels, channels, kernel_size, gin, gout, stride=stride, padding=1)
+        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, 0.5, stride=stride, padding=1)
+        self.ffc_conv2 = FFC(channels, channels, kernel_size, 0.5, gout, stride=stride, padding=1)
         ## init xavier uniform now inside of FFC
 
-        self.bnl1 = nn.BatchNorm2d(in_ch_l)
-        self.bnl2 = nn.BatchNorm2d(out_ch_l)
+        self.bnl1 = nn.Identity if gin == 1 else nn.BatchNorm2d(in_ch_l)
+        self.bnl2 = nn.BatchNorm2d(channels * 0.5)
         
-        self.bng1 = nn.BatchNorm2d(in_ch_g)
-        self.bng2 = nn.BatchNorm2d(out_ch_g)
+        self.bng1 = nn.Identity if gin == 0 else nn.BatchNorm2d(in_ch_g)
+        self.bng2 = nn.BatchNorm2d(channels * 0.5)
         
-        self.relul1 = nn.ReLU(inplace=True)
+        self.relul1 = nn.Identity if gin == 1 else nn.ReLU(inplace=True)
         self.relul2 = nn.ReLU(inplace=True)
-        self.relug1 = nn.ReLU(inplace=True)
+        self.relug1 = nn.Identity if gin == 0 else nn.ReLU(inplace=True)
         self.relug2 = nn.ReLU(inplace=True)
 
         self.upsample = nn.Upsample(scale_factor=2)
