@@ -88,8 +88,6 @@ class FFCResBlockGenerator(FFCModel):
         x_l_out = self.relul2(self.bnl2(x_l_out))
         x_g_out = self.relug2(self.bng2(x_g_out))
         
-        print(x_l_out.shape)
-        print(x_g_out.shape)
         # second convolution
         x_l_out, x_g_out = self.ffc_conv2(x_l_out, x_g_out)
     
