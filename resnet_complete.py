@@ -66,6 +66,9 @@ class FFCResBlockGenerator(FFCModel):
         self.upsample_l = nn.Upsample(scale_factor=2)
         self.upsample_g = nn.Identity() if gin == 0 else nn.Upsample(scale_factor=2)
         
+        ## for the first layer that the signal is divided into local and global
+        self.channel_reduction = nn.Conv2d(in_ch, mid_ch_l, kernel_size=1)
+
         self.bypass = nn.Sequential()
         if stride != 1:
             self.bypass = nn.Upsample(scale_factor=2)
@@ -93,10 +96,15 @@ class FFCResBlockGenerator(FFCModel):
         x_l_out, x_g_out = self.ffc_conv2(input)
         # adds the residual connection for both global and local
         
-        x_l_out = x_l_out + self.bypass(x_l)
-
-        if type(x_g) != int: # only does the residual if the initial x_g is not 0
+        if self.gin == 0: 
+            # only does the residual in global signal if the initial x_g is not 0
             x_g_out = x_g_out + self.bypass(x_g)
+        elif self.gin == 0 and self.gout != 0: 
+            # check if it is the first time that there is a signal division,
+            # if so, reduces the channel to the new local signal
+            x_l = self.channel_reduction(x_l)
+
+        x_l_out = x_l_out + self.bypass(x_l)
 
         return x_l_out, x_g_out
 
@@ -180,9 +188,9 @@ class FGenerator(nn.Module):
         self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
         nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
-        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, 2*GEN_SIZE, 0, 0.5, stride=2)
-        self.resblock2 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0.5, stride=2)
-        self.resblock3 = FFCResBlockGenerator(2*GEN_SIZE, 2*GEN_SIZE, 0.5, 0.5, stride=2)
+        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0, 0.5, stride=2)
+        self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.5, 0.5, stride=2)
+        self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.5, 0.5, stride=2)
 
         self.final_bn = nn.BatchNorm2d(GEN_SIZE)
         self.final_relu = nn.ReLU()
