@@ -83,7 +83,6 @@ class FFCResBlockGenerator(FFCModel):
         x_g_out = self.upsample_g(x_g_out)
 
         # first convolution
-        print(type(x_g_out))
         input = (x_l_out, x_g_out)
         x_l_out, x_g_out = self.ffc_conv1(input)
         print(x_l_out.shape)

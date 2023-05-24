@@ -56,7 +56,12 @@ class ResBlockGenerator(nn.Module):
             self.bypass = nn.Upsample(scale_factor=2)
 
     def forward(self, x):
-        return self.model(x) + self.bypass(x)
+        print(x.shape)
+        m = self.model(x)
+        print(m.shape)
+        b = self.bypass(x)
+        print(b.shape)
+        return m + b
 
 
 class ResBlockDiscriminator(nn.Module):
