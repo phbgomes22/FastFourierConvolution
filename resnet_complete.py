@@ -77,6 +77,7 @@ class FFCResBlockGenerator(FFCModel):
         # local BN and ReLU before first convolution
         x_l_out = self.relul1(self.bnl1(x_l))
         x_l_out = self.upsample_l(x_l_out)
+        print(x_l_out.shape)
         # global BN and ReLU before first convolution
         x_g_out = self.relug1(self.bng1(x_g))
         x_g_out = self.upsample_g(x_g_out)
@@ -85,7 +86,7 @@ class FFCResBlockGenerator(FFCModel):
         print(type(x_g_out))
         input = (x_l_out, x_g_out)
         x_l_out, x_g_out = self.ffc_conv1(input)
-
+        print(x_l_out.shape)
         # local and global BN and ReLU after the first convolution
         x_l_out = self.relul2(self.bnl2(x_l_out))
         x_g_out = self.relug2(self.bng2(x_g_out))
@@ -93,9 +94,13 @@ class FFCResBlockGenerator(FFCModel):
         # second convolution
         input = (x_l_out, x_g_out)
         x_l_out, x_g_out = self.ffc_conv2(input)
-    
+        print(x_l_out.shape)
         # adds the residual connection for both global and local
-        x_l_out = x_l_out + self.bypass(x_l)
+        
+        local_bypass = self.bypass(x_l)
+        print(x_l_out.shape)
+        print(local_bypass.shape)
+        x_l_out = x_l_out + local_bypass
         x_g_out = x_g_out + self.bypass(x_g)
 
         return x_l_out, x_g_out
