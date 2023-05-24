@@ -73,7 +73,7 @@ class FFCResBlockGenerator(FFCModel):
     def forward(self, x):
         # breaking x into x_l and x_g
         x_l, x_g = x if type(x) is tuple else (x, 0)
-        
+        print(x_l.shape)
         # local BN and ReLU before first convolution
         x_l_out = self.relul1(self.bnl1(x_l))
         x_l_out = self.upsample_l(x_l_out)
