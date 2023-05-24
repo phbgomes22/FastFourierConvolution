@@ -180,7 +180,7 @@ class FirstResBlockDiscriminator(nn.Module):
 GEN_SIZE=128
 DISC_SIZE=128
 
-class FGenerator(nn.Module):
+class FGenerator(FFCModel):
     def __init__(self, z_dim):
         super(FGenerator, self).__init__()
         self.z_dim = z_dim
