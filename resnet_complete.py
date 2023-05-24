@@ -59,9 +59,9 @@ class FFCResBlockGenerator(FFCModel):
         self.bng2 = nn.BatchNorm2d(mid_ch_g)
         
         self.relul1 = nn.Identity() if gin == 1 else nn.ReLU(inplace=True)
-        self.relul2 = nn.ReLU(inplace=True)
+        self.relul2 = nn.GELU()
         self.relug1 = nn.Identity() if gin == 0 else nn.ReLU(inplace=True)
-        self.relug2 = nn.ReLU(inplace=True)
+        self.relug2 = nn.GELU()
 
         self.upsample_l = nn.Upsample(scale_factor=2)
         self.upsample_g = nn.Identity() if gin == 0 else nn.Upsample(scale_factor=2)
@@ -193,7 +193,7 @@ class FGenerator(FFCModel):
         self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.5, 0.5, stride=2)
 
         self.final_bn = nn.BatchNorm2d(GEN_SIZE)
-        self.final_relu = nn.ReLU()
+        self.final_relu = nn.GELU()
         self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
 
         nn.init.xavier_uniform_(self.final_conv.weight.data, 1.)
@@ -274,8 +274,8 @@ print("Parameters on Discriminator: ", d_params, " \nParameters on Generator: ",
 # because the spectral normalization module creates parameters that don't require gradients (u and v), we don't want to 
 # optimize these using sgd. We only let the optimizer operate on parameters that _do_ require gradients
 # TODO: replace Parameters with buffers, which aren't returned from .parameters() method.
-optim_disc = optim.Adam(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=args.lr, betas=(0.5,0.999))
-optim_gen  = optim.Adam(generator.parameters(), lr=args.lr, betas=(0.5,0.999))
+optim_disc = optim.AdamW(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=args.lr, betas=(0.5,0.999))
+optim_gen  = optim.AdamW(generator.parameters(), lr=args.lr, betas=(0.5,0.999))
 
 # use an exponentially decaying learning rate
 scheduler_d = optim.lr_scheduler.ExponentialLR(optim_disc, gamma=0.99)
