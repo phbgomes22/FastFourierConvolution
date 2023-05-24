@@ -98,7 +98,7 @@ class FFCResBlockGenerator(FFCModel):
         
         x_l_out = x_l_out + self.bypass(x_l)
 
-        if x_g != 0: # only does the residual if the initial x_g is not 0
+        if type(x_g) != int: # only does the residual if the initial x_g is not 0
             x_g_out = x_g_out + self.bypass(x_g)
 
         return x_l_out, x_g_out
