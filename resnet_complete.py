@@ -40,22 +40,23 @@ class FFCResBlockGenerator(FFCModel):
         super(FFCResBlockGenerator, self).__init__()
         self.gin = gin
         self.gout = gout
+        middle_g = 0.5
 
         in_ch_l = int(channels * (1 - gin))
         in_ch_g = int(channels * gin)
-        out_ch_l = int(channels * (1 - gout))
-        out_ch_g = int(channels * gout)
+        mid_ch_l = int(channels * middle_g)
+        mid_ch_g = int(channels * middle_g)
 
         kernel_size = 3
-        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, 0.5, stride=stride, padding=1)
-        self.ffc_conv2 = FFC(channels, channels, kernel_size, 0.5, gout, stride=stride, padding=1)
+        self.ffc_conv1 = FFC(channels, channels, kernel_size, gin, middle_g, stride=stride, padding=1)
+        self.ffc_conv2 = FFC(channels, channels, kernel_size, middle_g, gout, stride=stride, padding=1)
         ## init xavier uniform now inside of FFC
 
         self.bnl1 = nn.Identity if gin == 1 else nn.BatchNorm2d(in_ch_l)
-        self.bnl2 = nn.BatchNorm2d(channels * 0.5)
+        self.bnl2 = nn.BatchNorm2d(mid_ch_l)
         
         self.bng1 = nn.Identity if gin == 0 else nn.BatchNorm2d(in_ch_g)
-        self.bng2 = nn.BatchNorm2d(channels * 0.5)
+        self.bng2 = nn.BatchNorm2d(mid_ch_g)
         
         self.relul1 = nn.Identity if gin == 1 else nn.ReLU(inplace=True)
         self.relul2 = nn.ReLU(inplace=True)
