@@ -96,11 +96,10 @@ class FFCResBlockGenerator(FFCModel):
         print(x_l_out.shape)
         # adds the residual connection for both global and local
         
-        local_bypass = self.bypass(x_l)
-        print(x_l_out.shape)
-        print(local_bypass.shape)
-        x_l_out = x_l_out + local_bypass
-        x_g_out = x_g_out + self.bypass(x_g)
+        x_l_out = x_l_out + self.bypass(x_l)
+
+        if x_g != 0: # only does the residual if the initial x_g is not 0
+            x_g_out = x_g_out + self.bypass(x_g)
 
         return x_l_out, x_g_out
 
