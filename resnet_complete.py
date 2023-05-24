@@ -252,7 +252,7 @@ Z_dim = 128
 disc_iters = 5
 
 discriminator = Discriminator().cuda()
-generator = Generator(Z_dim).cuda()
+generator = FGenerator(Z_dim).cuda()
 
 d_params = count_parameters(discriminator)
 g_params = count_parameters(generator)
