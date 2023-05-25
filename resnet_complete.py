@@ -40,7 +40,7 @@ class FFCResBlockGenerator(FFCModel):
         super(FFCResBlockGenerator, self).__init__()
         self.gin = gin
         self.gout = gout
-        middle_g = 0.5
+        middle_g = gout
 
         in_ch_l = int(in_ch * (1 - gin))
         in_ch_g = int(in_ch * gin)
@@ -188,9 +188,9 @@ class FGenerator(FFCModel):
         self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
         nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
-        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0, 0.5, stride=2)
-        self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.5, 0.5, stride=2)
-        self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.5, 0.5, stride=2)
+        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0, 0.25, stride=2)
+        self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.25, 0.25, stride=2)
+        self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.25, 0.25, stride=2)
 
         self.final_bn = nn.BatchNorm2d(GEN_SIZE)
         self.final_relu = nn.GELU()
@@ -262,7 +262,7 @@ loader = torch.utils.data.DataLoader(
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
-disc_iters = 5
+disc_iters = 2#5
 
 discriminator = Discriminator().cuda()
 generator = FGenerator(Z_dim).cuda()
