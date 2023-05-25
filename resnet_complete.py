@@ -350,7 +350,7 @@ def train():
         if next_step % 5000 == 0: 
             pbar.close()
             generator.eval()
-            evaluate(next_step)
+          #  evaluate(next_step)
 
             print('Evaluating the generator...')
 
