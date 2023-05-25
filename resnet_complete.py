@@ -188,19 +188,25 @@ class FGenerator(FFCModel):
         self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
         nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
-        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0, 0.25, stride=2)
-        self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.25, 0.25, stride=2)
-        self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0.25, 0.25, stride=2)
+        self.alpha = 0.25
 
-        self.final_bn = nn.BatchNorm2d(GEN_SIZE)
-        self.final_relu = nn.GELU()
-        self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
-
-        nn.init.xavier_uniform_(self.final_conv.weight.data, 1.)
-        self.final = nn.Sequential(
-            self.final_conv,
-            nn.Tanh()
-        )
+        self.resblock1 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0, self.alpha, stride=2)
+        self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
+        self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
+        
+        self.final_bn_l = nn.BatchNorm2d(GEN_SIZE * (1 - self.alpha))
+        self.final_bn_g = nn.BatchNorm2d(GEN_SIZE * self.alpha)
+        self.final_relu_l = nn.GELU()
+        self.final_relu_g = nn.GELU()
+     #   self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
+        self.ffc_final_conv = FFC(GEN_SIZE, channels, 3, self.alpha, 0, stride=1, padding=1)
+        self.act_l = nn.Tanh()
+        self.act_g = nn.Tanh()
+        # nn.init.xavier_uniform_(self.final_conv.weight.data, 1.)
+        # self.final = nn.Sequential(
+        #     self.final_conv,
+        #     nn.Tanh()
+        # )
 
     def forward(self, z):
         # passes thorugh linear layer
@@ -209,14 +215,17 @@ class FGenerator(FFCModel):
         # ffc blocks of resnet
         fake = self.resblock1(features)
         fake = self.resblock2(fake)
-        fake = self.resblock3(fake)
-        fake = self.resizer(fake) # instead of resizing!
+        fake_l, fake_g = self.resblock3(fake)
 
         # last batch norm and relu 
-        # -- TODO: only resize after local and global BN and ReLU
-        fake = self.final_relu(self.final_bn(fake))
+        fake_l = self.final_relu_l(self.final_bn_l(fake_l))
+        fake_g = self.final_relu_g(self.final_bn_g(fake_g))
+
         # -- TODO: transform this last convolution in FFC Conv too
-        fake = self.final(fake)
+        fake_l, fake_g = self.ffc_final_conv((fake_l, fake_g))
+        fake_l = self.act_l(fake_l)
+        fake_g = self.act_g(fake_g)
+        fake = self.resizer((fake_l, fake_g)) # instead of resizing!
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
