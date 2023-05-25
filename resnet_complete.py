@@ -201,7 +201,6 @@ class FGenerator(FFCModel):
      #   self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
         self.ffc_final_conv = FFC(GEN_SIZE, channels, 3, self.alpha, 0, stride=1, padding=1)
         self.act_l = nn.Tanh()
-        self.act_g = nn.Tanh()
         # nn.init.xavier_uniform_(self.final_conv.weight.data, 1.)
         # self.final = nn.Sequential(
         #     self.final_conv,
@@ -224,7 +223,6 @@ class FGenerator(FFCModel):
         # -- TODO: transform this last convolution in FFC Conv too
         fake_l, fake_g = self.ffc_final_conv((fake_l, fake_g))
         fake_l = self.act_l(fake_l)
-        fake_g = self.act_g(fake_g)
         fake = self.resizer((fake_l, fake_g)) # instead of resizing!
 
         if not self.training:
