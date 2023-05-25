@@ -44,7 +44,7 @@ class FFCResBlockGenerator(FFCModel):
 
         in_ch_l = int(in_ch * (1 - gin))
         in_ch_g = int(in_ch * gin)
-        mid_ch_l = int(out_ch * middle_g)
+        mid_ch_l = int(out_ch * (1 - middle_g))
         mid_ch_g = int(out_ch * middle_g)
 
         kernel_size = 3
