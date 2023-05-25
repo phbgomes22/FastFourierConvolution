@@ -262,7 +262,7 @@ loader = torch.utils.data.DataLoader(
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
-disc_iters = 2#5
+disc_iters = 5
 
 discriminator = Discriminator().cuda()
 generator = FGenerator(Z_dim).cuda()
