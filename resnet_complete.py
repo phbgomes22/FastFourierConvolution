@@ -194,8 +194,8 @@ class FGenerator(FFCModel):
         self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
         self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
         
-        self.final_bn_l = nn.BatchNorm2d(GEN_SIZE * (1 - self.alpha))
-        self.final_bn_g = nn.BatchNorm2d(GEN_SIZE * self.alpha)
+        self.final_bn_l = nn.BatchNorm2d(GEN_SIZE * int(1 - self.alpha))
+        self.final_bn_g = nn.BatchNorm2d(int(GEN_SIZE * self.alpha))
         self.final_relu_l = nn.GELU()
         self.final_relu_g = nn.GELU()
      #   self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
