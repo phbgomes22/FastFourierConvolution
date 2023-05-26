@@ -324,7 +324,6 @@ def train():
 
     loader_iter = iter(loader)
 
-    images_isc = generator(isc_z, isc_label)
 
     for step in range(args.num_total_steps):
         try:
@@ -335,7 +334,9 @@ def train():
 
         data = Variable(real_img.cuda())
         target = Variable(real_label.cuda())
+        print(target.shape)
 
+        images_isc = generator(isc_z, isc_label)
         # update discriminator
         for _ in range(disc_iters):
             z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
