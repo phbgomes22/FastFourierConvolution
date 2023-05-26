@@ -193,14 +193,24 @@ class FGenerator(FFCModel):
         self.alpha = 0.25
 
         self.resblock1 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, 0, self.alpha, stride=2)
+        self.lcl_noise1 = NoiseInjection(int(GEN_SIZE*(1-self.alpha))) # only local receives noise
+        self.glb_noise1 = NoiseInjection(int(GEN_SIZE*(self.alpha)))
+
         self.resblock2 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
+        self.lcl_noise2 = NoiseInjection(int(GEN_SIZE*(1-self.alpha))) # only local receives noise
+        self.glb_noise2 = NoiseInjection(int(GEN_SIZE*(self.alpha)))
+
         self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
         
         self.final_bn_l = nn.BatchNorm2d(int(GEN_SIZE * (1 - self.alpha)))
         self.final_bn_g = nn.BatchNorm2d(int(GEN_SIZE * self.alpha))
         self.final_relu_l = nn.GELU()
         self.final_relu_g = nn.GELU()
+
+        self.lcl_noise3 = NoiseInjection(int(GEN_SIZE*(1-self.alpha))) # only local receives noise
+        self.glb_noise3 = NoiseInjection(int(GEN_SIZE*(self.alpha)))
         
+
         self.ffc_final_conv = FFC(GEN_SIZE, channels, 3, self.alpha, 0, stride=1, padding=1)
         self.act_l = nn.Tanh()
         
@@ -218,17 +228,27 @@ class FGenerator(FFCModel):
 
         # ffc blocks of resnet
         fake = self.resblock1(features)
-        fake = self.resblock2(fake)
-        fake_l, fake_g = self.resblock3(fake)
+        if self.training:
+            fake = self.lcl_noise1(fake[0]), self.glb_noise1(fake[1])
 
+        fake = self.resblock2(fake)
+        if self.training:
+            fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1])
+
+        fake_l, fake_g = self.resblock3(fake)
         # last batch norm and relu 
         fake_l = self.final_relu_l(self.final_bn_l(fake_l))
         fake_g = self.final_relu_g(self.final_bn_g(fake_g))
 
+        if self.training:
+            fake_l = self.lcl_noise3(fake_l)
+            fake_g = self.glb_noise3(fake_g)
+
         # -- TODO: transform this last convolution in FFC Conv too
         fake_l, fake_g = self.ffc_final_conv((fake_l, fake_g))
-        fake_l = self.act_l(fake_l)
-        fake = self.resizer((fake_l, fake_g)) # instead of resizing!
+        fake = self.act_l(fake_l)
+
+       # fake = self.resizer((fake_l, fake_g)) # instead of resizing!
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
@@ -396,7 +416,6 @@ def train():
             # Calculate the maximum value along dimensions 2 and 3 (H and W)
             b, n, h, w = images_isc.shape
             images_isc = images_isc.view(b, -1)
-        #   images_isc -= images_isc.min(1, keepdim=True)[0]
             images_isc /= images_isc.max(1, keepdim=True)[0]
             images_isc = images_isc.view(b, n, h, w)
 
