@@ -255,7 +255,7 @@ class Discriminator(nn.Module):
         self.label_embed = nn.Embedding(num_classes, 32*32)
 
     def forward(self, x, y):
-        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(y, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 32, 32)
