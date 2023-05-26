@@ -201,7 +201,7 @@ loader = torch.utils.data.DataLoader(
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
-disc_iters = 5
+disc_iters = 1#5
 
 discriminator = Discriminator().cuda()
 generator = Generator(Z_dim).cuda()
@@ -213,8 +213,8 @@ print("Parameters on Discriminator: ", d_params, " \nParameters on Generator: ",
 # because the spectral normalization module creates parameters that don't require gradients (u and v), we don't want to 
 # optimize these using sgd. We only let the optimizer operate on parameters that _do_ require gradients
 # TODO: replace Parameters with buffers, which aren't returned from .parameters() method.
-optim_disc = optim.Adam(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=4e-4, betas=(0.5,0.999))
-optim_gen  = optim.Adam(generator.parameters(), lr=1e-4, betas=(0.5,0.999))
+optim_disc = optim.Adam(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=4e-4, betas=(0.0,0.9)) #(0.5,0.999)
+optim_gen  = optim.Adam(generator.parameters(), lr=1e-4, betas=(0.0,0.9)) #(0.5,0.999)
 
 # use an exponentially decaying learning rate
 scheduler_d = optim.lr_scheduler.ExponentialLR(optim_disc, gamma=0.99)
