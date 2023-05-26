@@ -31,6 +31,8 @@ SpectralNorm = torch.nn.utils.spectral_norm
 
 channels = 3
 
+from pytorch_gan_metrics import get_inception_score
+
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -308,6 +310,11 @@ leading_metric, last_best_metric, metric_greater_cmp = {
         'PPL': (torch_fidelity.KEY_METRIC_PPL_MEAN, float('inf'), float.__lt__),
     }['ISC']
 
+fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
+fixed_label = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(10), 8)[:64] ) ).float().to('cuda')
+
+isc_z = Variable(torch.randn(5000, Z_dim).cuda())
+isc_label = torch.nn.functional.one_hot( torch.as_tensor( torch.randint(low=0, high=10, size=(5000,)) ) ).float().to('cuda')
 
 
 def train():
@@ -360,7 +367,7 @@ def train():
             pbar.set_postfix(step_info)
         pbar.update(1)
 
-        if next_step % 5000 == 0: 
+        if next_step % 500 == 0: 
             pbar.close()
             generator.eval()
           #  evaluate(next_step)
@@ -380,14 +387,16 @@ def train():
                 ppl_sample_similarity_resize=64,
             )
 
+            ## other ISC
+            images_isc = generator(isc_z, isc_label)
+            IS, IS_std = get_inception_score(images_isc)
+            print("== Alt Inception Score: ", IS, " - std: ", IS_std)
+
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             generator.train()
 
     scheduler_d.step()
     scheduler_g.step()
-
-fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
-fixed_label = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(10), 8)[:64] ) ).float().to('cuda')
 
 
 def evaluate(epoch):
