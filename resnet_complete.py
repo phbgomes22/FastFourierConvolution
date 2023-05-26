@@ -339,12 +339,12 @@ def train():
         generator.eval()
         with torch.no_grad():
             images_isc = generator(isc_z, isc_label).detach().cpu()
-        print(images_isc.shape)
+        images_isc = images_isc.to(torch.float32)
         # Calculate the maximum value along dimensions 2 and 3 (H and W)
         b, n, h, w = images_isc.shape
         images_isc = images_isc.view(b, -1)
-        images_isc -= images_isc.min(1, keepdim=True)[0]
-        images_isc /= images_isc.max(1, keepdim=True)[0].float()
+     #   images_isc -= images_isc.min(1, keepdim=True)[0]
+        images_isc /= images_isc.max(1, keepdim=True)[0]
         images_isc = images_isc.view(b, n, h, w)
 
         # Normalize tensor between 0 and 1
