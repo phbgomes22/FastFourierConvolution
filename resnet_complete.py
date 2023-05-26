@@ -335,15 +335,23 @@ def train():
         data = Variable(real_img.cuda())
         target = Variable(real_label.cuda())
         
+        
         generator.eval()
         with torch.no_grad():
             images_isc = generator(isc_z, isc_label).detach().cpu()
+        print(images_isc.shape)
+        # Calculate the maximum value along dimensions 2 and 3 (H and W)
+        max_value = torch.max(images_isc, dim=(2, 3), keepdim=True)[0]
 
+        # Normalize tensor between 0 and 1
+        images_isc = torch.div(images_isc, max_value)
         assert 0 <= images_isc.min() and images_isc.max() <= 1
         IS, IS_std = get_inception_score(images_isc)
         print("== Alt Inception Score: ", IS, " - std: ", IS_std)
         generator.train()
         images_isc = []
+
+
         # update discriminator
         for _ in range(disc_iters):
             z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
