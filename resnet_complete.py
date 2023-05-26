@@ -266,6 +266,7 @@ class Discriminator(nn.Module):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=64)
+parser.add_argument('--workers', type=int, default=8)
 parser.add_argument('--lr', type=float, default=2e-4)
 parser.add_argument('--loss', type=str, default='hinge')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoints')
@@ -280,7 +281,7 @@ loader = torch.utils.data.DataLoader(
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
-        batch_size=args.batch_size, shuffle=True, num_workers=12, pin_memory=True, drop_last=True)
+        batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True, drop_last=True)
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
