@@ -280,7 +280,7 @@ loader = torch.utils.data.DataLoader(
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
-        batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+        batch_size=args.batch_size, shuffle=True, num_workers=12, pin_memory=True, drop_last=True)
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
