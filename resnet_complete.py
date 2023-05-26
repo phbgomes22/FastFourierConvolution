@@ -336,8 +336,10 @@ def train():
         target = Variable(real_label.cuda())
         
         generator.eval()
-        images_isc = generator(isc_z, isc_label)
+        with torch.no_grad():
+            images_isc = generator(isc_z, isc_label).detach().cpu()
         generator.train()
+        images_isc = []
         # update discriminator
         for _ in range(disc_iters):
             z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
