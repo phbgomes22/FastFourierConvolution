@@ -315,7 +315,7 @@ fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
 fixed_label = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(10), 8)[:64] ) ).float().to('cuda')
 
 isc_z = Variable(torch.randn(5000, Z_dim).cuda())
-isc_label = torch.nn.functional.one_hot( torch.as_tensor( torch.randint(low=0, high=10, size=(5000,)) ) ).to(torch.float32).to('cuda').long()
+isc_label = torch.as_tensor( torch.randint(low=0, high=10, size=(5000,)) ).to(torch.float32).to('cuda').long()
 
 
 def train():
