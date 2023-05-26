@@ -363,7 +363,7 @@ def train():
         next_step = step + 1
 
         if next_step  % 500 == 0:
-            step_info = {'disc loss': disc_loss.cpu().item(), 'gen loss': gen_loss.cpu().item()}
+            step_info = {'disc loss': disc_loss.item(), 'gen loss': gen_loss.item()}
             pbar.set_postfix(step_info)
         pbar.update(1)
 
