@@ -342,19 +342,17 @@ def train():
         print(images_isc.shape)
         # Calculate the maximum value along dimensions 2 and 3 (H and W)
         b, n, h, w = images_isc.shape
-        aux_tensor = images_isc.clone()
-        aux_tensor = aux_tensor.view(b, -1)
-        aux_tensor -= aux_tensor.min(1, keepdim=True)[0]
-        aux_tensor /= aux_tensor.max(1, keepdim=True)[0]
-        aux_tensor = aux_tensor.view(b, n, h, w)
+        images_isc = images_isc.view(b, -1)
+        images_isc -= images_isc.min(1, keepdim=True)[0]
+        images_isc /= images_isc.max(1, keepdim=True)[0].float()
+        images_isc = images_isc.view(b, n, h, w)
 
         # Normalize tensor between 0 and 1
-        assert 0 <= aux_tensor.min() and aux_tensor.max() <= 1
-        IS, IS_std = get_inception_score(aux_tensor)
+        assert 0 <= images_isc.min() and images_isc.max() <= 1
+        IS, IS_std = get_inception_score(images_isc)
         print("== Alt Inception Score: ", IS, " - std: ", IS_std)
         generator.train()
         images_isc = []
-        aux_tensor = []
 
 
         # update discriminator
