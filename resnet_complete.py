@@ -338,6 +338,9 @@ def train():
         generator.eval()
         with torch.no_grad():
             images_isc = generator(isc_z, isc_label).detach().cpu()
+
+        IS, IS_std = get_inception_score(images_isc)
+        print("== Alt Inception Score: ", IS, " - std: ", IS_std)
         generator.train()
         images_isc = []
         # update discriminator
