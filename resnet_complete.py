@@ -369,7 +369,7 @@ def train():
             pbar.set_postfix(step_info)
         pbar.update(1)
 
-        if next_step % 500 == 0: 
+        if next_step % 5000 == 0: 
             pbar.close()
             generator.eval()
           #  evaluate(next_step)
