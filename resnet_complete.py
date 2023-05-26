@@ -339,6 +339,7 @@ def train():
         with torch.no_grad():
             images_isc = generator(isc_z, isc_label).detach().cpu()
 
+        assert 0 <= images_isc.min() and images_isc.max() <= 1
         IS, IS_std = get_inception_score(images_isc)
         print("== Alt Inception Score: ", IS, " - std: ", IS_std)
         generator.train()
