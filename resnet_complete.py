@@ -181,11 +181,11 @@ GEN_SIZE=128
 DISC_SIZE=128
 
 class FGenerator(FFCModel):
-    def __init__(self, z_dim):
+    def __init__(self, z_dim, num_classes):
         super(FGenerator, self).__init__()
         self.z_dim = z_dim
 
-        self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
+        self.dense = nn.Linear(self.z_dim  + num_classes, 4 * 4 * GEN_SIZE)
         nn.init.xavier_uniform_(self.dense.weight.data, 1.)
 
         self.alpha = 0.25
@@ -198,18 +198,21 @@ class FGenerator(FFCModel):
         self.final_bn_g = nn.BatchNorm2d(int(GEN_SIZE * self.alpha))
         self.final_relu_l = nn.GELU()
         self.final_relu_g = nn.GELU()
-     #   self.final_conv = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
+        
         self.ffc_final_conv = FFC(GEN_SIZE, channels, 3, self.alpha, 0, stride=1, padding=1)
         self.act_l = nn.Tanh()
-        # nn.init.xavier_uniform_(self.final_conv.weight.data, 1.)
-        # self.final = nn.Sequential(
-        #     self.final_conv,
-        #     nn.Tanh()
-        # )
+        
+        self.label_embed = nn.Embedding(num_classes, num_classes)
 
-    def forward(self, z):
+    def forward(self, z, y):
+
+
+        ## conditional
+        embedding = self.label_embed(y)
+
+        input = torch.cat([z, embedding], dim=1)
         # passes thorugh linear layer
-        features = self.dense(z).view(-1, GEN_SIZE, 4, 4)
+        features = self.dense(input).view(-1, GEN_SIZE, 4, 4)
 
         # ffc blocks of resnet
         fake = self.resblock1(features)
@@ -231,11 +234,11 @@ class FGenerator(FFCModel):
         return fake
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=10):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-                FirstResBlockDiscriminator(channels, DISC_SIZE, stride=2),
+                FirstResBlockDiscriminator(channels + 1, DISC_SIZE, stride=2),
                 ResBlockDiscriminator(DISC_SIZE, DISC_SIZE, stride=2),
                 ResBlockDiscriminator(DISC_SIZE, DISC_SIZE),
                 ResBlockDiscriminator(DISC_SIZE, DISC_SIZE),
@@ -246,8 +249,18 @@ class Discriminator(nn.Module):
         nn.init.xavier_uniform_(self.fc.weight.data, 1.)
         self.fc = SpectralNorm(self.fc)
 
-    def forward(self, x):
-        return self.fc(self.model(x).view(-1,DISC_SIZE))
+        ## == Conditional
+        self.label_embed = nn.Embedding(num_classes, 32*32)
+
+    def forward(self, x, y):
+        labels = torch.unsqueeze(labels, dim=-1)
+        labels = torch.unsqueeze(labels, dim=-1)
+        embedding = self.label_embed(labels)
+        embedding = embedding.view(labels.shape[0], 1, 32, 32)
+    
+        input = torch.cat([x, embedding], dim=1)
+        
+        return self.fc(self.model(input).view(-1,DISC_SIZE))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=64)
@@ -271,8 +284,8 @@ Z_dim = 128
 #number of updates to discriminator for every update to generator 
 disc_iters = 5
 
-discriminator = Discriminator().cuda()
-generator = FGenerator(Z_dim).cuda()
+discriminator = Discriminator(10).cuda()
+generator = FGenerator(Z_dim, 10).cuda()
 
 d_params = count_parameters(discriminator)
 g_params = count_parameters(generator)
@@ -319,12 +332,12 @@ def train():
             optim_disc.zero_grad()
             optim_gen.zero_grad()
             if args.loss == 'hinge':
-                disc_loss = nn.ReLU()(1.0 - discriminator(data)).mean() + nn.ReLU()(1.0 + discriminator(generator(z))).mean()
+                disc_loss = nn.ReLU()(1.0 - discriminator(data, target)).mean() + nn.ReLU()(1.0 + discriminator(generator(z, target), target)).mean()
             elif args.loss == 'wasserstein':
-                disc_loss = -discriminator(data).mean() + discriminator(generator(z)).mean()
+                disc_loss = -discriminator(data, target).mean() + discriminator(generator(z, target), target).mean()
             else:
-                disc_loss = nn.BCEWithLogitsLoss()(discriminator(data), Variable(torch.ones(args.batch_size, 1).cuda())) + \
-                    nn.BCEWithLogitsLoss()(discriminator(generator(z)), Variable(torch.zeros(args.batch_size, 1).cuda()))
+                disc_loss = nn.BCEWithLogitsLoss()(discriminator(data, target), Variable(torch.ones(args.batch_size, 1).cuda())) + \
+                    nn.BCEWithLogitsLoss()(discriminator(generator(z, target), target), Variable(torch.zeros(args.batch_size, 1).cuda()))
             disc_loss.backward()
             optim_disc.step()
 
@@ -334,9 +347,9 @@ def train():
         optim_disc.zero_grad()
         optim_gen.zero_grad()
         if args.loss == 'hinge' or args.loss == 'wasserstein':
-            gen_loss = -discriminator(generator(z)).mean()
+            gen_loss = -discriminator(generator(z, target), target).mean()
         else:
-            gen_loss = nn.BCEWithLogitsLoss()(discriminator(generator(z)), Variable(torch.ones(args.batch_size, 1).cuda()))
+            gen_loss = nn.BCEWithLogitsLoss()(discriminator(generator(z, target), target), Variable(torch.ones(args.batch_size, 1).cuda()))
         gen_loss.backward()
         optim_gen.step()
 
@@ -356,7 +369,7 @@ def train():
 
             # compute and log generative metrics
             metrics = torch_fidelity.calculate_metrics(
-                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
+                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 10),
                 input1_model_num_samples=5000,
                 input2= 'cifar10-train',
                 isc=True,
@@ -374,9 +387,11 @@ def train():
     scheduler_g.step()
 
 fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
+fixed_label = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(10), 8)[:64] ) ).float().to('cuda')
+
 
 def evaluate(epoch):
-    samples = generator(fixed_z).cpu().data.numpy()[:64]
+    samples = generator(fixed_z, fixed_label).cpu().data.numpy()[:64]
 
     fig = plt.figure(figsize=(8, 8))
     gs = gridspec.GridSpec(8, 8)
@@ -400,5 +415,5 @@ os.makedirs(args.checkpoint_dir, exist_ok=True)
 
 
 train()
-torch.save(discriminator.state_dict(), os.path.join(args.checkpoint_dir, 'disc_{}'.format(1)))
-torch.save(generator.state_dict(), os.path.join(args.checkpoint_dir, 'gen_{}'.format(1)))
+# torch.save(discriminator.state_dict(), os.path.join(args.checkpoint_dir, 'disc_{}'.format(1)))
+# torch.save(generator.state_dict(), os.path.join(args.checkpoint_dir, 'gen_{}'.format(1)))
