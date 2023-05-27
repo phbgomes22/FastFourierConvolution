@@ -318,8 +318,8 @@ print("Parameters on Discriminator: ", d_params, " \nParameters on Generator: ",
 # optimize these using sgd. We only let the optimizer operate on parameters that _do_ require gradients
 # TODO: replace Parameters with buffers, which aren't returned from .parameters() method.
 
-optim_disc = optim.AdamW(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=4e-4, betas=(0.0,0.9)) #(0.5,0.999)
-optim_gen  = optim.AdamW(generator.parameters(), lr=1e-4, betas=(0.0,0.9)) #(0.5,0.999)
+optim_disc = optim.AdamW(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=4e-4, betas=(0.5,0.999)) #(0.5,0.999)
+optim_gen  = optim.AdamW(generator.parameters(), lr=1e-4, betas=(0.5,0.999)) #(0.5,0.999)
 
 # use an exponentially decaying learning rate
 scheduler_d = optim.lr_scheduler.ExponentialLR(optim_disc, gamma=0.99)
@@ -327,6 +327,8 @@ scheduler_g = optim.lr_scheduler.ExponentialLR(optim_gen, gamma=0.99)
 
 # scheduler_g = torch.optim.lr_scheduler.LambdaLR(optim_gen, lambda step: 1. - step / args.num_total_steps)
 # scheduler_d = torch.optim.lr_scheduler.LambdaLR(optim_disc, lambda step: 1. - step / args.num_total_steps)
+
+
 leading_metric, last_best_metric, metric_greater_cmp = {
         'ISC': (torch_fidelity.KEY_METRIC_ISC_MEAN, 0.0, float.__gt__),
         'FID': (torch_fidelity.KEY_METRIC_FID, float('inf'), float.__lt__),
