@@ -305,7 +305,7 @@ loader = torch.utils.data.DataLoader(
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
-disc_iters = 5
+disc_iters = 1#5
 
 discriminator = Discriminator(10).cuda()
 generator = FGenerator(Z_dim, 10).cuda()
@@ -318,7 +318,7 @@ print("Parameters on Discriminator: ", d_params, " \nParameters on Generator: ",
 # optimize these using sgd. We only let the optimizer operate on parameters that _do_ require gradients
 # TODO: replace Parameters with buffers, which aren't returned from .parameters() method.
 
-optim_disc = optim.AdamW(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=2e-4, betas=(0.5,0.999)) #(0.5,0.999)
+optim_disc = optim.AdamW(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=5e-4, betas=(0.5,0.999)) #(0.5,0.999)
 optim_gen  = optim.AdamW(generator.parameters(), lr=2e-4, betas=(0.5,0.999)) #(0.5,0.999)
 
 # use an exponentially decaying learning rate
