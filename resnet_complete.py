@@ -38,7 +38,7 @@ def count_parameters(model):
 
 class FFCResBlockGenerator(FFCModel):
 
-    def __init__(self, in_ch: int, out_ch: int, gin: float, gout: float, stride: int = 1):
+    def __init__(self, in_ch: int, out_ch: int, gin: float, gout: float, stride: int = 1, num_classes: int = 10):
         super(FFCResBlockGenerator, self).__init__()
         self.gin = gin
         self.gout = gout
@@ -54,11 +54,17 @@ class FFCResBlockGenerator(FFCModel):
         self.ffc_conv2 = FFC(out_ch, out_ch, kernel_size, middle_g, gout, stride=1, padding=1)
         ## init xavier uniform now inside of FFC
 
-        self.bnl1 = nn.Identity() if gin == 1 else nn.BatchNorm2d(in_ch_l)
-        self.bnl2 = nn.BatchNorm2d(mid_ch_l)
+        self.bnl1 = nn.Identity() 
+        if gin != 1:
+            self.bnl1 = ConditionalBatchNorm2d(in_ch_l, num_classes) if num_classes !=0 else nn.BatchNorm2d(in_ch_l)
         
-        self.bng1 = nn.Identity() if gin == 0 else nn.BatchNorm2d(in_ch_g)
-        self.bng2 = nn.BatchNorm2d(mid_ch_g)
+        self.bnl2 = ConditionalBatchNorm2d(mid_ch_l, num_classes) if num_classes !=0 else nn.BatchNorm2d(mid_ch_l) 
+        
+        self.bng1 = nn.Identity() 
+        if gin != 0:
+            self.bng1 = ConditionalBatchNorm2d(in_ch_g, num_classes) if num_classes !=0 else nn.BatchNorm2d(in_ch_g)
+
+        self.bng2 = ConditionalBatchNorm2d(mid_ch_g, num_classes) if num_classes !=0 else nn.BatchNorm2d(mid_ch_g)
         
         self.relul1 = nn.Identity() if gin == 1 else nn.ReLU(inplace=True)
         self.relul2 = nn.GELU()
@@ -75,23 +81,34 @@ class FFCResBlockGenerator(FFCModel):
         if stride != 1:
             self.bypass = nn.Upsample(scale_factor=2)
 
-    def forward(self, x):
+    def forward(self, x, y=None):
         # breaking x into x_l and x_g
         x_l, x_g = x if type(x) is tuple else (x, 0)
         
         # local BN and ReLU before first convolution
-        x_l_out = self.relul1(self.bnl1(x_l))
+        if y is not None:
+            x_l_out = self.relul1(self.bnl1(x_l, y)) 
+        else:
+            x_l_out = self.relul1(self.bnl1(x_l))
+
         x_l_out = self.upsample_l(x_l_out)
         # global BN and ReLU before first convolution
-        x_g_out = self.relug1(self.bng1(x_g))
+        if y is not None:
+            x_g_out = self.relug1(self.bng1(x_g))
+        else:
+            x_g_out = self.relug1(self.bng1(x_g, y))
         x_g_out = self.upsample_g(x_g_out)
 
         # first convolution
         input = (x_l_out, x_g_out)
         x_l_out, x_g_out = self.ffc_conv1(input)
         # local and global BN and ReLU after the first convolution
-        x_l_out = self.relul2(self.bnl2(x_l_out))
-        x_g_out = self.relug2(self.bng2(x_g_out))
+        if y is not None:
+            x_l_out = self.relul2(self.bnl2(x_l_out))
+            x_g_out = self.relug2(self.bng2(x_g_out))
+        else:
+            x_l_out = self.relul2(self.bnl2(x_l_out, y))
+            x_g_out = self.relug2(self.bng2(x_g_out, y))
         
         # second convolution
         input = (x_l_out, x_g_out)
@@ -227,15 +244,15 @@ class FGenerator(FFCModel):
         features = self.dense(input).view(-1, GEN_SIZE, 4, 4)
 
         # ffc blocks of resnet
-        fake = self.resblock1(features)
+        fake = self.resblock1(features, y)
         if self.training:
             fake = self.lcl_noise1(fake[0]), self.glb_noise1(fake[1])
 
-        fake = self.resblock2(fake)
+        fake = self.resblock2(fake, y)
         if self.training:
             fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1])
 
-        fake_l, fake_g = self.resblock3(fake)
+        fake_l, fake_g = self.resblock3(fake, y)
         # last batch norm and relu 
         fake_l = self.final_relu_l(self.final_bn_l(fake_l))
         fake_g = self.final_relu_g(self.final_bn_g(fake_g))
