@@ -86,14 +86,14 @@ class FFCResBlockGenerator(FFCModel):
         x_l, x_g = x if type(x) is tuple else (x, 0)
         
         # local BN and ReLU before first convolution
-        if y is not None:
+        if y is not None and type(self.bnl1) is not nn.Identity:
             x_l_out = self.relul1(self.bnl1(x_l, y)) 
         else:
             x_l_out = self.relul1(self.bnl1(x_l))
 
         x_l_out = self.upsample_l(x_l_out)
         # global BN and ReLU before first convolution
-        if y is not None:
+        if y is not None and type(self.bng1) is not nn.Identity:
             x_g_out = self.relug1(self.bng1(x_g, y))
         else:
             x_g_out = self.relug1(self.bng1(x_g))
