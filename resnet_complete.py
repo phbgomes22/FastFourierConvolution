@@ -94,9 +94,9 @@ class FFCResBlockGenerator(FFCModel):
         x_l_out = self.upsample_l(x_l_out)
         # global BN and ReLU before first convolution
         if y is not None:
-            x_g_out = self.relug1(self.bng1(x_g))
-        else:
             x_g_out = self.relug1(self.bng1(x_g, y))
+        else:
+            x_g_out = self.relug1(self.bng1(x_g))
         x_g_out = self.upsample_g(x_g_out)
 
         # first convolution
@@ -104,11 +104,11 @@ class FFCResBlockGenerator(FFCModel):
         x_l_out, x_g_out = self.ffc_conv1(input)
         # local and global BN and ReLU after the first convolution
         if y is not None:
-            x_l_out = self.relul2(self.bnl2(x_l_out))
-            x_g_out = self.relug2(self.bng2(x_g_out))
-        else:
             x_l_out = self.relul2(self.bnl2(x_l_out, y))
             x_g_out = self.relug2(self.bng2(x_g_out, y))
+        else:
+            x_l_out = self.relul2(self.bnl2(x_l_out))
+            x_g_out = self.relug2(self.bng2(x_g_out))
         
         # second convolution
         input = (x_l_out, x_g_out)
