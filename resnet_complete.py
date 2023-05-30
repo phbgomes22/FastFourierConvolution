@@ -432,21 +432,21 @@ def train():
             )
 
             ## other ISC
-            with torch.no_grad():
-                images_isc = generator(isc_z, isc_label).detach().cpu()
-            images_isc = images_isc.to(torch.float32)
-            # Calculate the maximum value along dimensions 2 and 3 (H and W)
-            b, n, h, w = images_isc.shape
-            images_isc = images_isc.view(b, -1)
-            images_isc /= images_isc.max(1, keepdim=True)[0]
-            images_isc = images_isc.view(b, n, h, w)
+            # with torch.no_grad():
+            #     images_isc = generator(isc_z, isc_label).detach().cpu()
+            # images_isc = images_isc.to(torch.float32)
+            # # Calculate the maximum value along dimensions 2 and 3 (H and W)
+            # b, n, h, w = images_isc.shape
+            # images_isc = images_isc.view(b, -1)
+            # images_isc /= images_isc.max(1, keepdim=True)[0]
+            # images_isc = images_isc.view(b, n, h, w)
 
-            # Normalize tensor between 0 and 1
-            assert 0 <= images_isc.min() and images_isc.max() <= 1
-            print("\nCalculating IS...")
-            IS, IS_std = get_inception_score(images_isc)
-            print("\n== Alt Inception Score: ", IS, " - std: ", IS_std)
-            images_isc = []
+            # # Normalize tensor between 0 and 1
+            # assert 0 <= images_isc.min() and images_isc.max() <= 1
+            # print("\nCalculating IS...")
+            # IS, IS_std = get_inception_score(images_isc)
+            # print("\n== Alt Inception Score: ", IS, " - std: ", IS_std)
+            # images_isc = []
 
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             generator.train()
