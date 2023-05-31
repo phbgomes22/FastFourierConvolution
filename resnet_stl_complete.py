@@ -282,7 +282,7 @@ class Discriminator(nn.Module):
         nn.init.xavier_uniform_(self.fc.weight.data, 1.)
         self.fc = SpectralNorm(self.fc)
 
-    def forward(self, x):
+    def forward(self, x, y):
         return self.fc(self.model(x).view(-1,DISC_SIZE))
 
 parser = argparse.ArgumentParser()
@@ -303,8 +303,9 @@ ds_transform = transforms.Compose([
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 
+print("Loading Dataset...")
 loader = load_stl_unlabeled(args.batch_size, ds_transform, args.workers)
-
+print("Dataset Loaded!")
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
