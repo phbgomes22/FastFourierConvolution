@@ -281,7 +281,7 @@ class Discriminator(nn.Module):
             ResBlockDiscriminator(256, 512, stride=2),
             ResBlockDiscriminator(512, 1024),
             nn.ReLU(),
-            nn.AvgPool2d(6),
+            nn.AvgPool2d(4),
         )
         self.fc = nn.Linear(1024, 1)
         nn.init.xavier_uniform_(self.fc.weight.data, 1.)
