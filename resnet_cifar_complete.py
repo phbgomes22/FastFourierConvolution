@@ -105,6 +105,8 @@ class FFCResBlockGenerator(FFCModel):
         # local and global BN and ReLU after the first convolution
         if y is not None:
             x_l_out = self.relul2(self.bnl2(x_l_out, y))
+            print(y.shape)
+            print(x_g_out.shape)
             x_g_out = self.relug2(self.bng2(x_g_out, y))
         else:
             x_l_out = self.relul2(self.bnl2(x_l_out))
@@ -219,8 +221,10 @@ class FGenerator(FFCModel):
 
         self.resblock3 = FFCResBlockGenerator(GEN_SIZE, GEN_SIZE, self.alpha, self.alpha, stride=2)
         
-        self.final_bn_l = nn.BatchNorm2d(int(GEN_SIZE * (1 - self.alpha)))
-        self.final_bn_g = nn.BatchNorm2d(int(GEN_SIZE * self.alpha))
+        bn_l_ch = int(GEN_SIZE * (1 - self.alpha))
+        self.final_bn_l = nn.BatchNorm2d(bn_l_ch) if num_classes == 0 else ConditionalBatchNorm2d(bn_l_ch, num_classes)
+        bn_g_ch = int(GEN_SIZE * self.alpha)
+        self.final_bn_g = nn.BatchNorm2d(bn_g_ch)  if num_classes == 0 else ConditionalBatchNorm2d(bn_g_ch, num_classes)
         self.final_relu_l = nn.GELU()
         self.final_relu_g = nn.GELU()
 
@@ -233,7 +237,7 @@ class FGenerator(FFCModel):
         
         self.label_embed = nn.Embedding(num_classes, num_classes)
 
-    def forward(self, z, y):
+    def forward(self, z, y=None):
 
 
         ## conditional
@@ -254,8 +258,12 @@ class FGenerator(FFCModel):
 
         fake_l, fake_g = self.resblock3(fake, y)
         # last batch norm and relu 
-        fake_l = self.final_relu_l(self.final_bn_l(fake_l))
-        fake_g = self.final_relu_g(self.final_bn_g(fake_g))
+        if y is None:
+            fake_l = self.final_relu_l(self.final_bn_l(fake_l))
+            fake_g = self.final_relu_g(self.final_bn_g(fake_g))
+        else:
+            fake_l = self.final_relu_l(self.final_bn_l(fake_l, y))
+            fake_g = self.final_relu_g(self.final_bn_g(fake_g, y))
 
         if self.training:
             fake_l = self.lcl_noise3(fake_l)
@@ -264,8 +272,6 @@ class FGenerator(FFCModel):
         # -- TODO: transform this last convolution in FFC Conv too
         fake_l, fake_g = self.ffc_final_conv((fake_l, fake_g))
         fake = self.act_l(fake_l)
-
-       # fake = self.resizer((fake_l, fake_g)) # instead of resizing!
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
