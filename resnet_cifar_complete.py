@@ -105,8 +105,6 @@ class FFCResBlockGenerator(FFCModel):
         # local and global BN and ReLU after the first convolution
         if y is not None:
             x_l_out = self.relul2(self.bnl2(x_l_out, y))
-            print(y.shape)
-            print(x_g_out.shape)
             x_g_out = self.relug2(self.bng2(x_g_out, y))
         else:
             x_l_out = self.relul2(self.bnl2(x_l_out))
