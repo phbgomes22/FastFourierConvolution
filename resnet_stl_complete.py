@@ -118,6 +118,7 @@ class FFCResBlockGenerator(FFCModel):
         if self.gin != 0: 
             # only does the residual in global signal if the initial x_g is not 0
             bypass_g = self.bypass(x_g)
+            print("\n - - - - ")
             print(x_g_out.shape)
             print(bypass_g.shape)
             x_g_out = x_g_out + bypass_g
