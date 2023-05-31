@@ -75,7 +75,7 @@ class FFCResBlockGenerator(FFCModel):
         self.upsample_g = nn.Identity() if gin == 0 else nn.Upsample(scale_factor=2)
         
         ## for the first layer that the signal is divided into local and global
-        self.channel_reduction = nn.Conv2d(in_ch, mid_ch_l, kernel_size=1)
+      #  self.channel_reduction = nn.Conv2d(in_ch, mid_ch_l, kernel_size=1)
 
         self.bypass = nn.Sequential()
         if in_ch != out_ch or stride != 1:
@@ -83,7 +83,10 @@ class FFCResBlockGenerator(FFCModel):
                 nn.Upsample(scale_factor=2),
                 nn.Conv2d(in_ch_g, mid_ch_g, kernel_size=1, padding=0)
             )
-            self.bypass_l =  nn.Upsample(scale_factor=2)
+            self.bypass_l =  nn.Sequential(
+                nn.Upsample(scale_factor=2),
+                nn.Conv2d(in_ch_l, mid_ch_l, kernel_size=1)
+            )
 
     def forward(self, x, y=None):
         # breaking x into x_l and x_g
@@ -122,11 +125,12 @@ class FFCResBlockGenerator(FFCModel):
         if self.gin != 0: 
             # only does the residual in global signal if the initial x_g is not 0
             x_g_out = x_g_out + self.bypass_g(x_g)
-        if self.gin == 0 and self.gout != 0: 
-            # check if it is the first time that there is a signal division,
-            # if so, reduces the channel to the new local signal
-            x_l = self.channel_reduction(x_l)
+        # if self.gin == 0 and self.gout != 0: 
+        #     # check if it is the first time that there is a signal division,
+        #     # if so, reduces the channel to the new local signal
+        #     x_l = self.channel_reduction(x_l)
 
+        print("\n - - - ")
         print(x_l_out.shape)
         local_residual = self.bypass_l(x_l)
         print(local_residual.shape)
