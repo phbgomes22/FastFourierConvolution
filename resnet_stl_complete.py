@@ -282,7 +282,8 @@ class Discriminator(nn.Module):
         self.fc = SpectralNorm(self.fc)
 
     def forward(self, x, y):
-        return self.fc(self.model(x).view(-1,DISC_SIZE))
+        output = self.model(x) #.view(-1,DISC_SIZE)
+        return self.fc(output)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=64)
