@@ -169,8 +169,6 @@ class ResBlockDiscriminator(nn.Module):
     def forward(self, x):
         output_model = self.model(x)
         output_residual = self.bypass(x)
-        print(output_model.shape)
-        print(output_residual.shape)
         return output_model + output_residual
 
 # special ResBlock just for the first layer of the discriminator
@@ -237,7 +235,7 @@ class FGenerator(FFCModel):
         self.act_l = nn.Tanh()
         
 
-    def forward(self, z):
+    def forward(self, z, y):
 
         # passes thorugh linear layer
         features = self.dense(z).view(-1, 512, 6, 6)
