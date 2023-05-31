@@ -165,7 +165,11 @@ class ResBlockDiscriminator(nn.Module):
             )
 
     def forward(self, x):
-        return self.model(x) + self.bypass(x)
+        output_model = self.model(x)
+        output_residual = self.bypass(x)
+        print(output_model.shape)
+        print(output_residual.shape)
+        return output_model + output_residual
 
 # special ResBlock just for the first layer of the discriminator
 class FirstResBlockDiscriminator(nn.Module):
