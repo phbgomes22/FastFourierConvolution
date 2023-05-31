@@ -314,6 +314,7 @@ ds_transform = transforms.Compose([
 print("Loading Dataset...")
 loader = load_stl_unlabeled(args.batch_size, ds_transform, args.workers)
 print("Dataset Loaded!")
+register_dataset(image_size=48)
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
