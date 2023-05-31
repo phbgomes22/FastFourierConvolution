@@ -288,6 +288,7 @@ class Discriminator(nn.Module):
         self.fc = SpectralNorm(self.fc)
 
     def forward(self, x, y):
+        print("input: ", x.shape)
         output = self.model(x) #.view(-1,DISC_SIZE)
         return self.fc(output)
 
