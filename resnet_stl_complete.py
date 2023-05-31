@@ -300,6 +300,7 @@ parser.add_argument('--lr', type=float, default=2e-4)
 parser.add_argument('--loss', type=str, default='hinge')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoints')
 parser.add_argument('--num_total_steps', type=int, default=100000)
+parser.add_argument('--metrics_step', type=int, default=5000)
 
 parser.add_argument('--model', type=str, default='resnet')
 
@@ -402,12 +403,12 @@ def train():
 
         next_step = step + 1
 
-        if next_step  % 500 == 0:
+        if next_step  % 250 == 0:
             step_info = {'disc loss': disc_loss.cpu().item(), 'gen loss': gen_loss.cpu().item()}
             pbar.set_postfix(step_info)
         pbar.update(1)
 
-        if next_step % 5000 == 0: 
+        if next_step % args.metrics_step == 0: 
             pbar.close()
             generator.eval()
           #  evaluate(next_step)
