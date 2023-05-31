@@ -280,11 +280,11 @@ class Discriminator(nn.Module):
             ResBlockDiscriminator(64, 128, stride=2),
             ResBlockDiscriminator(128, 256, stride=2),
             ResBlockDiscriminator(256, 512, stride=2),
-            ResBlockDiscriminator(512, 1024),
+            ResBlockDiscriminator(512, 512),
             nn.ReLU(),
         #    nn.AvgPool2d(4),
         )
-        self.fc = nn.Linear(1024, 1)
+        self.fc = nn.Linear(512, 1)
         nn.init.xavier_uniform_(self.fc.weight.data, 1.)
         self.fc = SpectralNorm(self.fc)
 
