@@ -78,8 +78,11 @@ class FFCResBlockGenerator(FFCModel):
         self.channel_reduction = nn.Conv2d(in_ch, mid_ch_l, kernel_size=1)
 
         self.bypass = nn.Sequential()
-        if stride != 1:
-            self.bypass = nn.Upsample(scale_factor=2)
+        if in_ch != out_ch or stride != 1:
+            self.bypass = nn.Sequential([
+                nn.Upsample(scale_factor=2),
+                nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
+            ])
 
     def forward(self, x, y=None):
         # breaking x into x_l and x_g
