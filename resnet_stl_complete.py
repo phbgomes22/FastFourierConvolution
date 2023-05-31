@@ -117,7 +117,10 @@ class FFCResBlockGenerator(FFCModel):
         
         if self.gin != 0: 
             # only does the residual in global signal if the initial x_g is not 0
-            x_g_out = x_g_out + self.bypass(x_g)
+            bypass_g = self.bypass(x_g)
+            print(x_g_out.shape)
+            print(bypass_g.shape)
+            x_g_out = x_g_out + bypass_g
         if self.gin == 0 and self.gout != 0: 
             # check if it is the first time that there is a signal division,
             # if so, reduces the channel to the new local signal
