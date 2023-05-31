@@ -318,7 +318,7 @@ parser.add_argument('--model', type=str, default='resnet')
 args = parser.parse_args()
 
 loader = torch.utils.data.DataLoader(
-    datasets.CIFAR10('../data/', train=True, download=True,
+    datasets.CIFAR10('../data_cifar/', train=True, download=True,
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),

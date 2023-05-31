@@ -82,7 +82,7 @@ def load_stl_labeld(batch_size, transforms, workers):
 def load_stl_unlabeled(batch_size, transforms, workers):
    
     # train + test (# 13000)
-    dataset = dset.STL10(root="./data", split="train+unlabeled", transform=transforms, download=True)
+    dataset = dset.STL10(root="./data_stl", split="train+unlabeled", transform=transforms, download=True)
     # dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
     # imgs, labels = [], []
     # for x, y in dataloader:
