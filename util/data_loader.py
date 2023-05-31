@@ -57,10 +57,32 @@ def register_dataset(image_size):
     torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
     torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
 
-def load_stl(batch_size, trans):
+def load_stl_labeld(batch_size, transforms, workers):
+    # train + test (# 13000)
+    dataset = dset.STL10(root="./data_labeled", split="train", transform=transforms, download=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
+    imgs, labels = [], []
+    for x, y in dataloader:
+        imgs.append(x)
+        labels.append(y)
+    dataset = dset.STL10(root="./data_labeled", split="test", transform=transforms)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
+    for x, y in dataloader:
+        imgs.append(x)
+        labels.append(y)
+    # as tensor
+    all_imgs = torch.cat(imgs, dim=0)
+    all_labels = torch.cat(labels, dim=0)
+    # as dataset
+    dataset = torch.utils.data.TensorDataset(all_imgs, all_labels)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=workers, pin_memory=True, drop_last=True)
+    return dataloader
+
+def load_stl_unlabeled(batch_size, transforms, workers):
    
     # train + test (# 13000)
-    dataset = dset.STL10(root="./data", split="train+unlabeled", transform=trans, download=True)
+    dataset = dset.STL10(root="./data", split="train+unlabeled", transform=transforms, download=True)
     # dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
     # imgs, labels = [], []
     # for x, y in dataloader:
@@ -76,7 +98,7 @@ def load_stl(batch_size, trans):
     # all_labels = torch.cat(labels, dim=0)
     # # as dataset
     # dataset = torch.utils.data.TensorDataset(all_imgs, all_labels)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=workers, pin_memory=True, drop_last=True)
     return dataloader
 
 def load_data(color_channels: int = -1):
