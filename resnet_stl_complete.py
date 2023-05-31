@@ -79,10 +79,11 @@ class FFCResBlockGenerator(FFCModel):
 
         self.bypass = nn.Sequential()
         if in_ch != out_ch or stride != 1:
-            self.bypass = nn.Sequential(
+            self.bypass_g = nn.Sequential(
                 nn.Upsample(scale_factor=2),
                 nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
             )
+            self.bypass_l =  nn.Upsample(scale_factor=2)
 
     def forward(self, x, y=None):
         # breaking x into x_l and x_g
@@ -120,17 +121,13 @@ class FFCResBlockGenerator(FFCModel):
         
         if self.gin != 0: 
             # only does the residual in global signal if the initial x_g is not 0
-            bypass_g = self.bypass(x_g)
-            print("\n - - - - ")
-            print(x_g_out.shape)
-            print(bypass_g.shape)
-            x_g_out = x_g_out + bypass_g
+            x_g_out = x_g_out + self.bypass_g(x_g)
         if self.gin == 0 and self.gout != 0: 
             # check if it is the first time that there is a signal division,
             # if so, reduces the channel to the new local signal
             x_l = self.channel_reduction(x_l)
 
-        x_l_out = x_l_out + self.bypass(x_l)
+        x_l_out = x_l_out + self.bypass_l(x_l)
 
         return x_l_out, x_g_out
 
