@@ -212,30 +212,30 @@ class FGenerator(FFCModel):
 
         self.alpha = 0.25
 
-        self.resblock1 = FFCResBlockGenerator(512, 256, 0, self.alpha, stride=2)
+        self.resblock1 = FFCResBlockGenerator(512, 256, 0, self.alpha, stride=2, num_classes=0)
         self.lcl_noise1 = NoiseInjection(int(256*(1-self.alpha))) # only local receives noise
         self.glb_noise1 = NoiseInjection(int(256*(self.alpha)))
 
-        self.resblock2 = FFCResBlockGenerator(256, 128, self.alpha, self.alpha, stride=2)
+        self.resblock2 = FFCResBlockGenerator(256, 128, self.alpha, self.alpha, stride=2, num_classes=0)
         self.lcl_noise2 = NoiseInjection(int(128*(1-self.alpha))) # only local receives noise
         self.glb_noise2 = NoiseInjection(int(128*(self.alpha)))
 
-        self.resblock3 = FFCResBlockGenerator(128, 64, self.alpha, self.alpha, stride=2)
+        self.resblock3 = FFCResBlockGenerator(128, 64, self.alpha, self.alpha, stride=2, num_classes=0)
         
         self.final_bn_l = nn.BatchNorm2d(int(64 * (1 - self.alpha)))
         self.final_bn_g = nn.BatchNorm2d(int(64 * self.alpha))
         self.final_relu_l = nn.GELU()
         self.final_relu_g = nn.GELU()
 
-        self.lcl_noise3 = NoiseInjection(int(GEN_SIZE*(1-self.alpha))) # only local receives noise
-        self.glb_noise3 = NoiseInjection(int(GEN_SIZE*(self.alpha)))
+        self.lcl_noise3 = NoiseInjection(int(64*(1-self.alpha))) # only local receives noise
+        self.glb_noise3 = NoiseInjection(int(64*(self.alpha)))
         
 
-        self.ffc_final_conv = FFC(GEN_SIZE, channels, 3, self.alpha, 0, stride=1, padding=1)
+        self.ffc_final_conv = FFC(64, channels, 3, self.alpha, 0, stride=1, padding=1)
         self.act_l = nn.Tanh()
         
 
-    def forward(self, z, y):
+    def forward(self, z, y=None):
 
         # passes thorugh linear layer
         features = self.dense(z).view(-1, 512, 6, 6)
