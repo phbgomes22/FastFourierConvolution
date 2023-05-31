@@ -125,16 +125,8 @@ class FFCResBlockGenerator(FFCModel):
         if self.gin != 0: 
             # only does the residual in global signal if the initial x_g is not 0
             x_g_out = x_g_out + self.bypass_g(x_g)
-        # if self.gin == 0 and self.gout != 0: 
-        #     # check if it is the first time that there is a signal division,
-        #     # if so, reduces the channel to the new local signal
-        #     x_l = self.channel_reduction(x_l)
 
-        print("\n - - - ")
-        print(x_l_out.shape)
-        local_residual = self.bypass_l(x_l)
-        print(local_residual.shape)
-        x_l_out = x_l_out + local_residual
+        x_l_out = x_l_out + self.bypass_l(x_l)
 
         return x_l_out, x_g_out
 
@@ -297,7 +289,6 @@ class Discriminator(nn.Module):
         self.fc = SpectralNorm(self.fc)
 
     def forward(self, x, y):
-        print("input: ", x.shape)
         output = self.model(x) #.view(-1,DISC_SIZE)
         features = torch.sum(output, dim=(2,3)) # gloobal sum pooling
         return self.fc(features)
