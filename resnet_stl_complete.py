@@ -281,7 +281,7 @@ class Discriminator(nn.Module):
             ResBlockDiscriminator(256, 512, stride=2),
             ResBlockDiscriminator(512, 1024),
             nn.ReLU(),
-            nn.AvgPool2d(4),
+        #    nn.AvgPool2d(4),
         )
         self.fc = nn.Linear(1024, 1)
         nn.init.xavier_uniform_(self.fc.weight.data, 1.)
@@ -290,7 +290,8 @@ class Discriminator(nn.Module):
     def forward(self, x, y):
         print("input: ", x.shape)
         output = self.model(x) #.view(-1,DISC_SIZE)
-        return self.fc(output)
+        features = torch.sum(output, dim=(2,3)) # gloobal sum pooling
+        return self.fc(features)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=64)
