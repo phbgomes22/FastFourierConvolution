@@ -127,7 +127,10 @@ class FFCResBlockGenerator(FFCModel):
             # if so, reduces the channel to the new local signal
             x_l = self.channel_reduction(x_l)
 
-        x_l_out = x_l_out + self.bypass_l(x_l)
+        print(x_l_out.shape)
+        local_residual = self.bypass_l(x_l)
+        print(local_residual.shape)
+        x_l_out = x_l_out + local_residual
 
         return x_l_out, x_g_out
 
