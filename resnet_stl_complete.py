@@ -81,7 +81,7 @@ class FFCResBlockGenerator(FFCModel):
         if in_ch != out_ch or stride != 1:
             self.bypass_g = nn.Sequential(
                 nn.Upsample(scale_factor=2),
-                nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
+                nn.Conv2d(in_ch_g, mid_ch_g, kernel_size=1, padding=0)
             )
             self.bypass_l =  nn.Upsample(scale_factor=2)
 
