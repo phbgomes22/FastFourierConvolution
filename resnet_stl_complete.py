@@ -79,10 +79,10 @@ class FFCResBlockGenerator(FFCModel):
 
         self.bypass = nn.Sequential()
         if in_ch != out_ch or stride != 1:
-            self.bypass = nn.Sequential([
+            self.bypass = nn.Sequential(
                 nn.Upsample(scale_factor=2),
                 nn.Conv2d(in_ch, out_ch, kernel_size=1, padding=0)
-            ])
+            )
 
     def forward(self, x, y=None):
         # breaking x into x_l and x_g
