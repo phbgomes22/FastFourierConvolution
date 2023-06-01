@@ -188,7 +188,7 @@ class DiscriminatorStrided(nn.Module):
         super().__init__()
         n_classes = 10 if enable_conditional else 0
         self.initial_down = SpectralNorm(nn.Conv2d(3, 32, 4, 2, padding=0)) # padding間違えた
-        self.block1 = ResBlockDiscriminator(32, 64, 2)
+        self.block1 = FirstResBlockDiscriminator(32, 64, 2)
         self.block2 = ResBlockDiscriminator(64, 128, 2)
         self.block3 = ResBlockDiscriminator(128, 256, 2)
         self.block4 = ResBlockDiscriminator(256, 512, 1)
