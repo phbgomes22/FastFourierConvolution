@@ -139,10 +139,10 @@ class Generator(nn.Module):
         nn.init.xavier_uniform(self.dense.weight.data, 1.)
         nn.init.xavier_uniform(self.final.weight.data, 1.)
 
-        self.model = nn.Sequential(
-            ResBlockGenerator(512, 256, stride=2),
-            ResBlockGenerator(256, 128, stride=2),
-            ResBlockGenerator(128, 64, stride=2),
+        self.block1 = ResBlockGenerator(512, 256, stride=2)
+        self.block2 = ResBlockGenerator(256, 128, stride=2)
+        self.block3 = ResBlockGenerator(128, 64, stride=2)
+        self.final = nn.Sequential(
             nn.BatchNorm2d(64),
             nn.ReLU(),
             self.final,
@@ -150,7 +150,10 @@ class Generator(nn.Module):
 
     def forward(self, z):
         features = self.dense(z).view(-1, 512, 6, 6)
-        fake = self.model(features)
+        features = self.block1(features)
+        features = self.block2(features)
+        features = self.block3(features)
+        fake = self.final(features)
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
