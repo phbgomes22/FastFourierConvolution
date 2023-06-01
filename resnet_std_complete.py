@@ -60,15 +60,14 @@ class ResBlockGenerator(nn.Module):
             self.bypass_conv = nn.Identity()
 
     def forward(self, x):
-        print(x.shape)
+        
         m = self.model(x)
-        print(m.shape)
+        
         bp = self.bypass_conv(x)
 
         if self.upsample > 1:
            # m = F.avg_pool2d(m, kernel_size=self.upsample)
             bp = F.interpolate(bp, scale_factor=self.upsample)
-        print(bp.shape)
 
         return m + bp
 
