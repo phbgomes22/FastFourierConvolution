@@ -88,8 +88,10 @@ class ResBlockDiscriminator(nn.Module):
                 nn.ReLU(),
                 SpectralNorm(self.conv2),
                 nn.AvgPool2d(2, stride=stride, padding=0)
-                )
+            )
+            
         self.bypass = nn.Sequential()
+
         if  in_channels != out_channels:
             self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels,out_channels, 1, 1, padding=0))
             nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
@@ -104,7 +106,11 @@ class ResBlockDiscriminator(nn.Module):
 
 
     def forward(self, x):
-        return self.model(x) + self.bypass(x)
+        x = self.model(x)
+        bp = self.bypass(x)
+        print(x.shape)
+        print(bp.shape)
+        return x + bp
 
 # special ResBlock just for the first layer of the discriminator
 class FirstResBlockDiscriminator(nn.Module):
