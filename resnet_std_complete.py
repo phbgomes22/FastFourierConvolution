@@ -183,6 +183,8 @@ class Discriminator(nn.Module):
         self.fc = SpectralNorm(self.fc)
 
     def forward(self, x):
+        print("\n\n- - - ")
+        print(x.shape)
         x = self.model(x)
         features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
 
