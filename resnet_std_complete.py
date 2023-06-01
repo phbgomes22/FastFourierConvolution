@@ -67,7 +67,7 @@ class ResBlockGenerator(nn.Module):
 
         if self.upsample > 1:
            # m = F.avg_pool2d(m, kernel_size=self.upsample)
-            bp = F.interpolate(bp, kernel_size=self.upsample)
+            bp = F.interpolate(bp, scale_factor=self.upsample)
         print(bp.shape)
 
         return m + bp
