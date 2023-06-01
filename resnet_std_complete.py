@@ -74,32 +74,25 @@ class ResBlockDiscriminator(nn.Module):
         nn.init.xavier_uniform(self.conv1.weight.data, 1.)
         nn.init.xavier_uniform(self.conv2.weight.data, 1.)
 
-        if stride == 1:
-            self.model = nn.Sequential(
-                nn.ReLU(),
-                SpectralNorm(self.conv1),
-                nn.ReLU(),
-                SpectralNorm(self.conv2)
-                )
-        else:
-            self.model = nn.Sequential(
-                nn.ReLU(),
-                SpectralNorm(self.conv1),
-                nn.ReLU(),
-                SpectralNorm(self.conv2),
-            )
+ 
+        self.model = nn.Sequential(
+            nn.ReLU(),
+            SpectralNorm(self.conv1),
+            nn.ReLU(),
+            SpectralNorm(self.conv2)
+        )
             
         self.bypass = nn.Sequential()
 
         if  in_channels != out_channels:
-            self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels,out_channels, 1, 1, padding=0))
+            self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels, out_channels, 1, 1, padding=0))
             nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
-        
-        if stride > 1:
+        else:
             self.bypass_conv = nn.Identity()
 
 
     def forward(self, x):
+        print("x: ", x.shape)
         x = self.model(x)
         bp = self.bypass_conv(x)
 
