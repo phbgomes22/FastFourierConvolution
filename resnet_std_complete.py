@@ -36,6 +36,7 @@ class ResBlockGenerator(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1):
         super(ResBlockGenerator, self).__init__()
+        self.upsample = stride
 
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
         self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
@@ -51,17 +52,25 @@ class ResBlockGenerator(nn.Module):
             nn.ReLU(),
             self.conv2
             )
-        self.bypass = nn.Sequential()
-        if stride != 1:
-            self.bypass = nn.Upsample(scale_factor=2)
+
+        if  in_channels != out_channels:
+            self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels, out_channels, 1, 1, padding=0))
+            nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
+        else:
+            self.bypass_conv = nn.Identity()
 
     def forward(self, x):
         print(x.shape)
         m = self.model(x)
         print(m.shape)
-        b = self.bypass(x)
-        print(b.shape)
-        return m + b
+        bp = self.bypass_conv(x)
+        print(bp.shape)
+
+        if self.upsample > 1:
+            input = F.avg_pool2d(input, kernel_size=self.upsample)
+            bp = F.avg_pool2d(bp, kernel_size=self.upsample)
+
+        return m + bp
 
 
 class ResBlockDiscriminator(nn.Module):
