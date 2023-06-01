@@ -166,19 +166,22 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-                FirstResBlockDiscriminator(channels, DISC_SIZE, stride=2),
-                ResBlockDiscriminator(DISC_SIZE, DISC_SIZE, stride=2),
-                ResBlockDiscriminator(DISC_SIZE, DISC_SIZE),
-                ResBlockDiscriminator(DISC_SIZE, DISC_SIZE),
+                FirstResBlockDiscriminator(channels, 64, stride=2),
+                ResBlockDiscriminator(64, 128, stride=2),
+                ResBlockDiscriminator(128, 256, stride=2),
+                ResBlockDiscriminator(256, 512, stride=2),
+                ResBlockDiscriminator(512, 1024, stride=1),
                 nn.ReLU(),
-                nn.AvgPool2d(8),
             )
-        self.fc = nn.Linear(DISC_SIZE, 1)
+        self.fc = nn.Linear(1024, 1)
         nn.init.xavier_uniform(self.fc.weight.data, 1.)
         self.fc = SpectralNorm(self.fc)
 
     def forward(self, x):
-        return self.fc(self.model(x).view(-1,DISC_SIZE))
+        x = self.model(x)
+        features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
+
+        return self.fc(features)
     
 class DiscriminatorStrided(nn.Module):
     def __init__(self, enable_conditional=False):
@@ -197,7 +200,10 @@ class DiscriminatorStrided(nn.Module):
 
     def forward(self, inputs, y=None):
         x = self.initial_down(inputs)
-        x = self.block4(self.block3(self.block2(self.block1(x))))
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+        x = self.block4(x)
         x = F.relu(x)
 
         features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
