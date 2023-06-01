@@ -93,16 +93,16 @@ class ResBlockDiscriminator(nn.Module):
 
     def forward(self, x):
         print("x: ", x.shape)
-        x = self.model(x)
+        input = self.model(x)
         bp = self.bypass_conv(x)
 
         if self.downsample > 1:
-            x = F.avg_pool2d(x, kernel_size=self.downsample)
+            input = F.avg_pool2d(input, kernel_size=self.downsample)
             bp = F.avg_pool2d(bp, kernel_size=self.downsample)
 
-        print(x.shape)
+        print(input.shape)
         print(bp.shape)
-        return x + bp
+        return input + bp
 
 # special ResBlock just for the first layer of the discriminator
 class FirstResBlockDiscriminator(nn.Module):
