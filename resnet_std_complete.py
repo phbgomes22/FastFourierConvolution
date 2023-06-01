@@ -64,11 +64,11 @@ class ResBlockGenerator(nn.Module):
         m = self.model(x)
         print(m.shape)
         bp = self.bypass_conv(x)
-        print(bp.shape)
 
         if self.upsample > 1:
-            m = F.avg_pool2d(m, kernel_size=self.upsample)
-            bp = F.avg_pool2d(bp, kernel_size=self.upsample)
+           # m = F.avg_pool2d(m, kernel_size=self.upsample)
+            bp = F.F.interpolate(bp, kernel_size=self.upsample)
+        print(bp.shape)
 
         return m + bp
 
