@@ -244,7 +244,7 @@ Z_dim = 128
 #number of updates to discriminator for every update to generator 
 disc_iters = 5
 
-discriminator = DiscriminatorStrided().cuda()
+discriminator = Discriminator().cuda()
 generator = Generator(Z_dim).cuda()
 
 d_params = count_parameters(discriminator)
