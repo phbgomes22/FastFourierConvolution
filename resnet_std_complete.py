@@ -68,7 +68,7 @@ class ResBlockDiscriminator(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1):
         super(ResBlockDiscriminator, self).__init__()
-
+        self.downsample = stride
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
         self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
         nn.init.xavier_uniform(self.conv1.weight.data, 1.)
@@ -87,7 +87,6 @@ class ResBlockDiscriminator(nn.Module):
                 SpectralNorm(self.conv1),
                 nn.ReLU(),
                 SpectralNorm(self.conv2),
-                nn.AvgPool2d(2, stride=stride, padding=0)
             )
             
         self.bypass = nn.Sequential()
@@ -99,15 +98,15 @@ class ResBlockDiscriminator(nn.Module):
         if stride > 1:
             self.bypass_conv = nn.Identity()
 
-            self.bypass = nn.Sequential(
-                self.bypass_conv,
-                nn.AvgPool2d(2, stride=stride, padding=0)
-            )
-
 
     def forward(self, x):
         x = self.model(x)
-        bp = self.bypass(x)
+        bp = self.bypass_conv(x)
+
+        if self.downsample > 1:
+            x = F.avg_pool2d(x, kernel_size=self.downsample)
+            bp = F.avg_pool2d(bp, kernel_size=self.downsample)
+
         print(x.shape)
         print(bp.shape)
         return x + bp
