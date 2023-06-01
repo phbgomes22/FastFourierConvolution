@@ -66,9 +66,9 @@ class FFCResBlockGenerator(FFCModel):
 
         self.bng2 = ConditionalBatchNorm2d(mid_ch_g, num_classes) if num_classes !=0 else nn.BatchNorm2d(mid_ch_g)
         
-        self.relul1 = nn.Identity() if gin == 1 else nn.ReLU(inplace=True)
+        self.relul1 = nn.Identity() if gin == 1 else nn.GELU()
         self.relul2 = nn.GELU()
-        self.relug1 = nn.Identity() if gin == 0 else nn.ReLU(inplace=True)
+        self.relug1 = nn.Identity() if gin == 0 else nn.GELU()
         self.relug2 = nn.GELU()
 
         self.upsample_l = nn.Upsample(scale_factor=2)

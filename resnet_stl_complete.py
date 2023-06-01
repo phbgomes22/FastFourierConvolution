@@ -66,9 +66,9 @@ class FFCResBlockGenerator(FFCModel):
 
         self.bng2 = ConditionalBatchNorm2d(mid_ch_g, num_classes) if num_classes !=0 else nn.BatchNorm2d(mid_ch_g)
         
-        self.relul1 = nn.Identity() if gin == 1 else nn.ReLU(inplace=True)
+        self.relul1 = nn.Identity() if gin == 1 else nn.GELU()
         self.relul2 = nn.GELU()
-        self.relug1 = nn.Identity() if gin == 0 else nn.ReLU(inplace=True)
+        self.relug1 = nn.Identity() if gin == 0 else nn.GELU()
         self.relug2 = nn.GELU()
 
         self.upsample_l = nn.Upsample(scale_factor=2)
@@ -279,12 +279,12 @@ class Discriminator(nn.Module):
             FirstResBlockDiscriminator(channels, 64, stride=2),
             ResBlockDiscriminator(64, 128, stride=2),
             ResBlockDiscriminator(128, 256, stride=2),
-            ResBlockDiscriminator(256, 512, stride=2),
-            ResBlockDiscriminator(512, 512),
+            ResBlockDiscriminator(256, 256, stride=2),
+            ResBlockDiscriminator(256, 256),
             nn.ReLU(),
-        #    nn.AvgPool2d(4),
         )
-        self.fc = nn.Linear(512, 1)
+
+        self.fc = nn.Linear(256, 1)
         nn.init.xavier_uniform_(self.fc.weight.data, 1.)
         self.fc = SpectralNorm(self.fc)
 
@@ -353,8 +353,8 @@ leading_metric, last_best_metric, metric_greater_cmp = {
 fixed_z = Variable(torch.randn(args.batch_size, Z_dim).cuda())
 fixed_label = torch.nn.functional.one_hot( torch.as_tensor( np.repeat(range(10), 8)[:64] ) ).float().to('cuda')
 
-isc_z = Variable(torch.randn(5000, Z_dim).cuda())
-isc_label = torch.as_tensor( torch.randint(low=0, high=10, size=(5000,)) ).to(torch.float32).to('cuda').long()
+# isc_z = Variable(torch.randn(5000, Z_dim).cuda())
+# isc_label = torch.as_tensor( torch.randint(low=0, high=10, size=(5000,)) ).to(torch.float32).to('cuda').long()
 
 
 def train():

@@ -15,7 +15,7 @@ import matplotlib.gridspec as gridspec
 import os
 import tqdm
 
-
+from util import *
 
 import torch_fidelity
 
@@ -131,31 +131,28 @@ class FirstResBlockDiscriminator(nn.Module):
 
     def forward(self, x):
         return self.model(x) + self.bypass(x)
-
-GEN_SIZE=128
-DISC_SIZE=128
-
+    
 class Generator(nn.Module):
     def __init__(self, z_dim):
         super(Generator, self).__init__()
         self.z_dim = z_dim
 
-        self.dense = nn.Linear(self.z_dim, 4 * 4 * GEN_SIZE)
-        self.final = nn.Conv2d(GEN_SIZE, channels, 3, stride=1, padding=1)
+        self.dense = nn.Linear(self.z_dim, 6 * 6 * 512)
+        self.final = nn.Conv2d(64, channels, 3, stride=1, padding=1)
         nn.init.xavier_uniform(self.dense.weight.data, 1.)
         nn.init.xavier_uniform(self.final.weight.data, 1.)
 
         self.model = nn.Sequential(
-            ResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
-            ResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
-            ResBlockGenerator(GEN_SIZE, GEN_SIZE, stride=2),
-            nn.BatchNorm2d(GEN_SIZE),
+            ResBlockGenerator(512, 256, stride=2),
+            ResBlockGenerator(256, 128, stride=2),
+            ResBlockGenerator(128, 64, stride=2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             self.final,
             nn.Tanh())
 
     def forward(self, z):
-        fake = self.model(self.dense(z).view(-1, GEN_SIZE, 4, 4))
+        fake = self.model(self.dense(z).view(-1, 512, 6, 6))
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
@@ -180,30 +177,60 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         return self.fc(self.model(x).view(-1,DISC_SIZE))
+    
+class DiscriminatorStrided(nn.Module):
+    def __init__(self, enable_conditional=False):
+        super().__init__()
+        n_classes = 10 if enable_conditional else 0
+        self.initial_down = SpectralNorm(nn.Conv2d(3, 32, 4, 2, padding=0)) # padding間違えた
+        self.block1 = ResBlockDiscriminator(32, 64, 2)
+        self.block2 = ResBlockDiscriminator(64, 128, 2)
+        self.block3 = ResBlockDiscriminator(128, 256, 2)
+        self.block4 = ResBlockDiscriminator(256, 512, 1)
+        self.dense = nn.Linear(512, 1)
+        if n_classes > 0:
+            self.sn_embedding = nn.Embedding(n_classes, 512)
+        else:
+            self.sn_embedding = None
+
+    def forward(self, inputs, y=None):
+        x = self.initial_down(inputs)
+        x = self.block4(self.block3(self.block2(self.block1(x))))
+        x = F.relu(x)
+
+        features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
+        x = self.dense(features)
+        if self.sn_embedding is not None:
+            x = self.sn_embedding(features, x, y)
+        return x
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=64)
+parser.add_argument('--workers', type=int, default=8)
 parser.add_argument('--lr', type=float, default=2e-4)
 parser.add_argument('--loss', type=str, default='hinge')
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoints')
 parser.add_argument('--num_total_steps', type=int, default=100000)
-
-parser.add_argument('--model', type=str, default='resnet')
+parser.add_argument('--metrics_step', type=int, default=5000)
 
 args = parser.parse_args()
 
-loader = torch.utils.data.DataLoader(
-    datasets.CIFAR10('../data/', train=True, download=True,
-        transform=transforms.Compose([
+ds_transform = transforms.Compose([
+            transforms.Resize(size=(48, 48)),
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
-        batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+
+print("Loading Dataset...")
+loader = load_stl_unlabeled(args.batch_size, ds_transform, args.workers)
+print("Dataset Loaded!")
+register_dataset(image_size=48)
 
 Z_dim = 128
 #number of updates to discriminator for every update to generator 
-disc_iters = 1#5
+disc_iters = 5
 
-discriminator = Discriminator().cuda()
+discriminator = DiscriminatorStrided().cuda()
 generator = Generator(Z_dim).cuda()
 
 d_params = count_parameters(discriminator)
@@ -213,12 +240,12 @@ print("Parameters on Discriminator: ", d_params, " \nParameters on Generator: ",
 # because the spectral normalization module creates parameters that don't require gradients (u and v), we don't want to 
 # optimize these using sgd. We only let the optimizer operate on parameters that _do_ require gradients
 # TODO: replace Parameters with buffers, which aren't returned from .parameters() method.
-optim_disc = optim.Adam(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=4e-4, betas=(0.0,0.9)) #(0.5,0.999)
-optim_gen  = optim.Adam(generator.parameters(), lr=1e-4, betas=(0.0,0.9)) #(0.5,0.999)
+optim_disc = optim.Adam(filter(lambda p: p.requires_grad, discriminator.parameters()), lr=4e-4, betas=(0.5,0.999)) #(0.5,0.999)
+optim_gen  = optim.Adam(generator.parameters(), lr=1e-4, betas=(0.5,0.999)) #(0.5,0.999)
 
 # use an exponentially decaying learning rate
-scheduler_d = optim.lr_scheduler.ExponentialLR(optim_disc, gamma=0.99)
-scheduler_g = optim.lr_scheduler.ExponentialLR(optim_gen, gamma=0.99)
+scheduler_d = optim.lr_scheduler.ExponentialLR(optim_disc, gamma=0.999)
+scheduler_g = optim.lr_scheduler.ExponentialLR(optim_gen, gamma=0.999)
 
 # scheduler_g = torch.optim.lr_scheduler.LambdaLR(optim_gen, lambda step: 1. - step / args.num_total_steps)
 # scheduler_d = torch.optim.lr_scheduler.LambdaLR(optim_disc, lambda step: 1. - step / args.num_total_steps)
@@ -231,8 +258,7 @@ leading_metric, last_best_metric, metric_greater_cmp = {
     }['ISC']
 
 
-
-def train(epoch):
+def train():
 
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
 
@@ -283,26 +309,25 @@ def train(epoch):
             pbar.set_postfix(step_info)
         pbar.update(1)
 
-        if next_step % 1000 == 0: 
+        if next_step % args.metrics_step == 0: 
             pbar.close()
             generator.eval()
-            evaluate(next_step)
 
-            if next_step % 5000 == 0:
-                print('Evaluating the generator...')
+            print('Evaluating the generator...')
 
-                # compute and log generative metrics
-                metrics = torch_fidelity.calculate_metrics(
-                    input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
-                    input1_model_num_samples=5000,
-                    input2= 'cifar10-train',
-                    isc=True,
-                    fid=True,
-                    kid=True,
-                    ppl=False,
-                    ppl_epsilon=1e-2,
-                    ppl_sample_similarity_resize=64,
-                )
+            # compute and log generative metrics
+            metrics = torch_fidelity.calculate_metrics(
+                input1=torch_fidelity.GenerativeModelModuleWrapper(generator, Z_dim, 'normal', 0),
+                input1_model_num_samples=5000,
+                input2= 'stl-10-48',
+                isc=True,
+                fid=True,
+                kid=True,
+                ppl=False,
+                ppl_epsilon=1e-2,
+                ppl_sample_similarity_resize=64,
+            )
+
 
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             generator.train()
@@ -335,8 +360,5 @@ def evaluate(epoch):
 
 os.makedirs(args.checkpoint_dir, exist_ok=True)
 
-for epoch in range(2000):
-    train(epoch)
-    evaluate(epoch)
-    torch.save(discriminator.state_dict(), os.path.join(args.checkpoint_dir, 'disc_{}'.format(epoch)))
-    torch.save(generator.state_dict(), os.path.join(args.checkpoint_dir, 'gen_{}'.format(epoch)))
+
+train()
