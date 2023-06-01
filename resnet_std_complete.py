@@ -92,7 +92,6 @@ class ResBlockDiscriminator(nn.Module):
 
 
     def forward(self, x):
-        print("x: ", x.shape)
         input = self.model(x)
         bp = self.bypass_conv(x)
 
@@ -100,8 +99,6 @@ class ResBlockDiscriminator(nn.Module):
             input = F.avg_pool2d(input, kernel_size=self.downsample)
             bp = F.avg_pool2d(bp, kernel_size=self.downsample)
 
-        print(input.shape)
-        print(bp.shape)
         return input + bp
 
 # special ResBlock just for the first layer of the discriminator
@@ -152,7 +149,8 @@ class Generator(nn.Module):
             nn.Tanh())
 
     def forward(self, z):
-        fake = self.model(self.dense(z).view(-1, 512, 6, 6))
+        features = self.dense(z).view(-1, 512, 6, 6)
+        fake = self.model(features)
 
         if not self.training:
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
@@ -176,8 +174,6 @@ class Discriminator(nn.Module):
         self.fc = SpectralNorm(self.fc)
 
     def forward(self, x):
-        print("\n\n- - - ")
-        print(x.shape)
         x = self.model(x)
         features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
 
