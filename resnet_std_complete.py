@@ -90,13 +90,15 @@ class ResBlockDiscriminator(nn.Module):
                 nn.AvgPool2d(2, stride=stride, padding=0)
                 )
         self.bypass = nn.Sequential()
-        if stride != 1:
-
-            self.bypass_conv = nn.Conv2d(in_channels,out_channels, 1, 1, padding=0)
+        if  in_channels != out_channels:
+            self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels,out_channels, 1, 1, padding=0))
+        
+        if stride > 1:
+            self.bypass_conv = nn.Identity()
             nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
 
             self.bypass = nn.Sequential(
-                SpectralNorm(self.bypass_conv),
+                self.bypass_conv,
                 nn.AvgPool2d(2, stride=stride, padding=0)
             )
 
