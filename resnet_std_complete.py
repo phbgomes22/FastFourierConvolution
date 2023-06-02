@@ -51,7 +51,7 @@ class ResBlockGenerator(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.ReLU(),
             self.conv2
-            )
+        )
 
         if  in_channels != out_channels:
             self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels, out_channels, 1, 1, padding=0))
@@ -245,7 +245,7 @@ Z_dim = 128
 #number of updates to discriminator for every update to generator 
 disc_iters = 5
 
-discriminator = Discriminator().cuda()
+discriminator = DiscriminatorStrided().cuda()
 generator = Generator(Z_dim).cuda()
 
 d_params = count_parameters(discriminator)
