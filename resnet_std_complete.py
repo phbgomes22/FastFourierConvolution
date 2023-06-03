@@ -177,10 +177,10 @@ class Discriminator(nn.Module):
                 ResBlockDiscriminator(64, 128, stride=2),
                 ResBlockDiscriminator(128, 256, stride=2),
                 ResBlockDiscriminator(256, 512, stride=2),
-                ResBlockDiscriminator(512, 1024, stride=1),
+                ResBlockDiscriminator(512, 512, stride=1),
                 nn.ReLU(),
             )
-        self.fc = nn.Linear(1024, 1)
+        self.fc = nn.Linear(512, 1)
         nn.init.xavier_uniform(self.fc.weight.data, 1.)
         self.fc = SpectralNorm(self.fc)
 
@@ -245,7 +245,7 @@ Z_dim = 128
 #number of updates to discriminator for every update to generator 
 disc_iters = 5
 
-discriminator = DiscriminatorStrided().cuda()
+discriminator = Discriminator().cuda()
 generator = Generator(Z_dim).cuda()
 
 d_params = count_parameters(discriminator)
