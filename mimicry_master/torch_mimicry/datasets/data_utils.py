@@ -6,7 +6,7 @@ import os
 import torchvision
 from torchvision import transforms
 
-from torch_mimicry.datasets.imagenet import imagenet
+#from torch_mimicry.datasets.imagenet import imagenet
 
 
 def load_dataset(root, name, **kwargs):
@@ -27,11 +27,11 @@ def load_dataset(root, name, **kwargs):
     elif name == "cifar100":
         return load_cifar100_dataset(root, **kwargs)
 
-    elif name == "imagenet_32":
-        return load_imagenet_dataset(root, size=32, **kwargs)
+    # elif name == "imagenet_32":
+    #     return load_imagenet_dataset(root, size=32, **kwargs)
 
-    elif name == "imagenet_128":
-        return load_imagenet_dataset(root, size=128, **kwargs)
+    # elif name == "imagenet_128":
+    #     return load_imagenet_dataset(root, size=128, **kwargs)
 
     elif name == "stl10_48":
         return load_stl10_dataset(root, size=48, **kwargs)
@@ -242,52 +242,52 @@ def load_stl10_dataset(root,
     return dataset
 
 
-def load_imagenet_dataset(root,
-                          size=32,
-                          split='train',
-                          download=True,
-                          transform_data=True,
-                          convert_tensor=True,
-                          **kwargs):
-    """
-    Loads the ImageNet dataset.
+# def load_imagenet_dataset(root,
+#                           size=32,
+#                           split='train',
+#                           download=True,
+#                           transform_data=True,
+#                           convert_tensor=True,
+#                           **kwargs):
+#     """
+#     Loads the ImageNet dataset.
 
-    Args:
-        root (str): Path to where datasets are stored.
-        size (int): Size to resize images to.
-        transform_data (bool): If True, preprocesses data.
-        split (str): The split of data to use.
-        download (bool): If True, downloads the dataset.
-        convert_tensor (bool): If True, converts image to tensor and preprocess 
-            to range [-1, 1].
+#     Args:
+#         root (str): Path to where datasets are stored.
+#         size (int): Size to resize images to.
+#         transform_data (bool): If True, preprocesses data.
+#         split (str): The split of data to use.
+#         download (bool): If True, downloads the dataset.
+#         convert_tensor (bool): If True, converts image to tensor and preprocess 
+#             to range [-1, 1].
 
-    Returns:
-        Dataset: Torch Dataset object.   
-    """
-    dataset_dir = os.path.join(root, 'imagenet')
-    if not os.path.exists(dataset_dir):
-        os.makedirs(dataset_dir)
+#     Returns:
+#         Dataset: Torch Dataset object.   
+#     """
+#     dataset_dir = os.path.join(root, 'imagenet')
+#     if not os.path.exists(dataset_dir):
+#         os.makedirs(dataset_dir)
 
-    if transform_data:
-        transforms_list = [transforms.CenterCrop(224), transforms.Resize(size)]
-        if convert_tensor:
-            transforms_list += [
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, ), (0.5, ))
-            ]
+#     if transform_data:
+#         transforms_list = [transforms.CenterCrop(224), transforms.Resize(size)]
+#         if convert_tensor:
+#             transforms_list += [
+#                 transforms.ToTensor(),
+#                 transforms.Normalize((0.5, ), (0.5, ))
+#             ]
 
-        transform = transforms.Compose(transforms_list)
+#         transform = transforms.Compose(transforms_list)
 
-    else:
-        transform = None
+#     else:
+#         transform = None
 
-    dataset = imagenet.ImageNet(root=dataset_dir,
-                                split=split,
-                                transform=transform,
-                                download=download,
-                                **kwargs)
+#     dataset = imagenet.ImageNet(root=dataset_dir,
+#                                 split=split,
+#                                 transform=transform,
+#                                 download=download,
+#                                 **kwargs)
 
-    return dataset
+#     return dataset
 
 
 def load_cifar100_dataset(root,
