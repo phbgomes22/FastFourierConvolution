@@ -32,6 +32,8 @@ if __name__ == "__main__":
                         n_dis=5,
                         num_steps=100000,
                         lr_decay='linear',
+                        print_steps=100,
+                        vis_steps=5000,
                         dataloader=dataloader,
                         log_dir='./log/example',
                         device=device)
@@ -44,7 +46,7 @@ if __name__ == "__main__":
                          dataset='cifar10',
                          num_real_samples=10000,
                          num_fake_samples=10000,
-                         evaluate_step=300,
+                         evaluate_step=30,
                          device=device)
 
     # Evaluate kid
@@ -53,7 +55,7 @@ if __name__ == "__main__":
                          netG=netG,
                          dataset='cifar10',
                          num_samples=10000,
-                         evaluate_step=300,
+                         evaluate_step=30,
                          device=device)
 
     # Evaluate inception score
@@ -61,5 +63,5 @@ if __name__ == "__main__":
                          log_dir='./log/example',
                          netG=netG,
                          num_samples=10000,
-                         evaluate_step=300,
+                         evaluate_step=30,
                          device=device)

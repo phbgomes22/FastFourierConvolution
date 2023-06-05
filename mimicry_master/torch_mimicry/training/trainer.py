@@ -11,6 +11,8 @@ from torch_mimicry.training import scheduler, logger, metric_log
 from torch_mimicry.utils import common
 
 
+import torch_fidelity
+
 class Trainer:
     """
     Trainer object for constructing the GAN training pipeline.
@@ -323,6 +325,25 @@ class Trainer:
                 if global_step % self.save_steps == 0:
                     print("INFO: Saving checkpoints...")
                     self._save_model_checkpoints(global_step)
+
+                if (global_step + 1) % 200 == 0: 
+                    self.netG.eval()
+
+                    ### HERE IS WHERE WE ADD THE CODE FOR METRICS
+                    metrics = torch_fidelity.calculate_metrics(
+                        input1=torch_fidelity.GenerativeModelModuleWrapper(self.netG, self.netG.nz, 'normal', 0),
+                        input1_model_num_samples=5000,
+                        input2= 'stl-10-48',
+                        isc=True,
+                        fid=True,
+                        kid=True,
+                        ppl=False,
+                        ppl_epsilon=1e-2,
+                        ppl_sample_similarity_resize=64,
+                    )
+                    
+                    self.netG.train()
+
 
             print("INFO: Saving final checkpoints...")
             self._save_model_checkpoints(global_step)

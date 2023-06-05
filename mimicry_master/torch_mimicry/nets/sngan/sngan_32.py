@@ -53,6 +53,9 @@ class SNGANGenerator32(sngan_base.SNGANBaseGenerator):
         h = self.b5(h)
         h = self.activation(h)
         h = torch.tanh(self.c5(h))
+        if not self.training:
+            h = (255 * (h.clamp(-1, 1) * 0.5 + 0.5))
+            h = h.to(torch.uint8)
 
         return h
 
