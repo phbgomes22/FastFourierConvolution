@@ -333,7 +333,7 @@ class Trainer:
                     metrics = torch_fidelity.calculate_metrics(
                         input1=torch_fidelity.GenerativeModelModuleWrapper(self.netG, self.netG.nz, 'normal', 0),
                         input1_model_num_samples=5000,
-                        input2= 'stl-10-48',
+                        input2= 'cifar10-train',
                         isc=True,
                         fid=True,
                         kid=True,
