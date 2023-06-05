@@ -32,193 +32,363 @@ channels = 3
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-class ResBlockGenerator(nn.Module):
+def hinge_loss_gen(output_fake):
+    r"""
+    Hinge loss for generator.
 
-    def __init__(self, in_channels, out_channels, stride=1):
-        super(ResBlockGenerator, self).__init__()
-        self.upsample = stride
+    Args:
+        output_fake (Tensor): Discriminator output logits for fake images.
 
-        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
+    Returns:
+        Tensor: A scalar tensor loss output.      
+    """
+    loss = -output_fake.mean()
 
-        self.model = nn.Sequential(
-            nn.BatchNorm2d(in_channels),
-            nn.ReLU(),
-            nn.Upsample(scale_factor=2),
-            self.conv1,
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
-            self.conv2
-        )
+    return loss
 
-        if  in_channels != out_channels:
-            self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels, out_channels, 1, 1, padding=0))
-            nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
-        else:
-            self.bypass_conv = nn.Identity()
+class BaseGenerator(basemodel.BaseModel):
+    r"""
+    Base class for a generic unconditional generator model.
+
+    Attributes:
+        nz (int): Noise dimension for upsampling.
+        ngf (int): Variable controlling generator feature map sizes.
+        bottom_width (int): Starting width for upsampling generator output to an image.
+        loss_type (str): Name of loss to use for GAN loss.
+    """
+    def __init__(self, nz, ngf, bottom_width, loss_type, **kwargs):
+        super().__init__(**kwargs)
+        self.nz = nz
+        self.ngf = ngf
+        self.bottom_width = bottom_width
+        self.loss_type = loss_type
+
+    def generate_images(self, num_images, device=None):
+        r"""
+        Generates num_images randomly.
+
+        Args:
+            num_images (int): Number of images to generate
+            device (torch.device): Device to send images to.
+
+        Returns:
+            Tensor: A batch of generated images.
+        """
+        if device is None:
+            device = self.device
+
+        noise = torch.randn((num_images, self.nz), device=device)
+        fake_images = self.forward(noise)
+
+        return fake_images
+
+    def compute_gan_loss(self, output):
+        r"""
+        Computes GAN loss for generator.
+
+        Args:
+            output (Tensor): A batch of output logits from the discriminator of shape (N, 1).
+
+        Returns:
+            Tensor: A batch of GAN losses for the generator.
+        """
+        # Compute loss and backprop
+        errG = hinge_loss_gen(output)
+
+
+        return errG
+
+    def train_step(self,
+                   real_batch,
+                   netD,
+                   optG,
+                   log_data,
+                   device=None,
+                   global_step=None,
+                   **kwargs):
+        r"""
+        Takes one training step for G.
+
+        Args:
+            real_batch (Tensor): A batch of real images of shape (N, C, H, W).
+                Used for obtaining current batch size.
+            netD (nn.Module): Discriminator model for obtaining losses.
+            optG (Optimizer): Optimizer for updating generator's parameters.
+            log_data (dict): A dict mapping name to values for logging uses.
+            device (torch.device): Device to use for running the model.
+            global_step (int): Variable to sync training, logging and checkpointing.
+                Useful for dynamic changes to model amidst training.
+
+        Returns:
+            Returns MetricLog object containing updated logging variables after 1 training step.
+
+        """
+        self.zero_grad()
+
+        # Get only batch size from real batch
+        batch_size = real_batch[0].shape[0]
+
+        # Produce fake images
+        fake_images = self.generate_images(num_images=batch_size,
+                                           device=device)
+
+        # Compute output logit of D thinking image real
+        output = netD(fake_images)
+
+        # Compute loss
+        errG = self.compute_gan_loss(output=output)
+
+        # Backprop and update gradients
+        errG.backward()
+        optG.step()
+
+        # Log statistics
+        log_data.add_metric('errG', errG, group='loss')
+
+        return log_data
+
+def hinge_loss_dis(output_fake, output_real):
+    r"""
+    Hinge loss for discriminator.
+
+    Args:
+        output_fake (Tensor): Discriminator output logits for fake images.
+        output_real (Tensor): Discriminator output logits for real images.
+
+    Returns:
+        Tensor: A scalar tensor loss output.        
+    """
+    loss = F.relu(1.0 - output_real).mean() + \
+           F.relu(1.0 + output_fake).mean()
+
+    return loss
+
+class BaseDiscriminator(basemodel.BaseModel):
+    r"""
+    Base class for a generic unconditional discriminator model.
+
+    Attributes:
+        ndf (int): Variable controlling discriminator feature map sizes.
+        loss_type (str): Name of loss to use for GAN loss.
+    """
+    def __init__(self, ndf, loss_type, **kwargs):
+        super().__init__(**kwargs)
+        self.ndf = ndf
+        self.loss_type = loss_type
+
+    def compute_gan_loss(self, output_real, output_fake):
+        r"""
+        Computes GAN loss for discriminator.
+
+        Args:
+            output_real (Tensor): A batch of output logits of shape (N, 1) from real images.
+            output_fake (Tensor): A batch of output logits of shape (N, 1) from fake images.
+
+        Returns:
+            errD (Tensor): A batch of GAN losses for the discriminator.
+        """
+        # Compute loss for D
+        errD = hinge_loss_dis(output_fake=output_fake,
+                                         output_real=output_real)
+
+        return errD
+
+    def compute_probs(self, output_real, output_fake):
+        r"""
+        Computes probabilities from real/fake images logits.
+
+        Args:
+            output_real (Tensor): A batch of output logits of shape (N, 1) from real images.
+            output_fake (Tensor): A batch of output logits of shape (N, 1) from fake images.
+
+        Returns:
+            tuple: Average probabilities of real/fake image considered as real for the batch.
+        """
+        D_x = torch.sigmoid(output_real).mean().item()
+        D_Gz = torch.sigmoid(output_fake).mean().item()
+
+        return D_x, D_Gz
+
+    def train_step(self,
+                   real_batch,
+                   netG,
+                   optD,
+                   log_data,
+                   device=None,
+                   global_step=None,
+                   **kwargs):
+        r"""
+        Takes one training step for D.
+
+        Args:
+            real_batch (Tensor): A batch of real images of shape (N, C, H, W).
+            loss_type (str): Name of loss to use for GAN loss.
+            netG (nn.Module): Generator model for obtaining fake images.
+            optD (Optimizer): Optimizer for updating discriminator's parameters.
+            device (torch.device): Device to use for running the model.
+            log_data (dict): A dict mapping name to values for logging uses.
+            global_step (int): Variable to sync training, logging and checkpointing.
+                Useful for dynamic changes to model amidst training.
+
+        Returns:
+            MetricLog: Returns MetricLog object containing updated logging variables after 1 training step.
+        """
+        self.zero_grad()
+        real_images, real_labels = real_batch
+        batch_size = real_images.shape[0]  # Match batch sizes for last iter
+
+        # Produce logits for real images
+        output_real = self.forward(real_images)
+
+        # Produce fake images
+        fake_images = netG.generate_images(num_images=batch_size,
+                                           device=device).detach()
+
+        # Produce logits for fake images
+        output_fake = self.forward(fake_images)
+
+        # Compute loss for D
+        errD = self.compute_gan_loss(output_real=output_real,
+                                     output_fake=output_fake)
+
+        # Backprop and update gradients
+        errD.backward()
+        optD.step()
+
+        # Compute probabilities
+        D_x, D_Gz = self.compute_probs(output_real=output_real,
+                                       output_fake=output_fake)
+
+        # Log statistics for D once out of loop
+        log_data.add_metric('errD', errD.item(), group='loss')
+        log_data.add_metric('D(x)', D_x, group='prob')
+        log_data.add_metric('D(G(z))', D_Gz, group='prob')
+
+        return log_data
+
+class SNGANBaseGenerator(BaseGenerator):
+    r"""
+    ResNet backbone generator for SNGAN.
+
+    Attributes:
+        nz (int): Noise dimension for upsampling.
+        ngf (int): Variable controlling generator feature map sizes.
+        bottom_width (int): Starting width for upsampling generator output to an image.
+        loss_type (str): Name of loss to use for GAN loss.
+    """
+    def __init__(self, nz, ngf, bottom_width, loss_type='hinge', **kwargs):
+        super().__init__(nz=nz,
+                         ngf=ngf,
+                         bottom_width=bottom_width,
+                         loss_type=loss_type,
+                         **kwargs)
+
+
+class SNGANBaseDiscriminator(BaseDiscriminator):
+    r"""
+    ResNet backbone discriminator for SNGAN.
+
+    Attributes:
+        ndf (int): Variable controlling discriminator feature map sizes.
+    """
+    def __init__(self, ndf, loss_type='hinge', **kwargs):
+        super().__init__(ndf=ndf, loss_type=loss_type, **kwargs)
+
+class SNGANGenerator48(SNGANBaseGenerator):
+    r"""
+    ResNet backbone generator for SNGAN.
+
+    Attributes:
+        nz (int): Noise dimension for upsampling.
+        ngf (int): Variable controlling generator feature map sizes.
+        bottom_width (int): Starting width for upsampling generator output to an image.
+        loss_type (str): Name of loss to use for GAN loss.        
+    """
+    def __init__(self, nz=128, ngf=512, bottom_width=6, **kwargs):
+        super().__init__(nz=nz, ngf=ngf, bottom_width=bottom_width, **kwargs)
+
+        # Build the layers
+        self.l1 = nn.Linear(self.nz, (self.bottom_width**2) * self.ngf)
+        self.block2 = GBlock(self.ngf, self.ngf >> 1, upsample=True)
+        self.block3 = GBlock(self.ngf >> 1, self.ngf >> 2, upsample=True)
+        self.block4 = GBlock(self.ngf >> 2, self.ngf >> 3, upsample=True)
+        self.b5 = nn.BatchNorm2d(self.ngf >> 3)
+        self.c5 = nn.Conv2d(self.ngf >> 3, 3, 3, 1, padding=1)
+        self.activation = nn.ReLU(True)
+
+        # Initialise the weights
+        nn.init.xavier_uniform_(self.l1.weight.data, 1.0)
+        nn.init.xavier_uniform_(self.c5.weight.data, 1.0)
 
     def forward(self, x):
-        
-        m = self.model(x)
-        
-        bp = self.bypass_conv(x)
+        r"""
+        Feedforwards a batch of noise vectors into a batch of fake images.
 
-        if self.upsample > 1:
-           # m = F.avg_pool2d(m, kernel_size=self.upsample)
-            bp = F.interpolate(bp, scale_factor=self.upsample)
+        Args:
+            x (Tensor): A batch of noise vectors of shape (N, nz).
 
-        return m + bp
+        Returns:
+            Tensor: A batch of fake images of shape (N, C, H, W).
+        """
+        h = self.l1(x)
+        h = h.view(x.shape[0], -1, self.bottom_width, self.bottom_width)
+        h = self.block2(h)
+        h = self.block3(h)
+        h = self.block4(h)
+        h = self.b5(h)
+        h = self.activation(h)
+        h = torch.tanh(self.c5(h))
 
-
-class ResBlockDiscriminator(nn.Module):
-
-    def __init__(self, in_channels, out_channels, stride=1):
-        super(ResBlockDiscriminator, self).__init__()
-        self.downsample = stride
-        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
-
- 
-        self.model = nn.Sequential(
-            nn.ReLU(),
-            SpectralNorm(self.conv1),
-            nn.ReLU(),
-            SpectralNorm(self.conv2)
-        )
-            
-        self.bypass = nn.Sequential()
-
-        if  in_channels != out_channels:
-            self.bypass_conv = SpectralNorm(nn.Conv2d(in_channels, out_channels, 1, 1, padding=0))
-            nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
-        else:
-            self.bypass_conv = nn.Identity()
+        return h
 
 
-    def forward(self, x):
-        input = self.model(x)
-        bp = self.bypass_conv(x)
+class SNGANDiscriminator48(SNGANBaseDiscriminator):
+    r"""
+    ResNet backbone discriminator for SNGAN.
 
-        if self.downsample > 1:
-            input = F.avg_pool2d(input, kernel_size=self.downsample)
-            bp = F.avg_pool2d(bp, kernel_size=self.downsample)
+    Attribates:
+        ndf (int): Variable controlling discriminator feature map sizes.
+        loss_type (str): Name of loss to use for GAN loss.        
+    """
+    def __init__(self, ndf=1024, **kwargs):
+        super().__init__(ndf=ndf, **kwargs)
 
-        return input + bp
+        # Build layers
+        self.block1 = DBlockOptimized(3, self.ndf >> 4)
+        self.block2 = DBlock(self.ndf >> 4, self.ndf >> 3, downsample=True)
+        self.block3 = DBlock(self.ndf >> 3, self.ndf >> 2, downsample=True)
+        self.block4 = DBlock(self.ndf >> 2, self.ndf >> 1, downsample=True)
+        self.block5 = DBlock(self.ndf >> 1, self.ndf, downsample=False)
+        self.l5 = SNLinear(self.ndf, 1)
 
-# special ResBlock just for the first layer of the discriminator
-class FirstResBlockDiscriminator(nn.Module):
+        self.activation = nn.ReLU(True)
 
-    def __init__(self, in_channels, out_channels, stride=1):
-        super(FirstResBlockDiscriminator, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, 1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, 1, padding=1)
-        self.bypass_conv = nn.Conv2d(in_channels, out_channels, 1, 1, padding=0)
-        nn.init.xavier_uniform(self.conv1.weight.data, 1.)
-        nn.init.xavier_uniform(self.conv2.weight.data, 1.)
-        nn.init.xavier_uniform(self.bypass_conv.weight.data, np.sqrt(2))
-
-        # we don't want to apply ReLU activation to raw image before convolution transformation.
-        self.model = nn.Sequential(
-            SpectralNorm(self.conv1),
-            nn.ReLU(),
-            SpectralNorm(self.conv2),
-            nn.AvgPool2d(2)
-            )
-        self.bypass = nn.Sequential(
-            nn.AvgPool2d(2),
-            SpectralNorm(self.bypass_conv),
-        )
+        # Initialise the weights
+        nn.init.xavier_uniform_(self.l5.weight.data, 1.0)
 
     def forward(self, x):
-        return self.model(x) + self.bypass(x)
-    
-class Generator(nn.Module):
-    def __init__(self, z_dim):
-        super(Generator, self).__init__()
-        self.z_dim = z_dim
+        r"""
+        Feedforwards a batch of real/fake images and produces a batch of GAN logits.
 
-        self.dense = nn.Linear(self.z_dim, 6 * 6 * 512)
-        self.final = nn.Conv2d(64, channels, 3, stride=1, padding=1)
-        nn.init.xavier_uniform(self.dense.weight.data, 1.)
-        nn.init.xavier_uniform(self.final.weight.data, 1.)
+        Args:
+            x (Tensor): A batch of images of shape (N, C, H, W).
 
-        self.block1 = ResBlockGenerator(512, 256, stride=2)
-        self.block2 = ResBlockGenerator(256, 128, stride=2)
-        self.block3 = ResBlockGenerator(128, 64, stride=2)
-        self.final = nn.Sequential(
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            self.final,
-            nn.Tanh())
+        Returns:
+            Tensor: A batch of GAN logits of shape (N, 1).
+        """
+        h = x
+        h = self.block1(h)
+        h = self.block2(h)
+        h = self.block3(h)
+        h = self.block4(h)
+        h = self.block5(h)
+        h = self.activation(h)
 
-    def forward(self, z):
-        features = self.dense(z).view(-1, 512, 6, 6)
-        features = self.block1(features)
-        features = self.block2(features)
-        features = self.block3(features)
-        fake = self.final(features)
+        # Global sum pooling
+        h = torch.sum(h, dim=(2, 3))
+        output = self.l5(h)
 
-        if not self.training:
-            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
-            fake = fake.to(torch.uint8)
-        return fake
-
-class Discriminator(nn.Module):
-    def __init__(self):
-        super(Discriminator, self).__init__()
-
-        self.model = nn.Sequential(
-                FirstResBlockDiscriminator(channels, 64, stride=2),
-                ResBlockDiscriminator(64, 128, stride=2),
-                ResBlockDiscriminator(128, 256, stride=2),
-                ResBlockDiscriminator(256, 512, stride=2),
-                ResBlockDiscriminator(512, 512, stride=1),
-                nn.ReLU(),
-            )
-        self.fc = nn.Linear(512, 1)
-        nn.init.xavier_uniform(self.fc.weight.data, 1.)
-        self.fc = SpectralNorm(self.fc)
-
-    def forward(self, x):
-        x = self.model(x)
-        features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
-
-        return self.fc(features)
-    
-class DiscriminatorStrided(nn.Module):
-    def __init__(self, enable_conditional=False):
-        super().__init__()
-        n_classes = 10 if enable_conditional else 0
-        self.initial_down = SpectralNorm(nn.Conv2d(3, 32, 4, 2, padding=0)) # padding間違えた
-        self.block1 = FirstResBlockDiscriminator(32, 64, 2)
-        self.block2 = ResBlockDiscriminator(64, 128, 2)
-        self.block3 = ResBlockDiscriminator(128, 256, 2)
-        self.block4 = ResBlockDiscriminator(256, 512, 1)
-        self.dense = nn.Linear(512, 1)
-        if n_classes > 0:
-            self.sn_embedding = nn.Embedding(n_classes, 512)
-        else:
-            self.sn_embedding = None
-
-    def forward(self, inputs, y=None):
-        x = self.initial_down(inputs)
-        x = self.block1(x)
-        x = self.block2(x)
-        x = self.block3(x)
-        x = self.block4(x)
-        x = F.relu(x)
-
-        features = torch.sum(x, dim=(2,3)) # gloobal sum pooling
-        x = self.dense(features)
-        if self.sn_embedding is not None:
-            x = self.sn_embedding(features, x, y)
-        return x
-
+        return output
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=64)
 parser.add_argument('--workers', type=int, default=8)

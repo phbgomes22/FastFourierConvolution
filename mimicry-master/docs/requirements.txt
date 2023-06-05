@@ -1,0 +1,8 @@
+python_version >= '3.6'
+scipy==1.4.1
+sphinx
+sphinx_rtd_theme
+torch
+torchvision
+numpy
+-e git+https://github.com/kwotsin/mimicry.git#egg=torch_mimicry
