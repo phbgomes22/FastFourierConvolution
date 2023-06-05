@@ -4,10 +4,10 @@ Typical usage example.
 
 import torch
 import torch.optim as optim
-from mimicry_master.torch_mimicry.nets import sngan
-from mimicry_master.torch_mimicry.training import Trainer
-from mimicry_master.torch_mimicry.datasets import load_dataset
-from mimicry_master.torch_mimicry import metrics
+from torch_mimicry.nets import sngan
+from torch_mimicry.training import Trainer
+from torch_mimicry.datasets import load_dataset
+from torch_mimicry import metrics
 
 if __name__ == "__main__":
     # Data handling objects
