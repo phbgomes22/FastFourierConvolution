@@ -1,3 +1,5 @@
-from torch_mimicry import nets, training, metrics, datasets, modules
-
-__version__ = "0.1.16"
+from .nets import *
+from .training import *
+from .metrics import *
+from .datasets import *
+from .modules import *
