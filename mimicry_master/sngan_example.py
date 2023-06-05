@@ -16,7 +16,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(dataset,
                                              batch_size=64,
                                              shuffle=True,
-                                             num_workers=4)
+                                             num_workers=8)
 
     # Define models and optimizers
     netG = sngan.SNGANGenerator32().to(device)
@@ -30,7 +30,7 @@ if __name__ == "__main__":
                         optD=optD,
                         optG=optG,
                         n_dis=5,
-                        num_steps=30,
+                        num_steps=100000,
                         lr_decay='linear',
                         dataloader=dataloader,
                         log_dir='./log/example',
@@ -42,9 +42,9 @@ if __name__ == "__main__":
                          log_dir='./log/example',
                          netG=netG,
                          dataset='cifar10',
-                         num_real_samples=50000,
-                         num_fake_samples=50000,
-                         evaluate_step=30,
+                         num_real_samples=10000,
+                         num_fake_samples=10000,
+                         evaluate_step=300,
                          device=device)
 
     # Evaluate kid
@@ -52,14 +52,14 @@ if __name__ == "__main__":
                          log_dir='./log/example',
                          netG=netG,
                          dataset='cifar10',
-                         num_samples=50000,
-                         evaluate_step=30,
+                         num_samples=10000,
+                         evaluate_step=300,
                          device=device)
 
     # Evaluate inception score
     metrics.evaluate(metric='inception_score',
                          log_dir='./log/example',
                          netG=netG,
-                         num_samples=50000,
-                         evaluate_step=30,
+                         num_samples=10000,
+                         evaluate_step=300,
                          device=device)
