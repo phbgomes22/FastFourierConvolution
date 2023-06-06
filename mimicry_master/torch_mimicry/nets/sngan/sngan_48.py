@@ -57,12 +57,12 @@ class SNGANGenerator48(sngan_base.SNGANBaseGenerator):
         if not self.training:
             min_val = float(h.min())
             max_val = float(h.max())
-            h.clamp_(min=min_val, max=max_val)
-            h.add_(-min_val).div_(max_val - min_val + 1e-5)
+            h = (255 * (h.clamp(min_val, max_val) * 0.5 + 0.5))
+            h = h.to(torch.uint8)
+
+            # h.clamp_()
+            # h.add_(-min_val).div_(max_val - min_val + 1e-5)
             
-            h = h.mul_(255).add_(0.5).clamp_(0, 255).permute(0, 2, 3, 1).to(torch.uint8)
-
-
         return h
 
 
