@@ -326,14 +326,14 @@ class Trainer:
                     print("INFO: Saving checkpoints...")
                     self._save_model_checkpoints(global_step)
 
-                if (global_step + 1) % 5000 == 0: 
+                if (global_step + 1) % 100 == 0: 
                     self.netG.eval()
 
                     ### HERE IS WHERE WE ADD THE CODE FOR METRICS
                     metrics = torch_fidelity.calculate_metrics(
                         input1=torch_fidelity.GenerativeModelModuleWrapper(self.netG, self.netG.nz, 'normal', 0),
                         input1_model_num_samples=5000,
-                        input2= 'cifar10-train',
+                        input2= 'stl-10-48',
                         isc=True,
                         fid=True,
                         kid=True,
