@@ -143,8 +143,8 @@ class Trainer:
         else:
             self.netG_ckpt_dir = os.path.join(self.log_dir, 'checkpoints',
                                               'netG')
-           # self.netG_ckpt_file = self._get_latest_checkpoint(
-          #      self.netG_ckpt_dir)  # can be None
+            self.netG_ckpt_file = self._get_latest_checkpoint(
+               self.netG_ckpt_dir)  # can be None
 
         if self.netD_ckpt_file:
             self.netD_ckpt_dir = os.path.dirname(netD_ckpt_file)
@@ -152,8 +152,8 @@ class Trainer:
         else:
             self.netD_ckpt_dir = os.path.join(self.log_dir, 'checkpoints',
                                               'netD')
-           # self.netD_ckpt_file = self._get_latest_checkpoint(
-           #     self.netD_ckpt_dir)
+            self.netD_ckpt_file = self._get_latest_checkpoint(
+               self.netD_ckpt_dir)
 
         # Log hyperparameters for experiments
         self.params = {
@@ -190,20 +190,20 @@ class Trainer:
         params_file = os.path.join(self.log_dir, 'params.json')
 
         # Check for discrepancy with previous training config.
-        # if os.path.exists(params_file):
-        #     check = common.load_from_json(params_file)
+        if os.path.exists(params_file):
+            check = common.load_from_json(params_file)
 
-        #     if params != check:
-        #         diffs = []
-        #         for k in params:
-        #             if k in check and params[k] != check[k]:
-        #                 diffs.append('{}: Expected {} but got {}.'.format(
-        #                     k, check[k], params[k]))
+            if params != check:
+                diffs = []
+                for k in params:
+                    if k in check and params[k] != check[k]:
+                        diffs.append('{}: Expected {} but got {}.'.format(
+                            k, check[k], params[k]))
 
-        #         diff_string = '\n'.join(diffs)
-        #         raise ValueError(
-        #             "Current hyperparameter configuration is different from previously:\n{}"
-        #             .format(diff_string))
+                diff_string = '\n'.join(diffs)
+                raise ValueError(
+                    "Current hyperparameter configuration is different from previously:\n{}"
+                    .format(diff_string))
 
         common.write_to_json(params, params_file)
 
