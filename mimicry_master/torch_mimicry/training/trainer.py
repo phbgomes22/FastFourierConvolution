@@ -11,7 +11,37 @@ from torch_mimicry.training import scheduler, logger, metric_log
 from torch_mimicry.utils import common
 
 
+import torchvision.transforms as transforms
+import torchvision.datasets as dset
+import torchvision.transforms.functional as F
+#import torch_fidelity
+
 import torch_fidelity
+
+class TransformPILtoRGBTensor:
+    def __call__(self, img):
+        return F.pil_to_tensor(img)
+
+class STL_10(dset.STL10):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+        return img
+    
+    
+def register_dataset(image_size):
+    transform_dts = transforms.Compose(
+        [
+            transforms.Resize(image_size),
+        #    transforms.CenterCrop(image_size),
+            TransformPILtoRGBTensor()
+        ]
+    )
+
+    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train', transform=transform_dts, download=download))
+  
 
 class Trainer:
     """
@@ -88,6 +118,8 @@ class Trainer:
         self.vis_steps = vis_steps
         self.log_steps = log_steps
         self.save_steps = save_steps
+
+        register_dataset(image_size=48)  
 
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
