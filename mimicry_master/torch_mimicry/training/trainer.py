@@ -136,6 +136,11 @@ class Trainer:
         }
         self._log_params(self.params)
 
+        num_params, num_trained_params = self.netG.count_params()
+        print("Parameters on generator: ", num_params, " - trainable: ", num_trained_params)
+        num_params, num_trained_params = self.netD.count_params()
+        print("Parameters on discriminator: ", num_params, " - trainable: ", num_trained_params)
+
         # Device for hosting model and data
         if not self.device:
             self.device = torch.device(
