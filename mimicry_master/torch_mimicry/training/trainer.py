@@ -363,7 +363,7 @@ class Trainer:
                     print("INFO: Saving checkpoints...")
                     self._save_model_checkpoints(global_step)
 
-                if (global_step + 1) % 1 == 0: 
+                if (global_step + 1) % 3000 == 0: 
                     self.netG.eval()
 
                     ### HERE IS WHERE WE ADD THE CODE FOR METRICS

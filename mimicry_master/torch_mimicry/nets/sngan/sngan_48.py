@@ -59,9 +59,6 @@ class SNGANGenerator48(sngan_base.SNGANBaseGenerator):
             max_val = float(h.max())
             h = (255 * (h.clamp(min_val, max_val) * 0.5 + 0.5))
             h = h.to(torch.uint8)
-
-            # h.clamp_()
-            # h.add_(-min_val).div_(max_val - min_val + 1e-5)
             
         return h
 
