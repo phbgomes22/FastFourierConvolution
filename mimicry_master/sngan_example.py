@@ -9,35 +9,9 @@ from torch_mimicry.training import Trainer
 from torch_mimicry.datasets import load_dataset
 from torch_mimicry import metrics
 
-import torchvision.transforms as transforms
-import torchvision.datasets as dset
-import torchvision.transforms.functional as F
-import torch_fidelity
 
-class TransformPILtoRGBTensor:
-    def __call__(self, img):
-        return F.pil_to_tensor(img)
 
-class STL_10(dset.STL10):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-    def __getitem__(self, index):
-        img, target = super().__getitem__(index)
-        return img
-    
-    
-def register_dataset(image_size):
-    transform_dts = transforms.Compose(
-        [
-            transforms.Resize(image_size),
-        #    transforms.CenterCrop(image_size),
-            TransformPILtoRGBTensor()
-        ]
-    )
-
-    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train', transform=transform_dts, download=download))
-    
 
 if __name__ == "__main__":
     # Data handling objects
@@ -49,7 +23,7 @@ if __name__ == "__main__":
                                              num_workers=8)
     
 
-    register_dataset(image_size=48)
+    
 
     # Define models and optimizers
     netG = sngan.SNGANGenerator48().to(device)
