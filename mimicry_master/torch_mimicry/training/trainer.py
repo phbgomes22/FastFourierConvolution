@@ -111,8 +111,8 @@ class Trainer:
         else:
             self.netG_ckpt_dir = os.path.join(self.log_dir, 'checkpoints',
                                               'netG')
-            self.netG_ckpt_file = self._get_latest_checkpoint(
-                self.netG_ckpt_dir)  # can be None
+           # self.netG_ckpt_file = self._get_latest_checkpoint(
+          #      self.netG_ckpt_dir)  # can be None
 
         if self.netD_ckpt_file:
             self.netD_ckpt_dir = os.path.dirname(netD_ckpt_file)
@@ -120,8 +120,8 @@ class Trainer:
         else:
             self.netD_ckpt_dir = os.path.join(self.log_dir, 'checkpoints',
                                               'netD')
-            self.netD_ckpt_file = self._get_latest_checkpoint(
-                self.netD_ckpt_dir)
+           # self.netD_ckpt_file = self._get_latest_checkpoint(
+           #     self.netD_ckpt_dir)
 
         # Log hyperparameters for experiments
         self.params = {
