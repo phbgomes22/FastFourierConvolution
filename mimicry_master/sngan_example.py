@@ -36,7 +36,7 @@ def register_dataset(image_size):
         ]
     )
 
-    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train+unlabeled', transform=transform_dts, download=download))
+    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train', transform=transform_dts, download=download))
     
 
 if __name__ == "__main__":
