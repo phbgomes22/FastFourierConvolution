@@ -11,6 +11,7 @@ from torch_mimicry.training import scheduler, logger, metric_log
 from torch_mimicry.utils import common
 
 
+import torch.optim as optim
 import torchvision.transforms as transforms
 import torchvision.datasets as dset
 import torchvision.transforms.functional as F
@@ -131,10 +132,13 @@ class Trainer:
                                     flush_secs=flush_secs,
                                     device=self.device)
 
-        self.scheduler = scheduler.LRScheduler(lr_decay=self.lr_decay,
-                                               optD=self.optD,
-                                               optG=self.optG,
-                                               num_steps=self.num_steps)
+       #  self.scheduler = scheduler.LRScheduler(lr_decay=self.lr_decay,
+        #                                        optD=self.optD,
+        #                                        optG=self.optG,
+        #                                        num_steps=self.num_steps)
+        
+        self.scheduler_d = optim.lr_scheduler.ExponentialLR(self.optD, gamma=0.999)
+        self.scheduler_g = optim.lr_scheduler.ExponentialLR(self.optG, gamma=0.999)
 
         # Obtain custom or latest checkpoint files
         if self.netG_ckpt_file:
@@ -337,8 +341,10 @@ class Trainer:
                 # -------------------------------
                 global_step += 1
 
-                log_data = self.scheduler.step(log_data=log_data,
-                                               global_step=global_step)
+               # log_data = self.scheduler.step(log_data=log_data,
+               #                                global_step=global_step)
+                self.scheduler_d.step()
+                self.scheduler_g.step()
 
                 # -------------------------
                 #   Logging and Metrics
@@ -355,9 +361,9 @@ class Trainer:
                                           self.print_steps)
                     start_time = curr_time
 
-                if global_step % self.vis_steps == 0:
-                    self.logger.vis_images(netG=self.netG,
-                                           global_step=global_step)
+            #    if global_step % self.vis_steps == 0:
+            #        self.logger.vis_images(netG=self.netG,
+            #                               global_step=global_step)
 
                 if global_step % self.save_steps == 0:
                     print("INFO: Saving checkpoints...")

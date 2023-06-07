@@ -196,7 +196,7 @@ def load_celeba_dataset(root,
 
 def load_stl10_dataset(root,
                        size=48,
-                       split='unlabeled',
+                       split='train+unlabeled',
                        download=True,
                        transform_data=True,
                        convert_tensor=True,
