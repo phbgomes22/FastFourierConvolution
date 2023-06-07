@@ -348,7 +348,7 @@ class Trainer:
                 
                 _lr_D = self.scheduler_d.get_last_lr()[0]
                 _lr_G = self.scheduler_g.get_last_lr()[0]
-                print(_lr_D, _lr_G)
+              
                 log_data.add_metric('lr_D', _lr_D, group='lr', precision=6)
                 log_data.add_metric('lr_G', _lr_G, group='lr', precision=6)
 
