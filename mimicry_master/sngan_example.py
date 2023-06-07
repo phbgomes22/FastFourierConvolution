@@ -39,7 +39,7 @@ if __name__ == "__main__":
                         n_dis=5,
                         num_steps=100000,
                         lr_decay='linear',
-                        print_steps=1000,
+                        print_steps=500,
                         vis_steps=5000,
                         dataloader=dataloader,
                         log_dir='./log/example',
