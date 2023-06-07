@@ -259,15 +259,15 @@ class Trainer:
         """
         global_step_D = global_step_G = 0
 
-        if self.netD_ckpt_file and os.path.exists(self.netD_ckpt_file):
-            print("INFO: Restoring checkpoint for D...")
-            global_step_D = self.netD.restore_checkpoint(
-                ckpt_file=self.netD_ckpt_file, optimizer=self.optD)
+        # if self.netD_ckpt_file and os.path.exists(self.netD_ckpt_file):
+        #     print("INFO: Restoring checkpoint for D...")
+        #     global_step_D = self.netD.restore_checkpoint(
+        #         ckpt_file=self.netD_ckpt_file, optimizer=self.optD)
 
-        if self.netG_ckpt_file and os.path.exists(self.netG_ckpt_file):
-            print("INFO: Restoring checkpoint for G...")
-            global_step_G = self.netG.restore_checkpoint(
-                ckpt_file=self.netG_ckpt_file, optimizer=self.optG)
+        # if self.netG_ckpt_file and os.path.exists(self.netG_ckpt_file):
+        #     print("INFO: Restoring checkpoint for G...")
+        #     global_step_G = self.netG.restore_checkpoint(
+        #         ckpt_file=self.netG_ckpt_file, optimizer=self.optG)
 
         if global_step_G != global_step_D:
             raise ValueError('G and D Networks are out of sync.')
@@ -345,8 +345,8 @@ class Trainer:
                #                                global_step=global_step)
                 self.scheduler_d.step()
                 self.scheduler_g.step()
-                _lr_D = self.scheduler_d.get_last_lr()[0]
                 
+                _lr_D = self.scheduler_d.get_last_lr()[0]
                 _lr_G = self.scheduler_g.get_last_lr()[0]
                 print(_lr_D, _lr_G)
                 log_data.add_metric('lr_D', _lr_D, group='lr', precision=6)
