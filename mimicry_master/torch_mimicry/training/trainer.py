@@ -139,9 +139,10 @@ class Trainer:
         
         # self.scheduler_d = optim.lr_scheduler.ExponentialLR(self.optD, gamma=0.999)
         # self.scheduler_g = optim.lr_scheduler.ExponentialLR(self.optG, gamma=0.999)
-
-        self.scheduler_d = torch.optim.lr_scheduler.LambdaLR(self.optD, lambda step: 1. - (step / 2*self.num_steps))
-        self.scheduler_g = torch.optim.lr_scheduler.LambdaLR(self.optG, lambda step: 1. - (step / 2*self.num_steps))
+        self.scheduler_d = torch.optim.lr_scheduler.CosineAnnealingLR(self.optD, self.num_steps)
+        self.scheduler_g = torch.optim.lr_scheduler.CosineAnnealingLR(self.optG, self.num_steps)
+        # self.scheduler_d = torch.optim.lr_scheduler.LambdaLR(self.optD, lambda step: 1. - (step / 2*self.num_steps))
+        # self.scheduler_g = torch.optim.lr_scheduler.LambdaLR(self.optG, lambda step: 1. - (step / 2*self.num_steps))
      
         # Obtain custom or latest checkpoint files
         if self.netG_ckpt_file:
