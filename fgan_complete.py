@@ -62,6 +62,9 @@ class Generator(torch.nn.Module):
 
         fake = self.model(fake)
         if not self.training:
+            min_val = float(fake.min())
+            max_val = float(fake.max())
+            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
 
@@ -358,7 +361,7 @@ def train(args):
 
         # compute and log generative metrics
         metrics = torch_fidelity.calculate_metrics(
-            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
+            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
             input1_model_num_samples=args.num_samples_for_metrics,
             input2= input2_dataset,
             isc=True,
