@@ -324,30 +324,30 @@ def train(args):
 
 
     ### GET CHECKPOINTS
+    if args.checkpoint:
+        # Obtain custom or latest checkpoint files
+        netG_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
+                                            'netG')
+        
+        netG_ckpt_file = _get_latest_checkpoint(
+            netG_ckpt_dir)  # can be None
 
-    # Obtain custom or latest checkpoint files
-    netG_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
-                                        'netG')
-    
-    netG_ckpt_file = _get_latest_checkpoint(
-        netG_ckpt_dir)  # can be None
+        netD_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
+                                            'netD')
+        netD_ckpt_file = _get_latest_checkpoint(
+            netD_ckpt_dir)
 
-    netD_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
-                                        'netD')
-    netD_ckpt_file = _get_latest_checkpoint(
-        netD_ckpt_dir)
+        ### RESTORE CHECKPOINTS
 
-    ### RESTORE CHECKPOINTS
+        if netD_ckpt_file and os.path.exists(netD_ckpt_file):
+            print("INFO: Restoring checkpoint for D...")
+            global_step = D.restore_checkpoint(
+                ckpt_file=netD_ckpt_file, optimizer=optim_D)
 
-    if netD_ckpt_file and os.path.exists(netD_ckpt_file):
-        print("INFO: Restoring checkpoint for D...")
-        global_step = D.restore_checkpoint(
-            ckpt_file=netD_ckpt_file, optimizer=optim_D)
-
-    if netG_ckpt_file and os.path.exists(netG_ckpt_file):
-        print("INFO: Restoring checkpoint for G...")
-        global_step = G.restore_checkpoint(
-            ckpt_file=netG_ckpt_file, optimizer=optim_G)
+        if netG_ckpt_file and os.path.exists(netG_ckpt_file):
+            print("INFO: Restoring checkpoint for G...")
+            global_step = G.restore_checkpoint(
+                ckpt_file=netG_ckpt_file, optimizer=optim_G)
         
 
     for step in range(global_step, args.num_total_steps):
@@ -385,8 +385,8 @@ def train(args):
             ## - hinge loss with criterion
             ## - update hinge loss
 
-            hg_loss_real = hinge_loss_real(output_dreal)
-            hg_loss_fake = hinge_loss_fake(output_dg)
+            # hg_loss_real = hinge_loss_real(output_dreal)
+            # hg_loss_fake = hinge_loss_fake(output_dg)
             # testing Adaptative Weight Loss Method
             # loss_D = aw_method().aw_loss(Dloss_real= hg_loss_real, Dloss_fake= hg_loss_fake, Dis_opt=optim_D, 
                                 # Dis_Net=D, real_validity=output_dreal, fake_validity=output_dg)
@@ -450,13 +450,14 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
-            G.save_checkpoint(directory = netG_ckpt_dir,
-                                    global_step = step,
-                                    optimizer = optim_G)
+            if args.checkpoint:
+                G.save_checkpoint(directory = netG_ckpt_dir,
+                                        global_step = step,
+                                        optimizer = optim_G)
 
-            D.save_checkpoint(directory = netD_ckpt_dir,
-                                    global_step = step,
-                                    optimizer = optim_D)
+                D.save_checkpoint(directory = netD_ckpt_dir,
+                                        global_step = step,
+                                        optimizer = optim_D)
 
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '
@@ -479,6 +480,7 @@ def main():
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan'))
+    parser.add_argument('--checkpoint', default=False, action='store_true')
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
   #  assert not args.conditional, 'Conditional mode not implemented'
