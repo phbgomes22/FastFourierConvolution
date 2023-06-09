@@ -391,6 +391,8 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
+            torch.save(G.state_dict(), args.dir_logs + "generator"+ str(next_step))
+
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '
           f'{args.dir_logs}/generator.onnx and {args.dir_logs}/generator.pth')
