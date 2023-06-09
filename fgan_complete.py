@@ -349,6 +349,8 @@ def train(args):
             print("INFO: Restoring checkpoint for G...")
             ini_step = G.restore_checkpoint(
                 ckpt_file=netG_ckpt_file, optimizer=optim_G)
+
+        print("INFO: Initial Step: ", ini_step)
         
 
     for step in range(ini_step, args.num_total_steps):
@@ -385,12 +387,6 @@ def train(args):
             output_dreal = D(real_img)
             ## - hinge loss with criterion
             ## - update hinge loss
-
-            # hg_loss_real = hinge_loss_real(output_dreal)
-            # hg_loss_fake = hinge_loss_fake(output_dg)
-            # testing Adaptative Weight Loss Method
-            # loss_D = aw_method().aw_loss(Dloss_real= hg_loss_real, Dloss_fake= hg_loss_fake, Dis_opt=optim_D, 
-                                # Dis_Net=D, real_validity=output_dreal, fake_validity=output_dg)
             loss_D = hinge_loss_dis(output_dg, output_dreal)
             loss_D.backward()
             optim_D.step()
@@ -453,11 +449,11 @@ def train(args):
 
             if args.checkpoint:
                 G.save_checkpoint(directory = netG_ckpt_dir,
-                                        global_step = step,
+                                        global_step = next_step,
                                         optimizer = optim_G)
 
                 D.save_checkpoint(directory = netD_ckpt_dir,
-                                        global_step = step,
+                                        global_step = next_step,
                                         optimizer = optim_D)
 
     tb.close()
