@@ -104,7 +104,7 @@ class FGenerator(FFCModel):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
-        ratio_g = 0.50#0.25
+        ratio_g = 0.25#0.25
         self.mg = mg
 
         sn_fn = torch.nn.utils.spectral_norm 
@@ -297,7 +297,7 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
+    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
