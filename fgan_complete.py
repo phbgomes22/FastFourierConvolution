@@ -318,8 +318,6 @@ def train(args):
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
     # initialize logging
-    tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
-    pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
     os.makedirs(args.dir_logs, exist_ok=True)
 
     ini_step = 0
@@ -351,6 +349,10 @@ def train(args):
                 ckpt_file=netG_ckpt_file, optimizer=optim_G)
 
         print("INFO: Initial Step: ", ini_step)
+
+
+    tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
+    pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
         
 
     for step in range(ini_step, args.num_total_steps):
