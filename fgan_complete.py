@@ -5,6 +5,7 @@ from util import *
 
 import argparse
 import os
+import re
 
 import PIL
 import torch
@@ -14,6 +15,33 @@ import tqdm
 from torch.utils import tensorboard
 
 import torch_fidelity
+
+
+def _get_latest_checkpoint(ckpt_dir):
+    """
+    Given a checkpoint dir, finds the checkpoint with the latest training step.
+    """
+    def _get_step_number(k):
+        """
+        Helper function to get step number from checkpoint files.
+        """
+        search = re.search(r'(\d+)_steps', k)
+
+        if search:
+            return int(search.groups()[0])
+        else:
+            return -float('inf')
+
+    if not os.path.exists(ckpt_dir):
+        return None
+
+    files = os.listdir(ckpt_dir)
+    if len(files) == 0:
+        return None
+
+    ckpt_file = max(files, key=lambda x: _get_step_number(x))
+
+    return os.path.join(ckpt_dir, ckpt_file)
 
 
 def count_parameters(model):
@@ -130,7 +158,7 @@ class FGenerator(FFCModel):
             fake = fake.to(torch.uint8)
         return fake
 
-class Discriminator(torch.nn.Module):
+class Discriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True, mg: int = 4):
         super(Discriminator, self).__init__()
@@ -248,7 +276,6 @@ def train(args):
             ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
         )
     else:
-       # ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 6
         register_dataset(image_size=image_size)
         input2_dataset = 'stl-10-48'
@@ -294,7 +321,35 @@ def train(args):
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
     os.makedirs(args.dir_logs, exist_ok=True)
 
-    for step in range(args.num_total_steps):
+
+    ### GET CHECKPOINTS
+
+    # Obtain custom or latest checkpoint files
+    netG_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
+                                        'netG')
+    
+    netG_ckpt_file = _get_latest_checkpoint(
+        netG_ckpt_dir)  # can be None
+
+    netD_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
+                                        'netD')
+    netD_ckpt_file = _get_latest_checkpoint(
+        netD_ckpt_dir)
+
+    ### RESTORE CHECKPOINTS
+
+    if netD_ckpt_file and os.path.exists(netD_ckpt_file):
+        print("INFO: Restoring checkpoint for D...")
+        global_step = D.restore_checkpoint(
+            ckpt_file=netD_ckpt_file, optimizer=optim_D)
+
+    if netG_ckpt_file and os.path.exists(netG_ckpt_file):
+        print("INFO: Restoring checkpoint for G...")
+        global_step = G.restore_checkpoint(
+            ckpt_file=netG_ckpt_file, optimizer=optim_G)
+        
+
+    for step in range(global_step, args.num_total_steps):
         # read next batch
         try:
             real_img, real_label = next(loader_iter)
@@ -394,7 +449,13 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
-            torch.save(G.state_dict(), args.dir_logs + "/generator"+ str(next_step))
+            G.save_checkpoint(directory = netG_ckpt_dir,
+                                    global_step = step,
+                                    optimizer = optim_G)
+
+            D.save_checkpoint(directory = netD_ckpt_dir,
+                                    global_step = step,
+                                    optimizer = optim_D)
 
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '
