@@ -322,6 +322,7 @@ def train(args):
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
     os.makedirs(args.dir_logs, exist_ok=True)
 
+    ini_step = 0
 
     ### GET CHECKPOINTS
     if args.checkpoint:
@@ -341,16 +342,16 @@ def train(args):
 
         if netD_ckpt_file and os.path.exists(netD_ckpt_file):
             print("INFO: Restoring checkpoint for D...")
-            global_step = D.restore_checkpoint(
+            ini_step = D.restore_checkpoint(
                 ckpt_file=netD_ckpt_file, optimizer=optim_D)
 
         if netG_ckpt_file and os.path.exists(netG_ckpt_file):
             print("INFO: Restoring checkpoint for G...")
-            global_step = G.restore_checkpoint(
+            ini_step = G.restore_checkpoint(
                 ckpt_file=netG_ckpt_file, optimizer=optim_G)
         
 
-    for step in range(global_step, args.num_total_steps):
+    for step in range(ini_step, args.num_total_steps):
         # read next batch
         try:
             real_img, real_label = next(loader_iter)
