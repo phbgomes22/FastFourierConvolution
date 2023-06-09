@@ -154,6 +154,9 @@ class FGenerator(FFCModel):
         fake = self.resizer(fake)
 
         if not self.training:
+            min_val = float(fake.min())
+            max_val = float(fake.max())
+            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
             fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
         return fake
@@ -294,10 +297,9 @@ def train(args):
     }[args.leading_metric]
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
-    print(G)
     
     print("- Parameters on generator: ", params)
 
@@ -305,7 +307,6 @@ def train(args):
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
-    print(D)
 
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
