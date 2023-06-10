@@ -154,10 +154,10 @@ class FGenerator(FFCModel):
         fake = self.resizer(fake)
 
         if not self.training:
-            min_val = float(fake.min())
-            max_val = float(fake.max())
-            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
-          #  fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            # min_val = float(fake.min())
+            # max_val = float(fake.max())
+         #   fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
         return fake
 
@@ -352,7 +352,7 @@ def train(args):
 
 
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
-    pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
+    pbar = tqdm.tqdm(total=args.num_total_steps, initial=ini_step,  desc='Training', unit='batch')
         
 
     for step in range(ini_step, args.num_total_steps):
@@ -449,7 +449,7 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
-            if args.checkpoint:
+            if args.checkpoint and next_step > args.num_total_steps//2 and next_step % (2*args.num_epoch_steps):
                 G.save_checkpoint(directory = netG_ckpt_dir,
                                         global_step = next_step,
                                         optimizer = optim_G)
@@ -470,7 +470,7 @@ def main():
     parser.add_argument('--num_total_steps', type=int, default=100000)
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
-    parser.add_argument('--num_samples_for_metrics', type=int, default=5000)
+    parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
     parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10'))
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
