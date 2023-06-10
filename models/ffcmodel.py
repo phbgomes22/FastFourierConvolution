@@ -24,6 +24,10 @@ class FFCModel(nn.Module):
         self.print_size = Print(debug=Config.shared().DEBUG)
         self.resizer = Resizer()
 
+    def get_lr(self, optimizer):
+        for param_group in optimizer.param_groups:
+            return param_group['lr']
+
     def restore_checkpoint(self, ckpt_file, optimizer=None):
         r"""
         Restores checkpoint from a pth file and restores optimizer state.
@@ -50,7 +54,8 @@ class FFCModel(nn.Module):
         # Restore optimizer status if existing. Evaluation doesn't need this
         if optimizer:
             optimizer.load_state_dict(ckpt_dict['optimizer_state_dict'])
-            print("INFO: Loaded optimizer with learning rate...")
+            lr = self.get_lr(optimizer)
+            print("INFO: Loaded optimizer with learning rate: ", lr)
 
         # Return global step
         return ckpt_dict['global_step']
