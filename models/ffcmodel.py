@@ -28,7 +28,7 @@ class FFCModel(nn.Module):
         for param_group in optimizer.param_groups:
             return param_group['lr']
 
-    def restore_checkpoint(self, ckpt_file, optimizer=None):
+    def restore_checkpoint(self, ckpt_file, optimizer=None, scheduler=None):
         r"""
         Restores checkpoint from a pth file and restores optimizer state.
 
@@ -56,6 +56,9 @@ class FFCModel(nn.Module):
             optimizer.load_state_dict(ckpt_dict['optimizer_state_dict'])
             lr = self.get_lr(optimizer)
             print("INFO: Loaded optimizer with learning rate: ", lr)
+        if scheduler:
+            scheduler.load_state_dict(ckpt_dict['scheduler_state_dict'])
+            print("INFO: Loaded scheduler with learning rate: ", scheduler.get_last_lr()[0])
 
         # Return global step
         return ckpt_dict['global_step']
@@ -64,6 +67,7 @@ class FFCModel(nn.Module):
                         directory,
                         global_step,
                         optimizer=None,
+                        scheduler=None,
                         name=None):
         r"""
         Saves checkpoint at a certain global step during training. Optimizer state
@@ -88,6 +92,8 @@ class FFCModel(nn.Module):
             self.state_dict(),
             'optimizer_state_dict':
             optimizer.state_dict() if optimizer is not None else None,
+            'scheduler_state_dict':
+            scheduler.state_dict() if scheduler is not None else None,
             'global_step':
             global_step
         }

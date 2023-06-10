@@ -315,6 +315,8 @@ def train(args):
     optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
     optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
 
+    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
+    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
     # initialize logging
     os.makedirs(args.dir_logs, exist_ok=True)
 
@@ -339,18 +341,14 @@ def train(args):
         if netD_ckpt_file and os.path.exists(netD_ckpt_file):
             print("INFO: Restoring checkpoint for D...")
             ini_step = D.restore_checkpoint(
-                ckpt_file=netD_ckpt_file, optimizer=optim_D)
+                ckpt_file=netD_ckpt_file, optimizer=optim_D, scheduler=scheduler_D)
 
         if netG_ckpt_file and os.path.exists(netG_ckpt_file):
             print("INFO: Restoring checkpoint for G...")
             ini_step = G.restore_checkpoint(
-                ckpt_file=netG_ckpt_file, optimizer=optim_G)
+                ckpt_file=netG_ckpt_file, optimizer=optim_G, scheduler=scheduler_G)
 
         print("INFO: Initial Step: ", ini_step)
-
-
-    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
-    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
     pbar = tqdm.tqdm(total=args.num_total_steps, initial=ini_step,  desc='Training', unit='batch')
@@ -453,11 +451,13 @@ def train(args):
             if args.checkpoint and next_step > args.num_total_steps//2 and next_step % (2*args.num_epoch_steps):
                 G.save_checkpoint(directory = netG_ckpt_dir,
                                         global_step = next_step,
-                                        optimizer = optim_G)
+                                        optimizer = optim_G,
+                                        scheduler = scheduler_G)
 
                 D.save_checkpoint(directory = netD_ckpt_dir,
                                         global_step = next_step,
-                                        optimizer = optim_D)
+                                        optimizer = optim_D,
+                                        scheduler = scheduler_D)
 
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '
