@@ -50,6 +50,7 @@ class FFCModel(nn.Module):
         # Restore optimizer status if existing. Evaluation doesn't need this
         if optimizer:
             optimizer.load_state_dict(ckpt_dict['optimizer_state_dict'])
+            print("INFO: Loaded optimizer with learning rate...")
 
         # Return global step
         return ckpt_dict['global_step']

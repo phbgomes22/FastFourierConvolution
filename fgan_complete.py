@@ -154,10 +154,10 @@ class FGenerator(FFCModel):
         fake = self.resizer(fake)
 
         if not self.training:
-            # min_val = float(fake.min())
-            # max_val = float(fake.max())
-         #   fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
-            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            min_val = float(fake.min())
+            max_val = float(fake.max())
+            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
+            # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
         return fake
 
@@ -314,8 +314,6 @@ def train(args):
     # prepare optimizer and learning rate schedulers (linear decay)
     optim_G = torch.optim.AdamW(G.parameters(), lr=args.lr, betas=(0.5, 0.999))
     optim_D = torch.optim.AdamW(D.parameters(), lr=args.lr, betas=(0.5, 0.999))
-    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
-    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
     # initialize logging
     os.makedirs(args.dir_logs, exist_ok=True)
@@ -350,6 +348,9 @@ def train(args):
 
         print("INFO: Initial Step: ", ini_step)
 
+
+    scheduler_G = torch.optim.lr_scheduler.LambdaLR(optim_G, lambda step: 1. - step / args.num_total_steps)
+    scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
     pbar = tqdm.tqdm(total=args.num_total_steps, initial=ini_step,  desc='Training', unit='batch')
