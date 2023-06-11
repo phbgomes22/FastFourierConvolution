@@ -21,6 +21,14 @@ import torch_fidelity
 class TransformPILtoRGBTensor:
     def __call__(self, img):
         return F.pil_to_tensor(img)
+    
+class Flowers_102(dset.Flowers102):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+        return img
 
 class STL_10(dset.STL10):
     def __init__(self, *args, **kwargs):
@@ -44,7 +52,7 @@ def get_device():
     device = torch.device("cuda:0" if (torch.cuda.is_available() and Config.shared().ngpu > 0) else "cpu")
     return device 
 
-def register_dataset(image_size):
+def register_dataset(dataset, image_size):
     transform_dts = transforms.Compose(
         [
             transforms.Resize(image_size),
@@ -52,10 +60,13 @@ def register_dataset(image_size):
             TransformPILtoRGBTensor()
         ]
     )
-
-    torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train+unlabeled', transform=transform_dts, download=download))
-    torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
-    torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
+    if dataset == 'stl-10-48':
+        torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train+unlabeled', transform=transform_dts, download=download))
+    elif dataset == 'flowers-48':
+        torch_fidelity.regiter_dataset('flowers-48', lambda root, download: Flowers_102(root=root, split='train', download=download, transform=transform_dts))
+    else:
+        torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
+        torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
 def load_stl(batch_size, trans):
    

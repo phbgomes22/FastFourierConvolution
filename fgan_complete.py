@@ -278,10 +278,18 @@ def train(args):
         loader = torch.utils.data.DataLoader(
             ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
         )
+    elif args.dataset == 'flowers':
+        ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
+        mg = 6
+        input2_dataset = 'flowers-48'
+        register_dataset(input2_dataset, image_size=image_size)
+        loader = torch.utils.data.DataLoader(
+            ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
+        )
     else:
         mg = 6
-        register_dataset(image_size=image_size)
         input2_dataset = 'stl-10-48'
+        register_dataset(input2_dataset, image_size=image_size)
         loader = load_stl(args.batch_size, ds_transform)
 
     loader_iter = iter(loader)
@@ -472,7 +480,7 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
-    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10'))
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10', 'flowers'))
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
