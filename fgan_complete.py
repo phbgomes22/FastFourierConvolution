@@ -286,11 +286,13 @@ def train(args):
         loader = torch.utils.data.DataLoader(
             ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
         )
-    else:
+    elif args.dataset == 'stl10':
         mg = 6
         input2_dataset = 'stl-10-48'
         register_dataset(input2_dataset, image_size=image_size)
         loader = load_stl(args.batch_size, ds_transform)
+    else:
+        print("ERROR: DATASET NOT VALIDATED!")
 
     loader_iter = iter(loader)
 

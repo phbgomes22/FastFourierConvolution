@@ -55,7 +55,7 @@ def get_device():
 def register_dataset(dataset, image_size):
     transform_dts = transforms.Compose(
         [
-            transforms.Resize(image_size),
+            transforms.Resize(size=(image_size, image_size)),
         #    transforms.CenterCrop(image_size),
             TransformPILtoRGBTensor()
         ]
