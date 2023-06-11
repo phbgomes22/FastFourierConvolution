@@ -63,7 +63,7 @@ def register_dataset(dataset, image_size):
     if dataset == 'stl-10-48':
         torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train+unlabeled', transform=transform_dts, download=download))
     elif dataset == 'flowers-48':
-        torch_fidelity.regiter_dataset('flowers-48', lambda root, download: Flowers_102(root=root, split='train', download=download, transform=transform_dts))
+        torch_fidelity.register_dataset('flowers-48', lambda root, download: Flowers_102(root=root, split='train', download=download, transform=transform_dts))
     else:
         torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
