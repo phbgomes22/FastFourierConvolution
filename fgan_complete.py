@@ -104,7 +104,7 @@ class FGenerator(FFCModel):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
-        ratio_g = 0.5
+        ratio_g = 0.25
         self.mg = mg
 
         sn_fn = torch.nn.utils.spectral_norm 
@@ -456,7 +456,7 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
-            if args.checkpoint and next_step > args.num_total_steps//2 and next_step % (2*args.num_epoch_steps):
+            if args.checkpoint and next_step > args.num_total_steps//2:
                 G.save_checkpoint(directory = netG_ckpt_dir,
                                         global_step = next_step,
                                         optimizer = optim_G,
