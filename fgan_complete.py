@@ -307,12 +307,12 @@ def train(args):
         netG_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
                                             'netG')
         
-        netG_ckpt_file = _get_latest_checkpoint(
+        netG_ckpt_file = get_latest_checkpoint(
             netG_ckpt_dir)  # can be None
 
         netD_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
                                             'netD')
-        netD_ckpt_file = _get_latest_checkpoint(
+        netD_ckpt_file = get_latest_checkpoint(
             netD_ckpt_dir)
 
         ### RESTORE CHECKPOINTS

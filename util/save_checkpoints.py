@@ -1,8 +1,12 @@
+'''
+Authors: Pedro Gomes 
+'''
+
 import os
 import re
 
 
-def _get_latest_checkpoint(ckpt_dir):
+def get_latest_checkpoint(ckpt_dir):
     """
     Given a checkpoint dir, finds the checkpoint with the latest training step.
     """

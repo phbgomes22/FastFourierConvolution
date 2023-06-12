@@ -1,4 +1,4 @@
-from .checkpoints import *
+from .save_checkpoints import *
 from .data_loader import *
 from .tar_loader import *
 from .save_snapshop import *

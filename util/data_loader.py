@@ -121,7 +121,7 @@ def load_flowers(batch_size, image_size):
 
     dataloader = torch.utils.data.DataLoader(train_flowers_sets, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     
-    print("INFO: Loaded Flowers dataset with ", print(len(dataloader.dataset)), " images!")
+    print("INFO: Loaded Flowers dataset with ", len(dataloader.dataset), " images!")
     print("INFO: Without Augmentation: ", len(ds_instance))
     return dataloader
 
