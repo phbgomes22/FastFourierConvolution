@@ -279,13 +279,10 @@ def train(args):
             ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
         )
     elif args.dataset == 'flowers':
-        ds_instance = torchvision.datasets.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
         mg = 6
         input2_dataset = 'flowers-48'
         register_dataset(input2_dataset, image_size=image_size)
-        loader = torch.utils.data.DataLoader(
-            ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
-        )
+        loader = load_flowers(args.batch_size, image_size)
     elif args.dataset == 'stl10':
         mg = 6
         input2_dataset = 'stl-10-48'

@@ -68,6 +68,61 @@ def register_dataset(dataset, image_size):
         torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
+
+def load_flowers(batch_size, image_size):
+
+    ds_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+           # torchvision.transforms.CenterCrop(image_size),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    ds_instance = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
+    
+    aug_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomHorizontalFlip(1.0),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    aug_instance_hz = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=aug_transform)
+
+    vert_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomVerticalFlip(1.0),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    aug_instance_vert = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=vert_transform)
+
+
+    crop_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomCrop(image_size),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    aug_instance_crop = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=crop_transform)
+
+    train_flowers_sets = torch.utils.data.ConcatDataset([ds_instance, aug_instance_hz, aug_instance_vert, aug_instance_crop])
+
+    dataloader = torch.utils.data.DataLoader(train_flowers_sets, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+
+    return dataloader
+
+
 def load_stl(batch_size, trans):
    
     # train + test (# 13000)
