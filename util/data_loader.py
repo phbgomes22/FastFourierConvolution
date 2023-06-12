@@ -109,10 +109,9 @@ def load_flowers(batch_size, image_size):
     crop_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
-            transforms.FiveCrop(image_size),
-            transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
-            transforms.Lambda(lambda tensors:
-                torch.stack([transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(t) for t in tensors]))
+            transforms.RandomCrop(image_size),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
     )
 
@@ -124,6 +123,18 @@ def load_flowers(batch_size, image_size):
     
     print("INFO: Loaded Flowers dataset with ", len(dataloader.dataset), " images!")
     print("INFO: Without Augmentation: ", len(ds_instance))
+
+    ## Checking images
+    try:
+        real_batch = next(iter(dataloader))
+        plt.figure(figsize=(8,8))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to('cuda')[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+        plt.savefig("training_set.jpg")
+    except OSError:
+        print("Cannot load image")
+
     return dataloader
 
 
