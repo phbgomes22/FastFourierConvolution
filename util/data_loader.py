@@ -74,7 +74,7 @@ def load_flowers(batch_size, image_size):
 
     ds_transform = transforms.Compose(
         [
-            transforms.RandomRotation(degrees=(0, 360), expand=True),
+            transforms.RandomRotation(degrees=(0, 360)),
             transforms.Resize(size=(image_size, image_size)),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
