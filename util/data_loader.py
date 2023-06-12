@@ -110,8 +110,9 @@ def load_flowers(batch_size, image_size):
         [
             transforms.Resize(size=(image_size, image_size)),
             transforms.FiveCrop(image_size),
-            transforms.ToTensor(), 
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
+            transforms.Lambda(lambda tensors:
+                torch.stack([transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(t) for t in tensors]))
         ]
     )
 
