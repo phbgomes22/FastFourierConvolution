@@ -186,7 +186,7 @@ class FCondGeneratorSTL(FFCModel):
         return fake
 
 
-class Discriminator(torch.nn.Module):
+class Discriminator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, sn=True, mg: int = 4, num_classes=10):
         super(Discriminator, self).__init__()
@@ -317,7 +317,7 @@ def train(args):
         mg = 6
         input2_dataset = 'stl-10-48'
 
-    register_dataset(image_size=image_size)
+    register_dataset('svhn-32', image_size=image_size)
 
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
@@ -364,11 +364,41 @@ def train(args):
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
     os.makedirs(args.dir_logs, exist_ok=True)
 
-    # Establish convention for real and fake labels during training
-#    real_label = 1
-#    fake_label = 0
+    ini_step = 0
 
-    for step in range(args.num_total_steps):
+    ### GET CHECKPOINTS
+    if args.checkpoint:
+        # Obtain custom or latest checkpoint files
+        netG_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
+                                            'netG')
+        
+        netG_ckpt_file = _get_latest_checkpoint(
+            netG_ckpt_dir)  # can be None
+
+        netD_ckpt_dir = os.path.join(args.dir_logs, 'checkpoints',
+                                            'netD')
+        netD_ckpt_file = _get_latest_checkpoint(
+            netD_ckpt_dir)
+
+        ### RESTORE CHECKPOINTS
+
+        if netD_ckpt_file and os.path.exists(netD_ckpt_file):
+            print("INFO: Restoring checkpoint for D...")
+            ini_step = D.restore_checkpoint(
+                ckpt_file=netD_ckpt_file, optimizer=optim_D, scheduler=scheduler_D)
+
+        if netG_ckpt_file and os.path.exists(netG_ckpt_file):
+            print("INFO: Restoring checkpoint for G...")
+            ini_step = G.restore_checkpoint(
+                ckpt_file=netG_ckpt_file, optimizer=optim_G, scheduler=scheduler_G)
+
+        print("INFO: Initial Step: ", ini_step)
+
+
+    tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
+    pbar = tqdm.tqdm(total=args.num_total_steps, initial=ini_step,  desc='Training', unit='batch')
+
+    for step in range(ini_step, args.num_total_steps):
         # read next batch
         try:
             real_img, real_label = next(loader_iter)
@@ -464,6 +494,17 @@ def train(args):
         if next_step <= args.num_total_steps:
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
+
+            if args.checkpoint and next_step > args.num_total_steps//2:
+                G.save_checkpoint(directory = netG_ckpt_dir,
+                                        global_step = next_step,
+                                        optimizer = optim_G,
+                                        scheduler = scheduler_G)
+
+                D.save_checkpoint(directory = netD_ckpt_dir,
+                                        global_step = next_step,
+                                        optimizer = optim_D,
+                                        scheduler = scheduler_D)
 
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '

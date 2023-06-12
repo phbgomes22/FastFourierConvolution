@@ -64,8 +64,9 @@ def register_dataset(dataset, image_size):
         torch_fidelity.register_dataset('stl-10-48', lambda root, download: STL_10(root, split='train+unlabeled', transform=transform_dts, download=download))
     elif dataset == 'flowers-48':
         torch_fidelity.register_dataset('flowers-48', lambda root, download: Flowers_102(root=root, split='train', download=download, transform=transform_dts))
-    else:
+    elif dataset == 'svhn-32':
         torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
+    else:
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
 
@@ -73,8 +74,8 @@ def load_flowers(batch_size, image_size):
 
     ds_transform = transforms.Compose(
         [
-            transforms.Resize(size=(image_size, image_size)),
-           # torchvision.transforms.CenterCrop(image_size),
+           # transforms.Resize(size=(image_size, image_size)),
+            transforms.CenterCrop(image_size),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
@@ -108,7 +109,7 @@ def load_flowers(batch_size, image_size):
     crop_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
-            transforms.RandomCrop(image_size),
+            transforms.FiveCrop(image_size),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
@@ -120,6 +121,7 @@ def load_flowers(batch_size, image_size):
 
     dataloader = torch.utils.data.DataLoader(train_flowers_sets, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
 
+    print("INFO: Loaded Flowers dataset with ", print(len(dataloader.dataset)), " images!")
     return dataloader
 
 
