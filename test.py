@@ -110,8 +110,8 @@ def test(args):
 
     for f in fake:
         generated_image = np.transpose(f, (1,2,0))
-        generated_image -= generated_image.min()
-        generated_image /= generated_image.max()
+        # generated_image -= generated_image.min()
+        # generated_image /= generated_image.max()
         im = Image.fromarray((generated_image.squeeze(axis=2).numpy() * 255).astype(np.uint8))
         im.save(output_dir + 'image' + str(count) + ".jpg")
         count+=1
