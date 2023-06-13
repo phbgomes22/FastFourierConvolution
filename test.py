@@ -6,7 +6,6 @@ from PIL import Image
 import os
 import argparse
 
-config = Config.shared()
 device = get_device()
 
 
@@ -76,7 +75,6 @@ class FGenerator(FFCModel):
 
 def main():
     ## Reads the parameters send from the user through the terminal call of test.py
-    config.read_test_params()
     dir = os.getcwd()
 
     parser = argparse.ArgumentParser()
@@ -89,12 +87,7 @@ def main():
 
 
 def test(args):
-    ngf = config.ngf
     nz = 128
-    nc = config.nc
-    model_path = config.model_path
-    output_dir = config.sample_output
-
     mg = 4 if args.img_size == 32 else 6
    ## Loading generator
     netG = FGenerator(z_size=nz, mg=mg).to(device) 
@@ -113,7 +106,7 @@ def test(args):
         # generated_image -= generated_image.min()
         # generated_image /= generated_image.max()
         im = Image.fromarray((generated_image.squeeze(axis=2).numpy() * 255).astype(np.uint8))
-        im.save(output_dir + 'image' + str(count) + ".jpg")
+        im.save(os.path.join(args.dir_logs, 'image' + str(count) + ".jpg"))
         count+=1
 
 main()
