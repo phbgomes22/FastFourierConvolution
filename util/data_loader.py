@@ -116,17 +116,17 @@ def load_flowers(batch_size, image_size):
         ]
     )
 
-    color_sharp_transform = transforms.Compose(
-        [
-            transforms.ColorJitter(brightness=0.5, hue=0.3),
-            transforms.RandomAdjustSharpness(sharpness_factor=2),
-            transforms.RandomAutocontrast(),
-            transforms.RandomEqualize(),
-            transforms.Resize(size=(image_size, image_size)),
-            transforms.ToTensor(), 
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        ]
-    )
+    # color_sharp_transform = transforms.Compose(
+    #     [
+    #         transforms.ColorJitter(brightness=0.5, hue=0.3),
+    #         transforms.RandomAdjustSharpness(sharpness_factor=2),
+    #         transforms.RandomAutocontrast(),
+    #         transforms.RandomEqualize(),
+    #         transforms.Resize(size=(image_size, image_size)),
+    #         transforms.ToTensor(), 
+    #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    #     ]
+    # )
 
     ds_instance = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
     ds_instance_val = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=ds_transform)
@@ -140,15 +140,15 @@ def load_flowers(batch_size, image_size):
     train_crop = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=crop_transform)
     val_crop = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=crop_transform)
     test_crop = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=crop_transform)
-    train_color = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=color_sharp_transform)
-    val_color = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=color_sharp_transform)
-    test_color = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=color_sharp_transform)
+    # train_color = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=color_sharp_transform)
+    # val_color = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=color_sharp_transform)
+    # test_color = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=color_sharp_transform)
 
     train_flowers_sets = torch.utils.data.ConcatDataset([ds_instance, ds_instance_val, ds_instance_test, 
                                                          train_hz, val_hz, test_hz,
                                                          train_vert, val_vert, test_vert,
-                                                         train_crop, val_crop, test_crop,
-                                                         train_color, val_color, test_color])
+                                                         train_crop, val_crop, test_crop])
+                                                 ##        train_color, val_color, test_color])
 
     dataloader = torch.utils.data.DataLoader(train_flowers_sets, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     
