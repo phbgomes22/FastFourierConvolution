@@ -96,7 +96,7 @@ def test(args):
     netG.eval()
     count = 0
 
-    noise = torch.randn(args.number_samples, nz, 1, 1, device=device)
+    noise = torch.randn(args.number_samples, nz, device=device)
 
     with torch.no_grad():
         fake = netG(noise).detach().cpu()#.numpy()
