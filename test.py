@@ -108,7 +108,7 @@ def test(args):
         # generated_image -= generated_image.min()
         # generated_image /= generated_image.max()
         im = Image.fromarray(generated_image.numpy().astype(np.uint8)) #.squeeze(axis=2).numpy() * 255).astype(np.uint8)
-        im.save(os.path.join(args.dir_logs, 'image' + str(count) + ".jpg"))
+        im.save(os.path.join(args.dir_logs, 'image' + str(count) + ".png"))
         count+=1
 
 main()
