@@ -83,6 +83,8 @@ def main():
     parser.add_argument('--number_samples', type=int, default=1000)
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'generated_output'))
     args = parser.parse_args()
+    os.makedirs(args.dir_logs, exist_ok=True)
+
     test(args)
 
 
