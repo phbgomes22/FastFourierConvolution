@@ -150,7 +150,7 @@ def get_filters(args):
         z = torch.randn(1, args.z_size, device=device)
         
         img, outputs = model(z)
-        save_image(img.detach().cpu(), args.dir_logs, 1, 'example_image')
+        save_image(img.detach().cpu(), args.dir_logs, 1, os.path.join(args.dir_logs, str('base_image' + str(elem) + '.jpg')))
 
         #print feature_maps
         for feature_map in outputs:
@@ -171,8 +171,7 @@ def get_filters(args):
             a = fig.add_subplot(5, 4, i+1)
             imgplot = plt.imshow(processed[i])
             a.axis("off")
-        img_to_add = Image.fromarray(img.cpu().numpy().astype(np.uint8))
-        fig.add_subplot(img_to_add)
+            
         #   a.set_title(names[i].split('(')[0], fontsize=30)
         plt.savefig(os.path.join(args.dir_logs, str('feature_maps' + str(elem) + '.jpg')), bbox_inches='tight')
 
