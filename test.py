@@ -159,7 +159,7 @@ def test(args):
     for f in fake:
         count = 0
         for kernel in kernels:
-            deconv_image = F.conv2d(f, kernel, padding=1)
+            deconv_image = F.conv2d(f, kernel)
             save_image(deconv_image, args.dir_logs, count, name="deconv" + str(count) + "_")
             count+=1
     
