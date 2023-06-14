@@ -31,7 +31,7 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
         
 
-class Generator(torch.nn.Module):
+class Generator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4):
         super(Generator, self).__init__()
