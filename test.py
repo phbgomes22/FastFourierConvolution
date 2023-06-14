@@ -5,6 +5,9 @@ from models import *
 from PIL import Image 
 import os
 import argparse
+import torchvision
+
+import torchvision.transforms.functional as F
 
 device = get_device()
 
@@ -88,6 +91,35 @@ def main():
     test(args)
 
 
+def get_filters(netG):
+
+    kernels = netG.conv5.ffc.convg2l.weight.detach().clone()
+
+    #check size for sanity check
+    print(kernels.size())
+
+    # normalize to (0,1) range so that matplotlib
+    # can plot them
+    kernels = kernels - kernels.min()
+    kernels = kernels / kernels.max()
+
+    filter_img = torchvision.utils.make_grid(kernels, nrow = 12)
+    # change ordering since matplotlib requires images to 
+    # be (H, W, C)
+    plt.imshow(filter_img.permute(1, 2, 0))
+
+    # You can directly save the image as well using
+    save_image(kernels, 'last_g2l_conv_kernel.png' ,nrow = 12)
+
+    return kernels
+
+def save_image(fake, logs, num, name='image'):
+    generated_image = np.transpose(fake, (1,2,0))
+    # generated_image -= generated_image.min()
+    # generated_image /= generated_image.max()
+    im = Image.fromarray(generated_image.numpy().astype(np.uint8)) #.squeeze(axis=2).numpy() * 255).astype(np.uint8)
+    im.save(os.path.join(logs, name + str(num) + ".png"))
+
 def test(args):
     nz = 128
     mg = 4 if args.img_size == 32 else 6
@@ -104,11 +136,17 @@ def test(args):
         fake = netG(noise).detach().cpu()#.numpy()
 
     for f in fake:
-        generated_image = np.transpose(f, (1,2,0))
-        # generated_image -= generated_image.min()
-        # generated_image /= generated_image.max()
-        im = Image.fromarray(generated_image.numpy().astype(np.uint8)) #.squeeze(axis=2).numpy() * 255).astype(np.uint8)
-        im.save(os.path.join(args.dir_logs, 'image' + str(count) + ".png"))
+        save_image(f, args.dir_logs, count)
         count+=1
+
+    kernels = get_filters(netG)
+    
+    for f in fake:
+        count = 0
+        for kernel in kernels:
+            deconv_image = F.conv2d(f, kernel, padding=1)
+            save_image(deconv_image, args.dir_logs, count, name="deconv" + str(count) + "_")
+            count+=1
+    
 
 main()
