@@ -155,8 +155,8 @@ def get_filters(args):
         save_image(img.detach().cpu(), args.dir_logs, 1, str('base_image' + str(counter)))
 
         #print feature_maps
-        for feature_map in outputs:
-            print(feature_map.shape)
+        # for feature_map in outputs:
+        #     print(feature_map.shape)
 
         processed = []
         for feature_map in outputs:
@@ -164,8 +164,8 @@ def get_filters(args):
             gray_scale = torch.sum(feature_map,0)
             gray_scale = gray_scale / feature_map.shape[0]
             processed.append(gray_scale.data.cpu().numpy())
-        for fm in processed:
-            print(fm.shape)
+        # for fm in processed:
+        #     print(fm.shape)
 
         
         fig = plt.figure(figsize=(30, 50))
