@@ -159,7 +159,7 @@ def get_filters(args):
     
     img, outputs = model(z)
 
-    save_image(img.cpu(), args.dir_logs, 1, 'example_image')
+    save_image(img.detach().cpu(), args.dir_logs, 1, 'example_image')
 
     #print feature_maps
     for feature_map in outputs:
@@ -185,7 +185,7 @@ def get_filters(args):
 
 
 def save_image(fake, logs, num, name='image'):
-    generated_image = np.transpose(fake, (1,2,0))
+    generated_image = np.transpose(fake.cpu(), (1,2,0))
     # generated_image -= generated_image.min()
     # generated_image /= generated_image.max()
     im = Image.fromarray(generated_image.cpu().numpy().astype(np.uint8)) #.squeeze(axis=2).numpy() * 255).astype(np.uint8)
