@@ -6,7 +6,7 @@ from PIL import Image
 import os
 import argparse
 import torchvision
-from torchvision import utils
+from torchvision import models, transforms, utils
 
 import torch.nn.functional as F
 
@@ -76,6 +76,13 @@ class FGenerator(FFCModel):
             fake = fake.to(torch.uint8)
         return fake
 
+transform = transforms.Compose(
+        [
+            transforms.Resize(size=(48, 48)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
 
 def main():
     ## Reads the parameters send from the user through the terminal call of test.py
@@ -84,6 +91,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint_file', type=str, default=os.path.join(dir, 'logs_fgan_cond'))
     parser.add_argument('--img_size', type=int, default=32)
+    parser.add_argument('--base_image', type=str, default='image.png')
     parser.add_argument('--number_samples', type=int, default=1000)
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'generated_output'))
     args = parser.parse_args()
@@ -91,42 +99,75 @@ def main():
 
     test(args)
 
-def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1): 
-    n,c,w,h = tensor.shape
-
-    if allkernels: tensor = tensor.view(n*c, -1, w, h)
-    elif c != 3: tensor = tensor[:,ch,:,:].unsqueeze(dim=1)
-
-    rows = np.min((tensor.shape[0] // nrow + 1, 64))    
-    grid = utils.make_grid(tensor, nrow=nrow, normalize=True, padding=padding)
-    plt.figure( figsize=(nrow,rows) )
-    plt.imshow(grid.numpy().transpose((1, 2, 0)))
-    plt.savefig('last_g2l_conv_kernel.png', bbox_inches='tight')
 
 
-def get_filters(netG):
+def get_filters(args, model):
+    ## 
+    image = Image.open(args.base_image)
+    plt.imshow(image)
 
-    kernels = netG.conv5.ffc.convg2l.weight.data.detach().clone()
+    # we will save the conv layer weights in this list
+    model_weights =[]
+    #we will save the 49 conv layers in this list
+    conv_layers = []
+    # get all the model children as list
+    model_children = list(model.children())
+    #counter to keep count of the conv layers
+    counter = 0
+    #append all the conv layers and their respective wights to the list
+    for i in range(len(model_children)):
+        if type(model_children[i]) == nn.Conv2d:
+            counter+=1
+            model_weights.append(model_children[i].weight)
+            conv_layers.append(model_children[i])
+        elif type(model_children[i]) == nn.Sequential:
+            for j in range(len(model_children[i])):
+                for child in model_children[i][j].children():
+                    if type(child) == nn.Conv2d:
+                        counter+=1
+                        model_weights.append(child.weight)
+                        conv_layers.append(child)
+    print(f"Total convolution layers: {counter}")
+    print("conv_layers")
 
-    #check size for sanity check
-    print(kernels.size())
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
 
-    visTensor(kernels.cpu(), ch=0, allkernels=False)
+    image = transform(image)
+    print(f"Image shape before: {image.shape}")
+    image = image.unsqueeze(0)
+    print(f"Image shape after: {image.shape}")
+    image = image.to(device)
 
-    # normalize to (0,1) range so that matplotlib
-    # can plot them
-    # kernels = kernels - kernels.min()
-    # kernels = kernels / kernels.max()
+    outputs = []
+    names = []
+    for layer in conv_layers[0:]:
+        image = layer(image)
+        outputs.append(image)
+        names.append(str(layer))
+    print(len(outputs))
+    #print feature_maps
+    for feature_map in outputs:
+        print(feature_map.shape)
+
+    processed = []
+    for feature_map in outputs:
+        feature_map = feature_map.squeeze(0)
+        gray_scale = torch.sum(feature_map,0)
+        gray_scale = gray_scale / feature_map.shape[0]
+        processed.append(gray_scale.data.cpu().numpy())
+    for fm in processed:
+        print(fm.shape)
+
     
-    # filter_img = torchvision.utils.make_grid(kernels.detach().cpu(), nrow = 12)
-    # # change ordering since matplotlib requires images to 
-    # # be (H, W, C)
-    # plt.imshow(filter_img.permute(1, 2, 0))
+    fig = plt.figure(figsize=(30, 50))
+    for i in range(len(processed)):
+        a = fig.add_subplot(5, 4, i+1)
+        imgplot = plt.imshow(processed[i])
+        a.axis("off")
+        a.set_title(names[i].split('(')[0], fontsize=30)
+    plt.savefig(str('feature_maps.jpg'), bbox_inches='tight')
 
-    # # You can directly save the image as well using
-    # save_image(kernels, 'last_g2l_conv_kernel.png' ,nrow = 12)
-
-    return kernels
 
 def save_image(fake, logs, num, name='image'):
     generated_image = np.transpose(fake, (1,2,0))
@@ -142,26 +183,21 @@ def test(args):
     netG = FGenerator(z_size=nz, mg=mg).to(device) 
     netG.restore_checkpoint(ckpt_file=args.checkpoint_file)
 
-    netG.eval()
-    count = 0
+    get_filters(args, netG)
 
-    noise = torch.randn(args.number_samples, nz, device=device)
+    return
 
-    with torch.no_grad():
-        fake = netG(noise).detach().cpu()#.numpy()
+    # netG.eval()
+    # count = 0
 
-    for f in fake:
-        save_image(f, args.dir_logs, count)
-        count+=1
+    # noise = torch.randn(args.number_samples, nz, device=device)
 
-    kernels = get_filters(netG)
-    
-    for f in fake:
-        count = 0
-        for kernel in kernels:
-            deconv_image = F.conv2d(f, kernel)
-            save_image(deconv_image, args.dir_logs, count, name="deconv" + str(count) + "_")
-            count+=1
+    # with torch.no_grad():
+    #     fake = netG(noise).detach().cpu()#.numpy()
+
+    # for f in fake:
+    #     save_image(f, args.dir_logs, count)
+    #     count+=1
     
 
 main()

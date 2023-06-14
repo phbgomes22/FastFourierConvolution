@@ -248,7 +248,7 @@ def load_cond_stl(batch_size, image_size):
     
     dataloader = torch.utils.data.DataLoader(stl_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
 
-    print("INFO: Loaded Flowers dataset with ", len(dataloader.dataset), " images!")
+    print("INFO: Loaded STL-10 dataset with ", len(dataloader.dataset), " images!")
     print("INFO: Without Augmentation: ", len(hor_train))
 
     ## Checking images
