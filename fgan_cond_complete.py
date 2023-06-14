@@ -445,7 +445,7 @@ def train(args):
 
         # log
         if (step + 1) % 10 == 0:
-            step_info = {'loss_G': loss_G.cpu().item(), 'loss_D': loss_D.cpu().item()}
+            step_info = {'loss_G': loss_G.cpu().item(), 'loss_D': loss_D.cpu().item(), 'lr': scheduler_G.get_last_lr()[0]}
             pbar.set_postfix(step_info)
             for k, v in step_info.items():
                 tb.add_scalar(f'loss/{k}', v, global_step=step)
@@ -478,8 +478,8 @@ def train(args):
         )
         
         # log metrics
-        # for k, v in metrics.items():
-        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        for k, v in metrics.items():
+            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis, torch.argmax(z_label_vis, dim=1)).detach().cpu()
