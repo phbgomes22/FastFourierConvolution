@@ -201,6 +201,15 @@ def load_cond_stl(batch_size, image_size):
         ]
     )
 
+    random_crop = transforms.Compose(
+        [
+            transforms.RandomCrop(size=(60, 60)),
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
 
     crop_transform = transforms.Compose(
         [
@@ -222,8 +231,8 @@ def load_cond_stl(batch_size, image_size):
         ]
     )
 
-    # rand_rot_train = dset.STL10(root="./data_stl_train", split="train", transform=ds_transform, download=True)
-    # rand_rot_test = dset.STL10(root="./data_stl_test", split="test", transform=ds_transform, download=True)
+    rand_rot_train = dset.STL10(root="./data_stl_train", split="train", transform=random_crop, download=True)
+    rand_rot_test = dset.STL10(root="./data_stl_test", split="test", transform=random_crop, download=True)
 
     hor_train = dset.STL10(root="./data_stl_train", split="train", transform=aug_transform, download=True)
     hor_test = dset.STL10(root="./data_stl_test", split="test", transform=aug_transform, download=True)
@@ -234,7 +243,7 @@ def load_cond_stl(batch_size, image_size):
     resize_train = dset.STL10(root="./data_stl_train", split="train", transform=crop_transform, download=True)
     resize_test = dset.STL10(root="./data_stl_test", split="test", transform=crop_transform, download=True)
 
-    stl_set = torch.utils.data.ConcatDataset([ hor_train, hor_test,
+    stl_set = torch.utils.data.ConcatDataset([ rand_rot_train, rand_rot_test, hor_train, hor_test,
                                                vert_train, vert_test,
                                                resize_train, resize_test])
     
