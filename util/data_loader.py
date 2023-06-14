@@ -70,11 +70,18 @@ def register_dataset(dataset, image_size):
     else:
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
-def special_image_crop(image: PIL.Image.Image) -> PIL.Image.Image:
-    bbox = image.convert("L").getbbox()
+def special_image_crop(rotated_image: PIL.Image.Image) -> PIL.Image.Image:
+    # Find the indices of non-black pixels
+    non_black_indices = torch.where(rotated_image.sum(axis=2) != 0)
+
+    # Calculate the bounding box coordinates
+    min_x = non_black_indices[1].min()
+    min_y = non_black_indices[0].min()
+    max_x = non_black_indices[1].max()
+    max_y = non_black_indices[0].max()
 
     # Crop the rotated image using the bounding box
-    cropped_image = image.crop(bbox)
+    cropped_image = rotated_image.crop((min_x, min_y, max_x, max_y))
     return cropped_image
 
 def load_flowers(batch_size, image_size):
@@ -167,6 +174,83 @@ def load_flowers(batch_size, image_size):
         print("Cannot load image")
 
     return dataloader
+
+
+
+def load_cond_stl(batch_size, image_size):
+
+    ds_transform = transforms.Compose (
+        [
+            transforms.RandomRotation(degrees=(0, 360)),
+            transforms.Lambda(special_image_crop), ## testing if works
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+    
+    aug_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomHorizontalFlip(1.0),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+
+    vert_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomVerticalFlip(1.0),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    crop_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    rand_rot_train = dset.STL10(root="./data_stl_train", split="train", transform=ds_transform, download=True)
+    rand_rot_test = dset.STL10(root="./data_stl_test", split="test", transform=ds_transform, download=True)
+
+    hor_train = dset.STL10(root="./data_stl_train", split="train", transform=aug_transform, download=True)
+    hor_test = dset.STL10(root="./data_stl_test", split="test", transform=aug_transform, download=True)
+
+    vert_train = dset.STL10(root="./data_stl_train", split="train", transform=vert_transform, download=True)
+    vert_test = dset.STL10(root="./data_stl_test", split="test", transform=vert_transform, download=True)
+
+    resize_train = dset.STL10(root="./data_stl_train", split="train", transform=crop_transform, download=True)
+    resize_test = dset.STL10(root="./data_stl_test", split="test", transform=crop_transform, download=True)
+
+    stl_set = torch.utils.data.ConcatDataset([rand_rot_train,rand_rot_test,
+                                                          hor_train, hor_test,
+                                                          vert_train, vert_test,
+                                                          resize_train, resize_test])
+    
+    dataloader = torch.utils.data.DataLoader(stl_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+
+    print("INFO: Loaded Flowers dataset with ", len(dataloader.dataset), " images!")
+    print("INFO: Without Augmentation: ", len(rand_rot_train))
+
+    ## Checking images
+    try:
+        real_batch = next(iter(dataloader))
+        plt.figure(figsize=(8,8))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to('cuda')[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+        plt.savefig("training_set.jpg")
+    except OSError:
+        print("Cannot load image")
+
+    return dataloader
+
 
 
 def load_stl(batch_size, trans):

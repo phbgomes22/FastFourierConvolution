@@ -308,20 +308,24 @@ def train(args):
         mg = 4
        # input2_dataset = args.dataset + '-train'
         input2_dataset = 'cifar-10-32'
+        loader = torch.utils.data.DataLoader(
+            ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
+        )
+        register_dataset('cifar-10-32', image_size=image_size)
     elif args.dataset == 'svhn':
         ds_instance = torchvision.datasets.SVHN(root=dir_dataset, split='train', download=True, transform=ds_transform)
         mg = 4
         input2_dataset = 'svhn-32'
+        loader = torch.utils.data.DataLoader(
+            ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
+        )
+        register_dataset('svhn-32', image_size=image_size)
     else:
-        ds_instance = torchvision.datasets.STL10(dir_dataset, split='train', download=True, transform=ds_transform)
+        loader = load_cond_stl(args.batch_size, image_size)
         mg = 6
         input2_dataset = 'stl-10-48'
-
-    register_dataset('svhn-32', image_size=image_size)
-
-    loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
-    )
+        register_dataset('stl-10-48', image_size=image_size)
+    
     loader_iter = iter(loader)
 
     # reinterpret command line inputs
@@ -527,6 +531,7 @@ def main():
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_cond'))
+    parser.add_argument('--checkpoint', default=False, action='store_true')
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
     
