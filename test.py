@@ -138,6 +138,7 @@ def get_filters(args):
     print("conv_layers")
 
     model = model.to(device)
+    model.eval()
 
     image = transform(image)
     print(f"Image shape before: {image.shape}")
@@ -170,6 +171,8 @@ def get_filters(args):
             a = fig.add_subplot(5, 4, i+1)
             imgplot = plt.imshow(processed[i])
             a.axis("off")
+        img_to_add = Image.fromarray(img.cpu().numpy().astype(np.uint8))
+        fig.add_subplot(img_to_add)
         #   a.set_title(names[i].split('(')[0], fontsize=30)
         plt.savefig(os.path.join(args.dir_logs, str('feature_maps' + str(elem) + '.jpg')), bbox_inches='tight')
 
