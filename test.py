@@ -102,8 +102,8 @@ def get_filters(netG):
     # can plot them
     kernels = kernels - kernels.min()
     kernels = kernels / kernels.max()
-
-    filter_img = torchvision.utils.make_grid(kernels, nrow = 12)
+    
+    filter_img = torchvision.utils.make_grid(kernels.detach().cpu(), nrow = 12)
     # change ordering since matplotlib requires images to 
     # be (H, W, C)
     plt.imshow(filter_img.permute(1, 2, 0))
