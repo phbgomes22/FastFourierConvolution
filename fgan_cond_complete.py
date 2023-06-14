@@ -342,7 +342,7 @@ def train(args):
     G = FCondGeneratorSTL(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
     params = count_parameters(G)
-    print(G)
+
     
     print("- Parameters on generator: ", params)
 
@@ -350,7 +350,7 @@ def train(args):
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
-    print(D)
+
 
     # initialize persistent noise for observed samples
     z_vis = torch.randn(64, args.z_size, device=device)
