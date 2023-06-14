@@ -6,6 +6,7 @@ from PIL import Image
 import os
 import argparse
 import torchvision
+from torchvision import utils
 
 import torchvision.transforms.functional as F
 
@@ -90,26 +91,40 @@ def main():
 
     test(args)
 
+def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1): 
+    n,c,w,h = tensor.shape
+
+    if allkernels: tensor = tensor.view(n*c, -1, w, h)
+    elif c != 3: tensor = tensor[:,ch,:,:].unsqueeze(dim=1)
+
+    rows = np.min((tensor.shape[0] // nrow + 1, 64))    
+    grid = utils.make_grid(tensor, nrow=nrow, normalize=True, padding=padding)
+    plt.figure( figsize=(nrow,rows) )
+    plt.imshow(grid.numpy().transpose((1, 2, 0)))
+    plt.savefig('last_g2l_conv_kernel.png', bbox_inches='tight')
+
 
 def get_filters(netG):
 
-    kernels = netG.conv5.ffc.convg2l.weight.detach().clone()
+    kernels = netG.conv5.ffc.convg2l.weight.data.detach().clone()
 
     #check size for sanity check
     print(kernels.size())
 
+    visTensor(kernels, ch=0, allkernels=False)
+
     # normalize to (0,1) range so that matplotlib
     # can plot them
-    kernels = kernels - kernels.min()
-    kernels = kernels / kernels.max()
+    # kernels = kernels - kernels.min()
+    # kernels = kernels / kernels.max()
     
-    filter_img = torchvision.utils.make_grid(kernels.detach().cpu(), nrow = 12)
-    # change ordering since matplotlib requires images to 
-    # be (H, W, C)
-    plt.imshow(filter_img.permute(1, 2, 0))
+    # filter_img = torchvision.utils.make_grid(kernels.detach().cpu(), nrow = 12)
+    # # change ordering since matplotlib requires images to 
+    # # be (H, W, C)
+    # plt.imshow(filter_img.permute(1, 2, 0))
 
-    # You can directly save the image as well using
-    save_image(kernels, 'last_g2l_conv_kernel.png' ,nrow = 12)
+    # # You can directly save the image as well using
+    # save_image(kernels, 'last_g2l_conv_kernel.png' ,nrow = 12)
 
     return kernels
 
