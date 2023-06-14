@@ -8,7 +8,7 @@ import argparse
 import torchvision
 from torchvision import utils
 
-import torchvision.transforms.functional as F
+import torch.nn.functional as F
 
 device = get_device()
 
