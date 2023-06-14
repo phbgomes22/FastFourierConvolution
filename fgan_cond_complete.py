@@ -9,7 +9,7 @@ import os
 import PIL
 import torch
 import torchvision
-from tqdm.auto import tqdm
+import tqdm
 
 from torch.utils import tensorboard
 
@@ -364,8 +364,6 @@ def train(args):
     scheduler_D = torch.optim.lr_scheduler.LambdaLR(optim_D, lambda step: 1. - step / args.num_total_steps)
 
     # initialize logging
-    tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
-    pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
     os.makedirs(args.dir_logs, exist_ok=True)
 
     ini_step = 0
