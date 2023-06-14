@@ -111,7 +111,7 @@ def get_filters(netG):
     #check size for sanity check
     print(kernels.size())
 
-    visTensor(kernels, ch=0, allkernels=False)
+    visTensor(kernels.cpu(), ch=0, allkernels=False)
 
     # normalize to (0,1) range so that matplotlib
     # can plot them
