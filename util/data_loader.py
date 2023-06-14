@@ -71,8 +71,11 @@ def register_dataset(dataset, image_size):
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
 def special_image_crop(rotated_image: PIL.Image.Image) -> PIL.Image.Image:
+    # Convert the PIL Image to a NumPy array
+    rotated_image_np = torch.Tensor(np.array(rotated_image))
+
     # Find the indices of non-black pixels
-    non_black_indices = torch.where(rotated_image.sum(axis=2) != 0)
+    non_black_indices = torch.where(rotated_image_np.sum(axis=2) != 0)
 
     # Calculate the bounding box coordinates
     min_x = non_black_indices[1].min()
