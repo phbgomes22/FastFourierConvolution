@@ -150,7 +150,7 @@ def get_filters(args):
         z = torch.randn(1, args.z_size, device=device)
         
         img, outputs = model(z)
-        save_image(img.detach().cpu(), args.dir_logs, 1, os.path.join(args.dir_logs, str('base_image' + str(elem) + '.jpg')))
+        save_image(img.detach().cpu(), args.dir_logs, 1, str('base_image' + str(elem)))
 
         #print feature_maps
         for feature_map in outputs:
