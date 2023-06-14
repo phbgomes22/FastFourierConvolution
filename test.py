@@ -49,24 +49,38 @@ class FGenerator(FFCModel):
 
     def forward(self, z):
         
+        feature_maps = []
+        
         fake = self.noise_to_feature(z)
       
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
+        feature_maps.append(fake)
 
         fake = self.conv2(fake)
         if self.training:
             fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1]) 
         
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
+
         fake = self.conv3(fake)
         if self.training:
             fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
         
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
+
         fake = self.conv4(fake)
         if self.training:
             fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1]) 
 
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
+
         fake = self.conv5(fake)
         fake = self.resizer(fake)
+
+        feature_maps.append(fake)
 
         if not self.training:
             min_val = float(fake.min())
@@ -74,7 +88,7 @@ class FGenerator(FFCModel):
             fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
             # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        return fake
+        return fake, feature_maps
 
 transform = transforms.Compose(
         [
@@ -101,32 +115,34 @@ def main():
 
 
 
-def get_filters(args, model):
+def get_filters(args):
     ## 
     image = Image.open(args.base_image)
     plt.imshow(image)
 
+
+    nz = 128
+    mg = 4 if args.img_size == 32 else 6
+
+    model = FGenerator(z_size=nz, mg=mg).to(device) 
+    model.restore_checkpoint(ckpt_file=args.checkpoint_file)
+
+
+    #we will save the 49 conv layers in this list
+    conv_layers = [
+        model.noise_to_feature,
+        [model.conv2.ffc.convl2g, model.conv2.ffc.convg2l]
+    ]
+
     # we will save the conv layer weights in this list
     model_weights =[]
-    #we will save the 49 conv layers in this list
-    conv_layers = []
+
     # get all the model children as list
     model_children = list(model.children())
     #counter to keep count of the conv layers
     counter = 0
-    #append all the conv layers and their respective wights to the list
-    for i in range(len(model_children)):
-        if type(model_children[i]) == nn.Conv2d:
-            counter+=1
-            model_weights.append(model_children[i].weight)
-            conv_layers.append(model_children[i])
-        elif type(model_children[i]) == nn.Sequential:
-            for j in range(len(model_children[i])):
-                for child in model_children[i][j].children():
-                    if type(child) == nn.Conv2d:
-                        counter+=1
-                        model_weights.append(child.weight)
-                        conv_layers.append(child)
+
+
     print(f"Total convolution layers: {counter}")
     print("conv_layers")
 
@@ -139,13 +155,12 @@ def get_filters(args, model):
     print(f"Image shape after: {image.shape}")
     image = image.to(device)
 
-    outputs = []
-    names = []
-    for layer in conv_layers[0:]:
-        image = layer(image)
-        outputs.append(image)
-        names.append(str(layer))
-    print(len(outputs))
+    z = torch.randn(1, args.z_size, device=device)
+    
+    img, outputs = model(z)
+
+    save_image(img, args.logs, 1, 'example_image')
+
     #print feature_maps
     for feature_map in outputs:
         print(feature_map.shape)
@@ -165,7 +180,7 @@ def get_filters(args, model):
         a = fig.add_subplot(5, 4, i+1)
         imgplot = plt.imshow(processed[i])
         a.axis("off")
-        a.set_title(names[i].split('(')[0], fontsize=30)
+     #   a.set_title(names[i].split('(')[0], fontsize=30)
     plt.savefig(str('feature_maps.jpg'), bbox_inches='tight')
 
 
@@ -177,16 +192,16 @@ def save_image(fake, logs, num, name='image'):
     im.save(os.path.join(logs, name + str(num) + ".png"))
 
 def test(args):
-    nz = 128
-    mg = 4 if args.img_size == 32 else 6
    ## Loading generator
-    netG = FGenerator(z_size=nz, mg=mg).to(device) 
-    netG.restore_checkpoint(ckpt_file=args.checkpoint_file)
 
-    get_filters(args, netG)
+    get_filters(args)
 
     return
+    # nz = 128
+    # mg = 4 if args.img_size == 32 else 6
 
+    # model = FGenerator(z_size=nz, mg=mg).to(device) 
+    # model.restore_checkpoint(ckpt_file=args.checkpoint_file)
     # netG.eval()
     # count = 0
 
