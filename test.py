@@ -158,7 +158,6 @@ def get_filters(args):
     z = torch.randn(1, args.z_size, device=device)
     
     img, outputs = model(z)
-
     save_image(img.detach().cpu(), args.dir_logs, 1, 'example_image')
 
     #print feature_maps
@@ -185,6 +184,7 @@ def get_filters(args):
 
 
 def save_image(fake, logs, num, name='image'):
+    fake = torch.squeeze(fake)
     generated_image = np.transpose(fake.cpu(), (1,2,0))
     # generated_image -= generated_image.min()
     # generated_image /= generated_image.max()
