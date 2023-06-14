@@ -146,7 +146,6 @@ def get_filters(args):
     print(f"Total convolution layers: {counter}")
     print("conv_layers")
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
     image = transform(image)
