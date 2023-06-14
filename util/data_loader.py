@@ -210,7 +210,6 @@ def load_cond_stl(batch_size, image_size):
         ]
     )
 
-
     crop_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
@@ -231,17 +230,17 @@ def load_cond_stl(batch_size, image_size):
         ]
     )
 
-    rand_rot_train = dset.STL10(root="./data_stl_train", split="train", transform=random_crop, download=True)
-    rand_rot_test = dset.STL10(root="./data_stl_test", split="test", transform=random_crop, download=True)
+    rand_rot_train = dset.STL10(root="./stl_data/data_stl__trainrandr", split="train", transform=random_crop, download=True)
+    rand_rot_test = dset.STL10(root="./stl_data/data_stl_testr", split="test", transform=random_crop, download=True)
 
-    hor_train = dset.STL10(root="./data_stl_train", split="train", transform=aug_transform, download=True)
-    hor_test = dset.STL10(root="./data_stl_test", split="test", transform=aug_transform, download=True)
+    hor_train = dset.STL10(root="./stl_data/data_stl_trainh", split="train", transform=aug_transform, download=True)
+    hor_test = dset.STL10(root="./stl_data/data_stl_testh", split="test", transform=aug_transform, download=True)
 
-    vert_train = dset.STL10(root="./data_stl_train", split="train", transform=color_sharp_transform, download=True)
-    vert_test = dset.STL10(root="./data_stl_test", split="test", transform=color_sharp_transform, download=True)
+    vert_train = dset.STL10(root="./stl_data/data_stl_trainv", split="train", transform=color_sharp_transform, download=True)
+    vert_test = dset.STL10(root="./stl_data/data_stl_testv", split="test", transform=color_sharp_transform, download=True)
 
-    resize_train = dset.STL10(root="./data_stl_train", split="train", transform=crop_transform, download=True)
-    resize_test = dset.STL10(root="./data_stl_test", split="test", transform=crop_transform, download=True)
+    resize_train = dset.STL10(root="./stl_data/data_stl_trains", split="train", transform=crop_transform, download=True)
+    resize_test = dset.STL10(root="./stl_data/data_stl_tests", split="test", transform=crop_transform, download=True)
 
     stl_set = torch.utils.data.ConcatDataset([ rand_rot_train, rand_rot_test, hor_train, hor_test,
                                                vert_train, vert_test,
