@@ -129,17 +129,7 @@ def get_filters(args):
     model.restore_checkpoint(ckpt_file=args.checkpoint_file)
 
 
-    #we will save the 49 conv layers in this list
-    conv_layers = [
-        model.noise_to_feature,
-        [model.conv2.ffc.convl2g, model.conv2.ffc.convg2l]
-    ]
-
-    # we will save the conv layer weights in this list
-    model_weights =[]
-
-    # get all the model children as list
-    model_children = list(model.children())
+ 
     #counter to keep count of the conv layers
     counter = 0
 
@@ -155,32 +145,33 @@ def get_filters(args):
     print(f"Image shape after: {image.shape}")
     image = image.to(device)
 
-    z = torch.randn(1, args.z_size, device=device)
-    
-    img, outputs = model(z)
-    save_image(img.detach().cpu(), args.dir_logs, 1, 'example_image')
+    for elem in range(args.number_samples): 
+        z = torch.randn(1, args.z_size, device=device)
+        
+        img, outputs = model(z)
+        save_image(img.detach().cpu(), args.dir_logs, 1, 'example_image')
 
-    #print feature_maps
-    for feature_map in outputs:
-        print(feature_map.shape)
+        #print feature_maps
+        for feature_map in outputs:
+            print(feature_map.shape)
 
-    processed = []
-    for feature_map in outputs:
-        feature_map = feature_map.squeeze(0)
-        gray_scale = torch.sum(feature_map,0)
-        gray_scale = gray_scale / feature_map.shape[0]
-        processed.append(gray_scale.data.cpu().numpy())
-    for fm in processed:
-        print(fm.shape)
+        processed = []
+        for feature_map in outputs:
+            feature_map = feature_map.squeeze(0)
+            gray_scale = torch.sum(feature_map,0)
+            gray_scale = gray_scale / feature_map.shape[0]
+            processed.append(gray_scale.data.cpu().numpy())
+        for fm in processed:
+            print(fm.shape)
 
-    
-    fig = plt.figure(figsize=(30, 50))
-    for i in range(len(processed)):
-        a = fig.add_subplot(5, 4, i+1)
-        imgplot = plt.imshow(processed[i])
-        a.axis("off")
-     #   a.set_title(names[i].split('(')[0], fontsize=30)
-    plt.savefig(str('feature_maps.jpg'), bbox_inches='tight')
+        
+        fig = plt.figure(figsize=(30, 50))
+        for i in range(len(processed)):
+            a = fig.add_subplot(5, 4, i+1)
+            imgplot = plt.imshow(processed[i])
+            a.axis("off")
+        #   a.set_title(names[i].split('(')[0], fontsize=30)
+        plt.savefig(os.path.join(args.dir_logs, str('feature_maps' + str(elem) + '.jpg')), bbox_inches='tight')
 
 
 def save_image(fake, logs, num, name='image'):
