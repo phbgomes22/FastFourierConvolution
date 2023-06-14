@@ -159,7 +159,7 @@ def get_filters(args):
     
     img, outputs = model(z)
 
-    save_image(img, args.logs, 1, 'example_image')
+    save_image(img, args.dir_logs, 1, 'example_image')
 
     #print feature_maps
     for feature_map in outputs:
