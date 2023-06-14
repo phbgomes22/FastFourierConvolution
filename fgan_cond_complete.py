@@ -9,7 +9,7 @@ import os
 import PIL
 import torch
 import torchvision
-import tqdm
+from tqdm.auto import tqdm
 
 from torch.utils import tensorboard
 
