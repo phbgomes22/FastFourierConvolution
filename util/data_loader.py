@@ -202,20 +202,23 @@ def load_cond_stl(batch_size, image_size):
     )
 
 
-    vert_transform = transforms.Compose(
-        [
-            transforms.Resize(size=(image_size, image_size)),
-            transforms.RandomVerticalFlip(1.0),
-            transforms.ToTensor(), 
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ]
-    )
-
     crop_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    color_sharp_transform = transforms.Compose(
+        [
+            transforms.ColorJitter(brightness=0.5, hue=0.3),
+            transforms.RandomAdjustSharpness(sharpness_factor=2),
+            transforms.RandomAutocontrast(),
+            transforms.RandomEqualize(),
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ]
     )
 
@@ -225,8 +228,8 @@ def load_cond_stl(batch_size, image_size):
     hor_train = dset.STL10(root="./data_stl_train", split="train", transform=aug_transform, download=True)
     hor_test = dset.STL10(root="./data_stl_test", split="test", transform=aug_transform, download=True)
 
-    vert_train = dset.STL10(root="./data_stl_train", split="train", transform=vert_transform, download=True)
-    vert_test = dset.STL10(root="./data_stl_test", split="test", transform=vert_transform, download=True)
+    vert_train = dset.STL10(root="./data_stl_train", split="train", transform=color_sharp_transform, download=True)
+    vert_test = dset.STL10(root="./data_stl_test", split="test", transform=color_sharp_transform, download=True)
 
     resize_train = dset.STL10(root="./data_stl_train", split="train", transform=crop_transform, download=True)
     resize_test = dset.STL10(root="./data_stl_test", split="test", transform=crop_transform, download=True)
