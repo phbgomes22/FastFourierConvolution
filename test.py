@@ -192,25 +192,22 @@ def save_image(fake, logs, num, name='image'):
 def test(args):
    ## Loading generator
 
-    get_filters(args)
+    nz = 128
+    mg = 4 if args.img_size == 32 else 6
 
-    return
-    # nz = 128
-    # mg = 4 if args.img_size == 32 else 6
+    model = FGenerator(z_size=nz, mg=mg).to(device) 
+    model.restore_checkpoint(ckpt_file=args.checkpoint_file)
+    model.eval()
+    count = 0
 
-    # model = FGenerator(z_size=nz, mg=mg).to(device) 
-    # model.restore_checkpoint(ckpt_file=args.checkpoint_file)
-    # netG.eval()
-    # count = 0
+    noise = torch.randn(args.number_samples, nz, device=device)
 
-    # noise = torch.randn(args.number_samples, nz, device=device)
+    with torch.no_grad():
+        fake = model(noise).detach().cpu()#.numpy()
 
-    # with torch.no_grad():
-    #     fake = netG(noise).detach().cpu()#.numpy()
-
-    # for f in fake:
-    #     save_image(f, args.dir_logs, count)
-    #     count+=1
+    for f in fake:
+        save_image(f, args.dir_logs, count)
+        count+=1
     
 
 main()
