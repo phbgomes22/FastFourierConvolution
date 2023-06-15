@@ -131,7 +131,7 @@ def test_cond(args):
     labels = torch.zeros(number_samples, dtype=torch.long)
 
     for i in range(num_classes):
-        labels[i*num_per_class : (i+1)*num_per_class] = i
+        labels[i*num_per_class : (i+1)*num_per_class - 1] = i
     labels = labels.to(device)
 
     ## generate the samples
