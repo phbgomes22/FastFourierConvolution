@@ -142,7 +142,7 @@ def test_cond(args):
     for f in fake:
         generated_image = np.transpose(f, (1,2,0))
         im = Image.fromarray(generated_image.cpu().numpy().astype(np.uint8)) #.squeeze(axis=2).numpy() * 255
-        im.save(output_dir + 'image' + str(count) + ".jpg")
+        im.save(output_dir + '/' + 'image' + str(count) + ".jpg")
         count+=1
 
 
