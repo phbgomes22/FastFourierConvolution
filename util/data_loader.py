@@ -77,22 +77,6 @@ def register_dataset(dataset, image_size):
     else:
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
-def special_image_crop(rotated_image: PIL.Image.Image) -> PIL.Image.Image:
-    # Convert the PIL Image to a NumPy array
-    rotated_image_np = torch.Tensor(np.array(rotated_image))
-
-    # Find the indices of non-black pixels
-    non_black_indices = torch.where(rotated_image_np.sum(axis=2) != 0)
-
-    # Calculate the bounding box coordinates
-    min_x = non_black_indices[1].min()
-    min_y = non_black_indices[0].min()
-    max_x = non_black_indices[1].max()
-    max_y = non_black_indices[0].max()
-
-    # Crop the rotated image using the bounding box
-    cropped_image = rotated_image.crop((min_x, min_y, max_x, max_y))
-    return cropped_image
 
 def load_flowers(batch_size, image_size):
 
@@ -133,18 +117,6 @@ def load_flowers(batch_size, image_size):
         ]
     )
 
-    # color_sharp_transform = transforms.Compose(
-    #     [
-    #         transforms.ColorJitter(brightness=0.5, hue=0.3),
-    #         transforms.RandomAdjustSharpness(sharpness_factor=2),
-    #         transforms.RandomAutocontrast(),
-    #         transforms.RandomEqualize(),
-    #         transforms.Resize(size=(image_size, image_size)),
-    #         transforms.ToTensor(), 
-    #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    #     ]
-    # )
-
     ds_instance = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=ds_transform)
     ds_instance_val = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=ds_transform)
     ds_instance_test = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=ds_transform)
@@ -157,9 +129,6 @@ def load_flowers(batch_size, image_size):
     train_crop = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=crop_transform)
     val_crop = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=crop_transform)
     test_crop = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=crop_transform)
-    # train_color = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=color_sharp_transform)
-    # val_color = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=color_sharp_transform)
-    # test_color = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=color_sharp_transform)
 
     train_flowers_sets = torch.utils.data.ConcatDataset([ds_instance, ds_instance_val, ds_instance_test, 
                                                          train_hz, val_hz, test_hz,
@@ -189,16 +158,6 @@ def load_flowers(batch_size, image_size):
 
 def load_cond_stl(batch_size, image_size):
 
-    # ds_transform = transforms.Compose (
-    #     [
-    #         transforms.RandomRotation(degrees=(0, 360)),
-    #     #    transforms.Lambda(special_image_crop), ## testing if works
-    #         transforms.Resize(size=(image_size, image_size)),
-    #         transforms.ToTensor(), 
-    #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    #     ]
-    # )
-    
     aug_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
@@ -271,27 +230,32 @@ def load_cond_stl(batch_size, image_size):
 
     return dataloader
 
+def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../celeba_data'):
+
+    transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    # - For CelebA
+    print("Loading CelebA dataset... ")
+    ## - Trouble loading CelebA from dir?
+    ## - https://stackoverflow.com/questions/69755609/dataset-not-found-or-corrupted-you-can-use-download-true-to-download-it
+    dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+
+    return dataloader
 
 
 def load_stl(batch_size, trans):
    
     # train + test (# 13000)
     dataset = dset.STL10(root="./data", split="train+unlabeled", transform=trans, download=True)
-    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
-    # imgs, labels = [], []
-    # for x, y in dataloader:
-    #     imgs.append(x)
-    #     labels.append(y)
-    # dataset = dset.STL10(root="./data", split="test", transform=trans)
-    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
-    # for x, y in dataloader:
-    #     imgs.append(x)
-    #     labels.append(y)
-    # # as tensor
-    # all_imgs = torch.cat(imgs, dim=0)
-    # all_labels = torch.cat(labels, dim=0)
-    # # as dataset
-    # dataset = torch.utils.data.TensorDataset(all_imgs, all_labels)
+ 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     return dataloader
 

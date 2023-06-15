@@ -260,6 +260,11 @@ def train(args):
         input2_dataset = 'stl-10-48'
         register_dataset(input2_dataset, image_size=image_size)
         loader = load_stl(args.batch_size, ds_transform)
+    elif args.dataset == 'celeba':
+        mg = 6
+        input2_dataset = 'celeba-48'
+        register_dataset('celeba-48', image_size=image_size)
+        loader = load_celeba(file_path=args.dataset_path)
     else:
         print("ERROR: DATASET NOT VALIDATED!")
 
@@ -393,21 +398,21 @@ def train(args):
         print('Evaluating the generator...')
 
         # compute and log generative metrics
-        metrics = torch_fidelity.calculate_metrics(
-            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
-            input1_model_num_samples=args.num_samples_for_metrics,
-            input2= input2_dataset,
-            isc=True,
-            fid=True,
-            kid=True,
-            ppl=False,
-            ppl_epsilon=1e-2,
-            ppl_sample_similarity_resize=64,
-        )
+        # metrics = torch_fidelity.calculate_metrics(
+        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
+        #     input1_model_num_samples=args.num_samples_for_metrics,
+        #     input2= input2_dataset,
+        #     isc=True,
+        #     fid=True,
+        #     kid=True,
+        #     ppl=False,
+        #     ppl_epsilon=1e-2,
+        #     ppl_sample_similarity_resize=64,
+        # )
         
-        # log metrics
-        for k, v in metrics.items():
-            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        # # log metrics
+        # for k, v in metrics.items():
+        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis).detach().cpu()
@@ -417,10 +422,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
-        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-            last_best_metric = metrics[leading_metric]
+        #     last_best_metric = metrics[leading_metric]
 
         # resume training
         if next_step <= args.num_total_steps:
@@ -451,7 +456,7 @@ def main():
     parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
-    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10', 'flowers'))
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=('cifar10', 'stl10', 'flowers', 'celeba'))
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
@@ -460,6 +465,7 @@ def main():
     parser.add_argument('--conditional', default=False, action='store_true')
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan'))
     parser.add_argument('--checkpoint', default=False, action='store_true')
+    parser.add_argument('--dataset_path', type=str, required=False)
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
   #  assert not args.conditional, 'Conditional mode not implemented'
