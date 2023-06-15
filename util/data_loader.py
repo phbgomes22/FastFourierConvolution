@@ -47,6 +47,13 @@ class CIFAR_10(dset.CIFAR10):
         img, target = super().__getitem__(index)
         return img
 
+class SVHN_10(dset.SVHN):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, index):
+        img, target = super().__getitem__(index)
+        return img
 
 def get_device():
     # Decide which device we want to run on
@@ -66,7 +73,7 @@ def register_dataset(dataset, image_size):
     elif dataset == 'flowers-48':
         torch_fidelity.register_dataset('flowers-48', lambda root, download: Flowers_102(root=root, split='train', download=download, transform=transform_dts))
     elif dataset == 'svhn-32':
-        torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN(root, split='train', download=download, transform=transform_dts))
+        torch_fidelity.register_dataset('svhn-32', lambda root, download: SVHN_10(root, split='train', download=download, transform=transform_dts))
     else:
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
@@ -220,7 +227,7 @@ def load_cond_stl(batch_size, image_size):
 
     color_sharp_transform = transforms.Compose(
         [
-            transforms.ColorJitter(brightness=0.5, hue=0.3),
+            transforms.ColorJitter(brightness=0.5, hue=0.1),
             transforms.RandomAdjustSharpness(sharpness_factor=2),
             transforms.RandomAutocontrast(),
             transforms.RandomEqualize(),
