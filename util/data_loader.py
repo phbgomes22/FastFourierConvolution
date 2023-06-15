@@ -244,7 +244,8 @@ def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../
     print("Loading CelebA dataset... ")
     ## - Trouble loading CelebA from dir?
     ## - https://stackoverflow.com/questions/69755609/dataset-not-found-or-corrupted-you-can-use-download-true-to-download-it
-    dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
+    #dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
+    dataset = dset.ImageFolder(root=file_path, transform=transform)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
 
