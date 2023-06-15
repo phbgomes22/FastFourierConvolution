@@ -155,6 +155,27 @@ def load_flowers(batch_size, image_size):
     return dataloader
 
 
+def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../celeba_data'):
+
+    transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    # - For CelebA
+    print("Loading CelebA dataset... ")
+    ## - Trouble loading CelebA from dir?
+    ## - https://stackoverflow.com/questions/69755609/dataset-not-found-or-corrupted-you-can-use-download-true-to-download-it
+    #dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
+    dataset = dset.ImageFolder(root=file_path, transform=transform)
+    print("INFO: Loaded CelebA dataset with ", len(dataset), " images!")
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+    
+    return dataloader
+
 
 def load_cond_stl(batch_size, image_size):
 
@@ -230,27 +251,6 @@ def load_cond_stl(batch_size, image_size):
 
     return dataloader
 
-def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../celeba_data'):
-
-    transform = transforms.Compose(
-        [
-            transforms.Resize(size=(image_size, image_size)),
-            transforms.ToTensor(), 
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ]
-    )
-
-    # - For CelebA
-    print("Loading CelebA dataset... ")
-    ## - Trouble loading CelebA from dir?
-    ## - https://stackoverflow.com/questions/69755609/dataset-not-found-or-corrupted-you-can-use-download-true-to-download-it
-    #dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
-    dataset = dset.ImageFolder(root=file_path, transform=transform)
-
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
-
-    return dataloader
-
 
 def load_stl(batch_size, trans):
    
@@ -259,6 +259,7 @@ def load_stl(batch_size, trans):
  
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     return dataloader
+
 
 def load_data(color_channels: int = -1):
     ''''
