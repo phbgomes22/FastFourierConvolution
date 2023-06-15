@@ -110,7 +110,7 @@ def main():
 
 def test_cond(args):
     number_samples = args.number_samples
-    output_dir = args.dir_longs
+    output_dir = args.dir_logs
     mg = 4 if args.img_size == 32 else 6
     num_classes = 10
 
