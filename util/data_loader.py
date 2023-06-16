@@ -16,7 +16,9 @@ from config import Config, Datasets
 from .tar_loader import TarImageFolder
 import torchvision.transforms.functional as F
 import torch_fidelity
+#from natsort import natsorted
 import PIL
+import os
 
 
 class TransformPILtoRGBTensor:
@@ -155,7 +157,48 @@ def load_flowers(batch_size, image_size):
     return dataloader
 
 
+## Create a custom Dataset class
+class CelebADataset(torch.utils.data.Dataset):
+  #https://stackoverflow.com/questions/65528568/how-do-i-load-the-celeba-dataset-on-google-colab-using-torch-vision-without-ru
+  #
+  def __init__(self, root_dir, transform=None):
+    """
+    Args:
+      root_dir (string): Directory with all the images
+      transform (callable, optional): transform to be applied to each image sample
+    """
+    # Read names of images in the root directory
+    image_names = os.listdir(root_dir)
+
+    self.root_dir = root_dir
+    self.transform = transform 
+    self.image_names = image_names#natsorted(image_names)
+
+  def __len__(self): 
+    return len(self.image_names)
+
+  def __getitem__(self, idx):
+    # Get the path to the image 
+    img_path = os.path.join(self.root_dir, self.image_names[idx])
+    # Load image and convert it to RGB
+    img = PIL.Image.open(img_path).convert('RGB')
+    # Apply transformations to the image
+    if self.transform:
+      img = self.transform(img)
+
+    return img
+
+
 def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../celeba_data'):
+    ## Load the dataset 
+    # Path to directory with all the images
+    img_folder = file_path#f'{file_path}/img_align_celeba'
+    # Spatial size of training images, images are resized to this size.
+    image_size = 64
+    # Transformations to be applied to each individual image sample
+
+    # Load the dataset from file and apply transformations
+
 
     transform = transforms.Compose(
         [
@@ -170,9 +213,10 @@ def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../
     ## - Trouble loading CelebA from dir?
     ## - https://stackoverflow.com/questions/69755609/dataset-not-found-or-corrupted-you-can-use-download-true-to-download-it
     #dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
-    dataset = dset.ImageFolder(root=file_path, transform=transform)
-    print("INFO: Loaded CelebA dataset with ", len(dataset), " images!")
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+    
+    celeba_dataset = CelebADataset(img_folder, transform)
+    print("INFO: Loaded CelebA dataset with ", len(celeba_dataset), " images!")
+    dataloader = torch.utils.data.DataLoader(celeba_dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     
     return dataloader
 
