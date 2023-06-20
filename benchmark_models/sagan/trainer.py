@@ -180,12 +180,12 @@ class Trainer(object):
 
             # Sample images
             if (step + 1) % self.sample_step == 0:
-                self.G.eval()
-
                 fake_images = self.G(fixed_z) #,_,,_
                 save_image(denorm(fake_images.data),
                            os.path.join(self.sample_path, '{}_fake.png'.format(step + 1)))
                 
+                self.G.eval()
+
                 metrics = torch_fidelity.calculate_metrics(
                     input1=torch_fidelity.GenerativeModelModuleWrapper(self.G, self.z_dim, 'normal', 0),
                     input1_model_num_samples=5000,
