@@ -94,12 +94,12 @@ class Generator(nn.Module):
         out=self.l1(z)
         out=self.l2(out)
         out=self.l3(out)
-        out,p1 = self.attn1(out)
+        # out,p1 = self.attn1(out)
         # out=self.l4(out)
-        # out,p2 = self.attn2(out)
+        out,p2 = self.attn2(out)
         out=self.last(out)
 
-        return out, p1 #, p2 
+        return out, p2 #p1#,
 
 
 class Discriminator(nn.Module):
