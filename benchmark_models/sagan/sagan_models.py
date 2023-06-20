@@ -68,6 +68,7 @@ class Generator(nn.Module):
         layer3.append(nn.BatchNorm2d(int(curr_dim / 2)))
         layer3.append(nn.ReLU())
 
+        self.l4 = nn.Identity()
         if self.imsize == 64:
             layer4 = []
             curr_dim = int(curr_dim / 2)
