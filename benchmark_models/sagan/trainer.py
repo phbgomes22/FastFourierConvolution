@@ -11,6 +11,8 @@ from torchvision.utils import save_image
 from sagan_models import Generator, Discriminator
 from utils import *
 
+import torch_fidelity
+
 class Trainer(object):
     def __init__(self, data_loader, config):
 
@@ -178,9 +180,24 @@ class Trainer(object):
 
             # Sample images
             if (step + 1) % self.sample_step == 0:
+                self.G.eval()
+
                 fake_images,_ = self.G(fixed_z) #,_
                 save_image(denorm(fake_images.data),
                            os.path.join(self.sample_path, '{}_fake.png'.format(step + 1)))
+                
+                metrics = torch_fidelity.calculate_metrics(
+                    input1=torch_fidelity.GenerativeModelModuleWrapper(self.G, self.z_dim, 'normal', 0),
+                    input1_model_num_samples=5000,
+                    input2= 'cifar10-train',
+                    isc=True,
+                    fid=True,
+                    kid=True,
+                    ppl=False,
+                    ppl_epsilon=1e-2,
+                    ppl_sample_similarity_resize=64,
+                )
+                self.G.train()
 
             if (step+1) % model_save_step==0:
                 torch.save(self.G.state_dict(),

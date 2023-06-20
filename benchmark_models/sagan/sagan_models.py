@@ -99,6 +99,13 @@ class Generator(nn.Module):
         out,p2 = self.attn2(out)
         out=self.last(out)
 
+        if not self.training:
+            min_val = float(out.min())
+            max_val = float(out.max())
+            out = (255 * (out.clamp(min_val, max_val) * 0.5 + 0.5))
+            
+            out = out.to(torch.uint8)
+
         return out, p2 #p1#,
 
 
