@@ -148,9 +148,9 @@ class Discriminator(nn.Module):
         out = self.l1(x)
         out = self.l2(out)
         out = self.l3(out)
-        # out,p1 = self.attn1(out)
+        out,p1 = self.attn1(out)
         # out=self.l4(out)
-        out,p2 = self.attn2(out)
+        # out,p2 = self.attn2(out)
         out=self.last(out)
 
-        return out.squeeze(), p2 #, p1
+        return out.squeeze(), p1#, p2
