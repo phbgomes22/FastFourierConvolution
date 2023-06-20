@@ -182,7 +182,7 @@ class Trainer(object):
             if (step + 1) % self.sample_step == 0:
                 self.G.eval()
 
-                fake_images,_ = self.G(fixed_z) #,_
+                fake_images = self.G(fixed_z) #,_,,_
                 save_image(denorm(fake_images.data),
                            os.path.join(self.sample_path, '{}_fake.png'.format(step + 1)))
                 

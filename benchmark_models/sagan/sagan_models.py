@@ -105,6 +105,7 @@ class Generator(nn.Module):
             out = (255 * (out.clamp(min_val, max_val) * 0.5 + 0.5))
             
             out = out.to(torch.uint8)
+            return out
 
         return out, p2 #p1#,
 
