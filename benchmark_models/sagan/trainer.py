@@ -101,7 +101,7 @@ class Trainer(object):
             # Compute loss with real images
             # dr1, dr2, df1, df2, gf1, gf2 are attention scores
             real_images = tensor2var(real_images)
-            d_out_real,dr1,dr2 = self.D(real_images)
+            d_out_real,dr1 = self.D(real_images) #,dr2
             if self.adv_loss == 'wgan-gp':
                 d_loss_real = - torch.mean(d_out_real)
             elif self.adv_loss == 'hinge':
@@ -109,8 +109,8 @@ class Trainer(object):
 
             # apply Gumbel Softmax
             z = tensor2var(torch.randn(real_images.size(0), self.z_dim))
-            fake_images,gf1,gf2 = self.G(z)
-            d_out_fake,df1,df2 = self.D(fake_images)
+            fake_images,gf1 = self.G(z) #,gf2
+            d_out_fake,df1 = self.D(fake_images) #,df2
 
             if self.adv_loss == 'wgan-gp':
                 d_loss_fake = d_out_fake.mean()
@@ -129,7 +129,7 @@ class Trainer(object):
                 # Compute gradient penalty
                 alpha = torch.rand(real_images.size(0), 1, 1, 1).cuda().expand_as(real_images)
                 interpolated = Variable(alpha * real_images.data + (1 - alpha) * fake_images.data, requires_grad=True)
-                out,_,_ = self.D(interpolated)
+                out,_ = self.D(interpolated) #,_
 
                 grad = torch.autograd.grad(outputs=out,
                                            inputs=interpolated,
@@ -152,10 +152,10 @@ class Trainer(object):
             # ================== Train G and gumbel ================== #
             # Create random noise
             z = tensor2var(torch.randn(real_images.size(0), self.z_dim))
-            fake_images,_,_ = self.G(z)
+            fake_images,_ = self.G(z) #,_
 
             # Compute loss with fake images
-            g_out_fake,_,_ = self.D(fake_images)  # batch x n
+            g_out_fake,_ = self.D(fake_images)  # batch x n #,_ 
             if self.adv_loss == 'wgan-gp':
                 g_loss_fake = - g_out_fake.mean()
             elif self.adv_loss == 'hinge':
@@ -178,7 +178,7 @@ class Trainer(object):
 
             # Sample images
             if (step + 1) % self.sample_step == 0:
-                fake_images,_,_= self.G(fixed_z)
+                fake_images,_ = self.G(fixed_z) #,_
                 save_image(denorm(fake_images.data),
                            os.path.join(self.sample_path, '{}_fake.png'.format(step + 1)))
 
