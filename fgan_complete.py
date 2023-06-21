@@ -409,21 +409,21 @@ def train(args):
         print('Evaluating the generator...')
 
         # compute and log generative metrics
-        # metrics = torch_fidelity.calculate_metrics(
-        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
-        #     input1_model_num_samples=args.num_samples_for_metrics,
-        #     input2= input2_dataset,
-        #     isc=True,
-        #     fid=True,
-        #     kid=True,
-        #     ppl=False,
-        #     ppl_epsilon=1e-2,
-        #     ppl_sample_similarity_resize=64,
-        # )
+        metrics = torch_fidelity.calculate_metrics(
+            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
+            input1_model_num_samples=args.num_samples_for_metrics,
+            input2= input2_dataset,
+            isc=True,
+            fid=True,
+            kid=True,
+            ppl=False,
+            ppl_epsilon=1e-2,
+            ppl_sample_similarity_resize=64,
+        )
         
-        # # log metrics
-        # for k, v in metrics.items():
-        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        # log metrics
+        for k, v in metrics.items():
+            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis).detach().cpu()
@@ -433,10 +433,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # save the generator if it improved
-        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-        #     last_best_metric = metrics[leading_metric]
+            last_best_metric = metrics[leading_metric]
 
         # resume training
         if next_step <= args.num_total_steps:
