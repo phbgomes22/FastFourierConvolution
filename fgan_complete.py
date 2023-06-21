@@ -158,7 +158,7 @@ class Discriminator(FFCModel):
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
-        self.attn1 = Self_Attn(256, 'relu')
+        self.attn1 = Self_Attn(512, 'relu')
 
     def forward(self, x):
         m = self.act(self.conv1(x))
