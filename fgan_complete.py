@@ -51,6 +51,11 @@ class Generator(FFCModel):
             torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
             torch.nn.BatchNorm2d(64),
             torch.nn.ReLU(),
+        )
+
+        self.attn = Self_Attn( 64,  'relu')
+
+        self.last = torch.nn.Sequential(
             torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
             torch.nn.Tanh()
         )
@@ -61,6 +66,9 @@ class Generator(FFCModel):
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
 
         fake = self.model(fake)
+        fake, out = self.attn(fake)
+        fake = self.last(fake)
+
         if not self.training:
             min_val = float(fake.min())
             max_val = float(fake.max())
@@ -150,6 +158,8 @@ class Discriminator(FFCModel):
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
+        self.attn1 = Self_Attn(256, 'relu')
+
     def forward(self, x):
         m = self.act(self.conv1(x))
         m = self.act(self.conv2(m))
@@ -158,6 +168,7 @@ class Discriminator(FFCModel):
         m = self.act(self.conv5(m))
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
+        m, out = self.attn1(m)
         output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
