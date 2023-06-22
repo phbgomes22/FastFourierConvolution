@@ -53,8 +53,9 @@ class TarDataset(Dataset):
         image = image.read()
         try:
           image = Image.open(io.BytesIO(image))
-        except UnidentifiedImageError:
+        except:
             print("++++image not found: ". image)
+            pass
         return image
 
     def __len__(self):
