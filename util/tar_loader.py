@@ -39,7 +39,12 @@ class TarDataset(Dataset):
         :param name: name of targeted image
         :return: a PIL image
         """
-        image = self.tf.extractfile(name)
+        try:
+          image = self.tf.extractfile(name)
+        except:
+          print("File not found: ", name)
+          pass
+        
         image = image.read()
         image = Image.open(io.BytesIO(image))
         return image
