@@ -218,7 +218,7 @@ def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../
    # celeba_dataset = CelebADataset(img_folder, transform)
     celeba_dataset = TarDataset(txt_path=txt_path, img_dir=img_dir, transform=transform)
     print("INFO: Loaded CelebA dataset with ", len(celeba_dataset), " images!")
-    dataloader = torch.utils.data.DataLoader(celeba_dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(celeba_dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True)
     
     return dataloader
 
