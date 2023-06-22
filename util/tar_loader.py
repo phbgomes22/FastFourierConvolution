@@ -41,15 +41,14 @@ class TarDataset(Dataset):
         :return: a PIL image
         """
         
-        try:
-          image = self.tf.extractfile(name)
-          self.prev_image = image
-        except:
-          image = self.prev_image
-          print("File not found: ", name)
-          pass
-        if image == None:
-            raise "No prev image"
+        # try:
+        image = self.tf.extractfile(name)
+        #   self.prev_image = image
+        # except:
+        #   image = self.prev_image
+        #   print("File not found: ", name)
+        #   pass
+        
 
         image = image.read()
         image = Image.open(io.BytesIO(image))
