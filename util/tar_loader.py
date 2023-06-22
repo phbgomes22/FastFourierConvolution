@@ -31,6 +31,7 @@ class TarDataset(Dataset):
         self.to_tensor = ToTensor()
         self.to_pil = ToPILImage()
         self.tf = tarfile.open(self.img_dir)
+        self.prev_image = None
 
     def get_image_from_tar(self, name):
         """
@@ -39,12 +40,13 @@ class TarDataset(Dataset):
         :param name: name of targeted image
         :return: a PIL image
         """
+        image = ""
         try:
           image = self.tf.extractfile(name)
         except:
           print("File not found: ", name)
           pass
-        
+
         image = image.read()
         image = Image.open(io.BytesIO(image))
         return image
