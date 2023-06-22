@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from torchvision.transforms import ToTensor, ToPILImage
 import numpy as np
 import random
@@ -51,7 +51,10 @@ class TarDataset(Dataset):
         
 
         image = image.read()
-        image = Image.open(io.BytesIO(image))
+        try:
+          image = Image.open(io.BytesIO(image))
+        except UnidentifiedImageError:
+                print(image)
         return image
 
     def __len__(self):
