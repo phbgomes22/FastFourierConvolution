@@ -51,10 +51,11 @@ class TarDataset(Dataset):
         
 
         image = image.read()
+        print("++++image loaded: ", image)
         try:
           image = Image.open(io.BytesIO(image))
         except:
-            print("++++image not found: ". image)
+            print("++++image not found: ", image)
             pass
         return image
 
