@@ -191,14 +191,7 @@ class CelebADataset(torch.utils.data.Dataset):
 
 def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../celeba_data'):
     ## Load the dataset 
-    # Path to directory with all the images
-    img_folder = file_path#f'{file_path}/img_align_celeba'
-    # Spatial size of training images, images are resized to this size.
-    image_size = 64
-    # Transformations to be applied to each individual image sample
-
-    # Load the dataset from file and apply transformations
-    img_dir = img_folder 
+    img_dir = file_path 
 
     transform = transforms.Compose(
         [
