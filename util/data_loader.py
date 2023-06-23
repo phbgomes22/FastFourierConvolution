@@ -13,7 +13,7 @@ from torchvision.utils import save_image
 from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102, FashionMNIST
 from config import Config, Datasets
 
-from .tar_loader import TarDataset
+from .tar_loader import TarImageFolder, TarDataset
 import torchvision.transforms.functional as F
 import torch_fidelity
 from natsort import natsorted
@@ -216,7 +216,7 @@ def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../
     #dataset = CelebA(root=file_path, split='all', download=True, transform=transform)
     
    # celeba_dataset = CelebADataset(img_folder, transform)
-    celeba_dataset = TarDataset(txt_path=txt_path, img_dir=img_dir, transform=transform)
+    celeba_dataset = TarDataset(archive=img_dir, transform=transform, )#(txt_path=txt_path, img_dir=img_dir, transform=transform)
     print("INFO: Loaded CelebA dataset with ", len(celeba_dataset), " images!")
     dataloader = torch.utils.data.DataLoader(celeba_dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True)
     
