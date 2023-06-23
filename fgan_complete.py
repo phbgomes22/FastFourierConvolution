@@ -274,7 +274,7 @@ def train(args):
         mg = 6
         input2_dataset = 'celeba-48'
         register_dataset('celeba-48', image_size=image_size)
-        loader = load_celeba(file_path=args.dataset_path)
+        loader = load_celeba(batch_size=args.batch_size, file_path=args.dataset_path)
     else:
         print("ERROR: DATASET NOT VALIDATED!")
 
