@@ -64,7 +64,7 @@ class TarDataset(Dataset):
       and __len__).
   Author: Joao F. Henriques
   """
-  def __init__(self, archive, transform=to_tensor, extensions=('.png', '.jpg', '.jpeg'),
+  def __init__(self, archive, transform=to_tensor, labeled:bool=True extensions=('.png', '.jpg', '.jpeg'),
     is_valid_file=None, ignore_unexpected_eof=False):
     if not isinstance(archive, TarDataset):
       # open tar file. in a multiprocessing setting (e.g. DataLoader workers), we
@@ -75,6 +75,7 @@ class TarDataset(Dataset):
       worker = worker.id if worker else None
       self.tar_obj = {worker: tarfile.open(archive) if ignore_unexpected_eof is False else UnexpectedEOFTarFile.open(archive)}
       self.archive = archive
+      self.labeled = labeled
 
       # store headers of all files and folders by name
       members = sorted(self.tar_obj[worker].getmembers(), key=lambda m: m.name)
@@ -130,7 +131,9 @@ class TarDataset(Dataset):
     image = image.convert('RGB')  # if it's grayscale, convert to RGB
     if self.transform:  # apply any custom transforms
       image = self.transform(image)
-    return image
+
+    dummy_label = 0
+    return image, dummy_label if self.labeled else image
 
 
   def __len__(self):
