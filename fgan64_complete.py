@@ -133,7 +133,6 @@ class Discriminator(FFCModel):
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
         m = self.act(self.conv8(m))
-        print(m.shape)
         output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
