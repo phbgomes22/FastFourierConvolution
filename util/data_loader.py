@@ -217,8 +217,20 @@ def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../
    # celeba_dataset = CelebADataset(img_folder, transform)
     celeba_dataset = TarDataset(archive=img_dir, transform=transform, )#(txt_path=txt_path, img_dir=img_dir, transform=transform)
     print("INFO: Loaded CelebA dataset with ", len(celeba_dataset), " images!")
-    dataloader = torch.utils.data.DataLoader(celeba_dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(celeba_dataset, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     
+    try:
+        real_batch = next(iter(dataloader))
+        plt.figure(figsize=(8,8))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to('cuda')[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+        plt.savefig("training_set.jpg")
+        print("Image shape: ", real_batch[0].to('cuda')[0].shape)
+    except OSError:
+        print("Cannot load image")
+
+
     return dataloader
 
 
