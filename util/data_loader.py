@@ -198,8 +198,7 @@ def load_celeba(batch_size: int = 64, image_size:int = 48, file_path: str = '../
     # Transformations to be applied to each individual image sample
 
     # Load the dataset from file and apply transformations
-    txt_path = img_folder + "/output.txt"
-    img_dir = img_folder + "/img_align_celeba.tar"
+    img_dir = img_folder 
 
     transform = transforms.Compose(
         [
