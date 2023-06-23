@@ -118,7 +118,7 @@ class Discriminator(FFCModel):
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.conv8 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
-        self.conv9 = sn_fn(torch.nn.Conv2d(1024, 1024, 3, stride=1, padding=(1,1)))
+        self.conv9 = sn_fn(torch.nn.Conv2d(512, 1024, 3, stride=1, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 1024, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
