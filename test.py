@@ -49,38 +49,38 @@ class FGenerator(FFCModel):
 
     def forward(self, z):
         
-        feature_maps = []
+        # feature_maps = []
         
         fake = self.noise_to_feature(z)
       
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
-        feature_maps.append(fake)
+        # feature_maps.append(fake)
 
         fake = self.conv2(fake)
         if self.training:
             fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1]) 
         
-        feature_maps.append(fake[0])
-        feature_maps.append(fake[1])
+        # feature_maps.append(fake[0])
+        # feature_maps.append(fake[1])
 
         fake = self.conv3(fake)
         if self.training:
             fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
         
-        feature_maps.append(fake[0])
-        feature_maps.append(fake[1])
+        # feature_maps.append(fake[0])
+        # feature_maps.append(fake[1])
 
         fake = self.conv4(fake)
         if self.training:
             fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1]) 
 
-        feature_maps.append(fake[0])
-        feature_maps.append(fake[1])
+        # feature_maps.append(fake[0])
+        # feature_maps.append(fake[1])
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
 
-        feature_maps.append(fake)
+        #feature_maps.append(fake)
 
         if not self.training:
             min_val = float(fake.min())
@@ -88,7 +88,7 @@ class FGenerator(FFCModel):
             fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
             # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        return fake, feature_maps
+        return fake #, feature_maps
 
 transform = transforms.Compose(
         [
