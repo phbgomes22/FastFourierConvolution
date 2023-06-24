@@ -188,7 +188,7 @@ def test(args):
    ## Loading generator
 
     nz = 128
-    mg = 4 if args.img_size == 32 else 6
+    mg = 4 if args.img_size % 32 == 0 else 6
 
     model = FGenerator(z_size=nz, mg=mg).to(device) 
     model.restore_checkpoint(ckpt_file=args.checkpoint_file)
