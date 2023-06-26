@@ -241,7 +241,7 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
+    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
