@@ -31,6 +31,57 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
+class Generator(FFCModel):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, z_size, mg: int = 4):
+        super(Generator, self).__init__()
+        self.z_size = z_size
+        self.mg = mg
+        self.ngf = 64
+
+        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8)
+      
+        self.model = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(256),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(128),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(64),
+            torch.nn.ReLU(),
+            torch.nn.ConvTranspose2d(64, 64, 4, stride=2, padding=(1,1)),
+            torch.nn.BatchNorm2d(64),
+            torch.nn.ReLU(),
+        )
+
+        self.attn = Self_Attn( 64,  'relu')
+
+        self.last = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
+            torch.nn.Tanh()
+        )
+
+    def forward(self, z):
+
+        fake = self.noise_to_feature(z)
+        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
+
+        fake = self.model(fake)
+        fake, out = self.attn(fake)
+        fake = self.last(fake)
+
+        if not self.training:
+            min_val = float(fake.min())
+            max_val = float(fake.max())
+            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
+         #  fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = fake.to(torch.uint8)
+
+        return fake
+
+
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4):
@@ -190,7 +241,7 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = Generator(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
