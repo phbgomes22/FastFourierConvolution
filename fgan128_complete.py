@@ -325,7 +325,7 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
-            if args.checkpoint and next_step > args.num_total_steps//10:
+            if args.checkpoint:
                 G.save_checkpoint(directory = netG_ckpt_dir,
                                         global_step = next_step,
                                         optimizer = optim_G,
