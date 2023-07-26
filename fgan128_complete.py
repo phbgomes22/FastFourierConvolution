@@ -31,56 +31,6 @@ def weights_init(m):
         nn.init.constant_(m.bias.data, 0)
 
 
-class Generator(FFCModel):
-    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size, mg: int = 4):
-        super(Generator, self).__init__()
-        self.z_size = z_size
-        self.mg = mg
-        self.ngf = 64
-
-        self.noise_to_feature = nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8)
-      
-        self.model = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(512, 256, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(256),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(256, 128, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(128),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(128, 64, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(64),
-            torch.nn.ReLU(),
-            torch.nn.ConvTranspose2d(64, 64, 4, stride=2, padding=(1,1)),
-            torch.nn.BatchNorm2d(64),
-            torch.nn.ReLU(),
-        )
-
-        self.attn = Self_Attn( 64,  'relu')
-
-        self.last = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(64, 3, 3, stride=1, padding=(1,1)),
-            torch.nn.Tanh()
-        )
-
-    def forward(self, z):
-
-        fake = self.noise_to_feature(z)
-        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
-
-        fake = self.model(fake)
-        fake, out = self.attn(fake)
-        fake = self.last(fake)
-
-        if not self.training:
-            min_val = float(fake.min())
-            max_val = float(fake.max())
-            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
-         #  fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
-            fake = fake.to(torch.uint8)
-
-        return fake
-
 
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
@@ -117,8 +67,14 @@ class FGenerator(FFCModel):
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise5 = NoiseInjection(int(self.ngf*(1-ratio_g)))
         self.glb_noise5 = NoiseInjection(int(self.ngf*(ratio_g)))
+
+
+        self.conv6 = FFC_BN_ACT(self.ngf, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise6 = NoiseInjection(int(self.ngf*(1-ratio_g)))
+        self.glb_noise6 = NoiseInjection(int(self.ngf*(ratio_g)))
         
-        self.conv6 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+        self.conv7 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
 
     def forward(self, z):
@@ -144,6 +100,10 @@ class FGenerator(FFCModel):
             fake = self.lcl_noise5(fake[0]), self.glb_noise5(fake[1]) 
 
         fake = self.conv6(fake)
+        if self.training:
+            fake = self.lcl_noise6(fake[0]), self.glb_noise6(fake[1]) 
+
+        fake = self.conv7(fake)
         fake = self.resizer(fake)
 
         if not self.training:
@@ -169,6 +129,7 @@ class Discriminator(FFCModel):
         self.conv6 = sn_fn(torch.nn.Conv2d(256, 256, 4, stride=2, padding=(1,1)))
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.conv8 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
+        self.conv9 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
         self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
@@ -184,6 +145,7 @@ class Discriminator(FFCModel):
         m = self.act(self.conv6(m))
         m = self.act(self.conv7(m))
         m = self.act(self.conv8(m))
+        m = self.act(self.conv9(m))
         output = self.fc(m.view(-1, self.mg * self.mg * 512))
  
         return output
@@ -217,15 +179,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' else 48
-    ds_transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.Resize(size=(image_size, image_size)),
-           # torchvision.transforms.CenterCrop(image_size),
-            torchvision.transforms.ToTensor(), 
-            torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ]
-    )
+    image_size = 128
 
 
     mg = 4
