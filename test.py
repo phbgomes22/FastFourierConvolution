@@ -12,7 +12,6 @@ import torch.nn.functional as F
 
 device = get_device()
 
-
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4):
@@ -48,8 +47,14 @@ class FGenerator(FFCModel):
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise5 = NoiseInjection(int(self.ngf*(1-ratio_g)))
         self.glb_noise5 = NoiseInjection(int(self.ngf*(ratio_g)))
+
+
+        self.conv6 = FFC_BN_ACT(self.ngf, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+        self.lcl_noise6 = NoiseInjection(int(self.ngf*(1-ratio_g)))
+        self.glb_noise6 = NoiseInjection(int(self.ngf*(ratio_g)))
         
-        self.conv6 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
+        self.conv7 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
 
     def forward(self, z):
@@ -75,6 +80,10 @@ class FGenerator(FFCModel):
             fake = self.lcl_noise5(fake[0]), self.glb_noise5(fake[1]) 
 
         fake = self.conv6(fake)
+        if self.training:
+            fake = self.lcl_noise6(fake[0]), self.glb_noise6(fake[1]) 
+
+        fake = self.conv7(fake)
         fake = self.resizer(fake)
 
         if not self.training:
@@ -84,6 +93,8 @@ class FGenerator(FFCModel):
             # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
         return fake
+
+
 
 transform = transforms.Compose(
         [
@@ -204,5 +215,4 @@ def test(args):
         save_image(f, args.dir_logs, count)
         count+=1
     
-
 main()
