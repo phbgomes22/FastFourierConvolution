@@ -14,6 +14,7 @@ import tqdm
 from torch.utils import tensorboard
 
 import torch_fidelity
+import torch.nn.functional as F
 
 
 def count_parameters(model):
