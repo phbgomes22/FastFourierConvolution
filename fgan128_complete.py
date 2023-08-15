@@ -44,22 +44,20 @@ class FGenerator(FFCModel):
         sn_fn = torch.nn.utils.spectral_norm 
        # self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
         self.noise_to_feature = nn.Sequential(
-            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*4),
-            nn.Linear(self.ngf*4 * self.ngf*8)
-      #      nn.BatchNorm1d((self.mg * self.mg) * self.ngf*8)
+            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*16)
         )
 
-        self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv2 = FFC_BN_ACT(self.ngf*16, self.ngf*8, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        self.lcl_noise2 = NoiseInjection(int(self.ngf*4*(1-ratio_g)))
-        self.glb_noise2 = NoiseInjection(int(self.ngf*4*(ratio_g)))
+        self.lcl_noise2 = NoiseInjection(int(self.ngf*8*(1-ratio_g)))
+        self.glb_noise2 = NoiseInjection(int(self.ngf*8*(ratio_g)))
         
-        self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv3 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
-        self.lcl_noise3 = NoiseInjection(int(self.ngf*2*(1-ratio_g)))
-        self.glb_noise3 = NoiseInjection(int(self.ngf*2*(ratio_g)))
+        self.lcl_noise3 = NoiseInjection(int(self.ngf*4*(1-ratio_g)))
+        self.glb_noise3 = NoiseInjection(int(self.ngf*4*(ratio_g)))
         
-        self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
+        self.conv4 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
         self.lcl_noise4 = NoiseInjection(int(self.ngf*2*(1-ratio_g)))
         self.glb_noise4 = NoiseInjection(int(self.ngf*2*(ratio_g)))
