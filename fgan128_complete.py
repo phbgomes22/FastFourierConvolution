@@ -252,7 +252,7 @@ class SNGANDiscriminator128(FFCModel):
         loss_type (str): Name of loss to use for GAN loss.
     """
     def __init__(self, ndf=1024, **kwargs):
-        super().__init__(ndf=ndf, **kwargs)
+        super().__init__()
 
         # Build layers
         self.block1 = DBlockOptimized(3, self.ndf >> 4)
