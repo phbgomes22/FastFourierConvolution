@@ -44,7 +44,7 @@ class FGenerator(FFCModel):
         sn_fn = torch.nn.utils.spectral_norm 
        # self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
         self.noise_to_feature = nn.Sequential(
-            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8),
+            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*16),
       #      nn.BatchNorm1d((self.mg * self.mg) * self.ngf*8)
         )
 
