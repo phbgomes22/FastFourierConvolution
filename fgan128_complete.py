@@ -185,7 +185,7 @@ def train(args):
     mg = 4
     # input2_dataset = 'celeba-64'
     # register_dataset('celeba-64', image_size=image_size)
-    loader = load_celeba(batch_size=args.batch_size, image_size=image_size, file_path=args.dataset_path)
+    loader = load_flowers(batch_size=args.batch_size, image_size=image_size, file_path=args.dataset_path)
 
 
     loader_iter = iter(loader)

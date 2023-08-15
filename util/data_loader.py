@@ -84,8 +84,6 @@ def load_flowers(batch_size, image_size):
 
     ds_transform = transforms.Compose (
         [
-            transforms.RandomRotation(degrees=(0, 360)),
-         #   transforms.Lambda(special_image_crop), ## testing if works
             transforms.Resize(size=(image_size, image_size)),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -101,7 +99,6 @@ def load_flowers(batch_size, image_size):
         ]
     )
 
-
     vert_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
@@ -114,6 +111,8 @@ def load_flowers(batch_size, image_size):
     crop_transform = transforms.Compose(
         [
             transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomVerticalFlip(1.0),
+            transforms.RandomHorizontalFlip(1.0),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ]
