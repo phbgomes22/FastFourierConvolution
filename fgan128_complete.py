@@ -379,7 +379,7 @@ def train(args):
     
     print("- Parameters on generator: ", params)
     
-    D = SNGANDiscriminator128().to(device).train() 
+    D = Discriminator().to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
