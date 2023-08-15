@@ -253,6 +253,7 @@ class SNGANDiscriminator128(FFCModel):
     """
     def __init__(self, ndf=1024, **kwargs):
         super().__init__()
+        self.ndf = ndf
 
         # Build layers
         self.block1 = DBlockOptimized(3, self.ndf >> 4)
