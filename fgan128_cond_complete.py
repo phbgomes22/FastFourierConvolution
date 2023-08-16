@@ -209,29 +209,8 @@ def train(args):
         ]
     )
 
-    if args.dataset == 'cifar10':
-        ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
-        mg = 4
-       # input2_dataset = args.dataset + '-train'
-        input2_dataset = 'cifar-10-32'
-        loader = torch.utils.data.DataLoader(
-            ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
-        )
-        register_dataset('cifar-10-32', image_size=image_size)
-    elif args.dataset == 'svhn':
-        ds_instance = torchvision.datasets.SVHN(root=dir_dataset, split='train', download=True, transform=ds_transform)
-        mg = 4
-        input2_dataset = 'svhn-32'
-        loader = torch.utils.data.DataLoader(
-            ds_instance, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True
-        )
-        register_dataset('svhn-32', image_size=image_size)
-    else:
-        loader = load_cond_stl(args.batch_size, image_size)
-        mg = 6
-        input2_dataset = 'stl-10-48'
-        register_dataset('stl-10-48', image_size=image_size)
     
+    loader = load_textures(batch_size=args.batch_size, image_size=image_size, file_path=args.dataset_path)
     loader_iter = iter(loader)
 
     # reinterpret command line inputs

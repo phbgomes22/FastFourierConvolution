@@ -220,6 +220,48 @@ def load_flowers(batch_size, image_size):
     return dataloader
 
 
+def load_textures(batch_size, image_size, file_path: str = '../celeba_data'):
+    img_dir = file_path 
+
+    transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+    aug_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomHorizontalFlip(1.0),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    print("Loading Texture dataset... ")
+    texture_dataset = TarDataset(archive=img_dir, transform=transform)#(txt_path=txt_path, img_dir=img_dir, transform=transform)
+    texture_dataset_aug = TarDataset(archive=img_dir, transform=aug_transform)
+    texture_full = torch.utils.data.ConcatDataset([texture_dataset, texture_dataset_aug])
+    print("INFO: Loaded Texture dataset with ", len(texture_full), " images!")
+    
+    dataloader = torch.utils.data.DataLoader(texture_full, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+    
+    try:
+        real_batch = next(iter(dataloader))
+        plt.figure(figsize=(8,8))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to('cuda')[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+        plt.savefig("training_set.jpg")
+        print("Image shape: ", real_batch[0].to('cuda')[0].shape)
+    except OSError:
+        print("Cannot load image")
+
+
+    return dataloader
+
+
 ## Create a custom Dataset class
 class CelebADataset(torch.utils.data.Dataset):
   #https://stackoverflow.com/questions/65528568/how-do-i-load-the-celeba-dataset-on-google-colab-using-torch-vision-without-ru
