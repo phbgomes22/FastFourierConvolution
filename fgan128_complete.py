@@ -537,10 +537,13 @@ class Discriminator(FFCModel):
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.conv8 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
         self.conv9 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
-        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
+     #   self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
+        self.last_conv = sn_fn(nn.Conv2d(512, 1, 4, 1, 0, bias=False))
+
+        self.last_act =  nn.Sigmoid()
        # self.attn1 = Self_Attn(512, 'relu')
 
     def forward(self, x):
@@ -553,8 +556,8 @@ class Discriminator(FFCModel):
         m = self.act(self.conv7(m))
         m = self.act(self.conv8(m))
         m = self.act(self.conv9(m))
-        output = self.fc(m.view(-1, self.mg * self.mg * 512))
- 
+      #  output = self.fc(m.view(-1, self.mg * self.mg * 512))
+        output = self.last_act(self.last_conv(m))
         return output
 
 
@@ -601,13 +604,13 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = SNGANGenerator128().to(device).train()
+    G = FGenerator(z_size=args.z_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
     print("- Parameters on generator: ", params)
     
-    D = SNGANDiscriminator128().to(device).train() 
+    D = Discriminator().to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
