@@ -10,7 +10,7 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torchvision.utils import save_image
-from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102, FashionMNIST
+from torchvision.datasets import CIFAR10, CelebA, MNIST, Omniglot, Food101, StanfordCars, SVHN, Flowers102, FashionMNIST, SUN397
 from config import Config, Datasets
 
 from .tar_loader import TarImageFolder, TarDataset
@@ -107,9 +107,9 @@ def load_cars(batch_size, image_size):
         ]
     )
 
-    dataset = StanfordCars(root='../stanfordcars_data_ok', split='train', download=True, transform=ds_transform)
-    dataset_hor = StanfordCars(root='../stanfordcars_data_hor', split='train', download=True, transform=hor_transform)
-    dataset_crop = StanfordCars(root='../stanfordcars_data_crop', split='train', download=True, transform=random_crop_transform)
+    dataset = SUN397(root='../sun_data_ok', split='train', download=True, transform=ds_transform)
+    dataset_hor = SUN397(root='../sun_data_hor', split='train', download=True, transform=hor_transform)
+    dataset_crop = SUN397(root='../sun_data_crop', split='train', download=True, transform=random_crop_transform)
 
     train_cars_sets = torch.utils.data.ConcatDataset([dataset, dataset_hor, dataset_crop])
 
