@@ -600,13 +600,13 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = SNGANGenerator128().to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
     print("- Parameters on generator: ", params)
     
-    D = Discriminator().to(device).train() 
+    D = SNGANDiscriminator128().to(device).train() 
     D.apply(weights_init)
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
