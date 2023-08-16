@@ -297,7 +297,7 @@ class DBlockOptimized(nn.Module):
         sn_fn = torch.nn.utils.spectral_norm 
         # Build the layers
         self.c1 = sn_fn(nn.Conv2d(self.in_channels, self.out_channels, 3, 1, 1))
-        self.c2 = sn_fn(nn.onv2d(self.out_channels, self.out_channels, 3, 1, 1))
+        self.c2 = sn_fn(nn.Conv2d(self.out_channels, self.out_channels, 3, 1, 1))
         self.c_sc = sn_fn(nn.Conv2d(self.in_channels, self.out_channels, 1, 1, 0))
       
 
