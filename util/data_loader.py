@@ -80,6 +80,57 @@ def register_dataset(dataset, image_size):
         torch_fidelity.register_dataset('cifar-10-32', lambda root, download: CIFAR_10(root, train=False, download=download, transform=transform_dts))
 
 
+def load_cars(batch_size, image_size):
+
+    ds_transform = transforms.Compose (
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    random_crop_transform = transforms.Compose (
+        [
+            transforms.RandomCrop(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    hor_transform = transforms.Compose(
+        [
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.RandomHorizontalFlip(1.0),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
+
+    dataset = StanfordCars(root='../stanfordcars_data_ok', split='train', download=True, transform=ds_transform)
+    dataset_hor = StanfordCars(root='../stanfordcars_data_hor', split='train', download=True, transform=hor_transform)
+    dataset_crop = StanfordCars(root='../stanfordcars_data_crop', split='train', download=True, transform=random_crop_transform)
+
+    train_cars_sets = torch.utils.data.ConcatDataset([dataset, dataset_hor, dataset_crop])
+
+    dataloader = torch.utils.data.DataLoader(train_cars_sets, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
+    
+    print("INFO: Loaded Flowers dataset with ", len(dataloader.dataset), " images!")
+    print("INFO: Without Augmentation: ", len(dataset))
+
+    ## Checking images
+    try:
+        real_batch = next(iter(dataloader))
+        plt.figure(figsize=(8,8))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to('cuda')[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+        plt.savefig("training_set.jpg")
+    except OSError:
+        print("Cannot load image")
+
+    return dataloader
+
 def load_flowers(batch_size, image_size):
 
     ds_transform = transforms.Compose (
