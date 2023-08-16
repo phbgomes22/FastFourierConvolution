@@ -557,7 +557,7 @@ class Discriminator(FFCModel):
         m = self.act(self.conv9(m))
         output = self.fc(m.view(-1, self.mg * self.mg * 512))
 
-        output = self.last_act(output)
+      #  output = self.last_act(output)
 
         return output
         
