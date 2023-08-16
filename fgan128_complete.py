@@ -105,6 +105,7 @@ class GBlock(nn.Module):
         self.num_classes = num_classes
         self.spectral_norm = spectral_norm
 
+        sn_fn = torch.nn.utils.spectral_norm 
         # Build the layers
         # Note: Can't use something like self.conv = SNConv2d to save code length
         # this results in somehow spectral norm working worse consistently.
