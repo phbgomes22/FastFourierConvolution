@@ -61,23 +61,6 @@ class ConditionalBatchNorm2d(nn.Module):
 
         return out
     
-def SNConv2d(*args, default=True, **kwargs):
-    r"""
-    Wrapper for applying spectral norm on conv2d layer.
-    """
-    if default:
-        return nn.utils.spectral_norm(nn.Conv2d(*args, **kwargs))
-
-    else:
-        return spectral_norm.SNConv2d(*args, **kwargs)
-    
-"""
-Implementation of residual blocks for discriminator and generator.
-We follow the official SNGAN Chainer implementation as closely as possible:
-https://github.com/pfnet-research/sngan_projection
-"""
-
-
 
 
 class GBlock(nn.Module):
@@ -116,28 +99,16 @@ class GBlock(nn.Module):
         # Build the layers
         # Note: Can't use something like self.conv = SNConv2d to save code length
         # this results in somehow spectral norm working worse consistently.
-        if self.spectral_norm:
-            self.c1 = SNConv2d(self.in_channels,
-                               self.hidden_channels,
-                               3,
-                               1,
-                               padding=1)
-            self.c2 = SNConv2d(self.hidden_channels,
-                               self.out_channels,
-                               3,
-                               1,
-                               padding=1)
-        else:
-            self.c1 = nn.Conv2d(self.in_channels,
-                                self.hidden_channels,
-                                3,
-                                1,
-                                padding=1)
-            self.c2 = nn.Conv2d(self.hidden_channels,
-                                self.out_channels,
-                                3,
-                                1,
-                                padding=1)
+        self.c1 = SNConv2d(self.in_channels,
+                            self.hidden_channels,
+                            3,
+                            1,
+                            padding=1)
+        self.c2 = SNConv2d(self.hidden_channels,
+                            self.out_channels,
+                            3,
+                            1,
+                            padding=1)
 
         if self.num_classes == 0:
             self.b1 = nn.BatchNorm2d(self.in_channels)
@@ -153,6 +124,7 @@ class GBlock(nn.Module):
         nn.init.xavier_uniform_(self.c1.weight.data, math.sqrt(2.0))
         nn.init.xavier_uniform_(self.c2.weight.data, math.sqrt(2.0))
 
+        sn_fn = torch.nn.utils.spectral_norm
         # Shortcut layer
         if self.learnable_sc:
             if self.spectral_norm:
@@ -255,16 +227,11 @@ class DBlock(nn.Module):
         self.learnable_sc = (in_channels != out_channels) or downsample
         self.spectral_norm = spectral_norm
 
+        sn_fn = torch.nn.utils.spectral_norm 
         # Build the layers
-        if self.spectral_norm:
-            self.c1 = SNConv2d(self.in_channels, self.hidden_channels, 3, 1, 1)
-            self.c2 = SNConv2d(self.hidden_channels, self.out_channels, 3, 1,
-                               1)
-        else:
-            self.c1 = nn.Conv2d(self.in_channels, self.hidden_channels, 3, 1,
-                                1)
-            self.c2 = nn.Conv2d(self.hidden_channels, self.out_channels, 3, 1,
-                                1)
+        self.c1 = sn_fn(nn.Conv2d(self.in_channels, self.hidden_channels, 3, 1, 1))
+        self.c2 = sn_fn(nn.Conv2d(self.hidden_channels, self.out_channels, 3, 1,
+                               1))
 
         self.activation = nn.ReLU(True)
 
@@ -273,11 +240,7 @@ class DBlock(nn.Module):
 
         # Shortcut layer
         if self.learnable_sc:
-            if self.spectral_norm:
-                self.c_sc = SNConv2d(in_channels, out_channels, 1, 1, 0)
-            else:
-                self.c_sc = nn.Conv2d(in_channels, out_channels, 1, 1, 0)
-
+            self.c_sc = sn_fn(nn.Conv2d(in_channels, out_channels, 1, 1, 0))
             nn.init.xavier_uniform_(self.c_sc.weight.data, 1.0)
 
     def _residual(self, x):
@@ -328,16 +291,12 @@ class DBlockOptimized(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.spectral_norm = spectral_norm
-
+        sn_fn = torch.nn.utils.spectral_norm 
         # Build the layers
-        if self.spectral_norm:
-            self.c1 = SNConv2d(self.in_channels, self.out_channels, 3, 1, 1)
-            self.c2 = SNConv2d(self.out_channels, self.out_channels, 3, 1, 1)
-            self.c_sc = SNConv2d(self.in_channels, self.out_channels, 1, 1, 0)
-        else:
-            self.c1 = nn.Conv2d(self.in_channels, self.out_channels, 3, 1, 1)
-            self.c2 = nn.Conv2d(self.out_channels, self.out_channels, 3, 1, 1)
-            self.c_sc = nn.Conv2d(self.in_channels, self.out_channels, 1, 1, 0)
+        self.c1 = sn_fn(nn.Conv2d(self.in_channels, self.out_channels, 3, 1, 1))
+        self.c2 = sn_fn(nn.onv2d(self.out_channels, self.out_channels, 3, 1, 1))
+        self.c_sc = sn_fn(nn.Conv2d(self.in_channels, self.out_channels, 1, 1, 0))
+      
 
         self.activation = nn.ReLU(True)
 
@@ -369,367 +328,9 @@ class DBlockOptimized(nn.Module):
         """
         return self._residual(x) + self._shortcut(x)
 
-class BaseModel(nn.Module, ABC):
-    r"""
-    BaseModel with basic functionalities for checkpointing and restoration.
-    """
-    def __init__(self):
-        super().__init__()
 
-    @abstractmethod
-    def forward(self, x):
-        pass
 
-    @property
-    def device(self):
-        return next(self.parameters()).device
-
-    def restore_checkpoint(self, ckpt_file, optimizer=None):
-        r"""
-        Restores checkpoint from a pth file and restores optimizer state.
-
-        Args:
-            ckpt_file (str): A PyTorch pth file containing model weights.
-            optimizer (Optimizer): A vanilla optimizer to have its state restored from.
-
-        Returns:
-            int: Global step variable where the model was last checkpointed.
-        """
-        if not ckpt_file:
-            raise ValueError("No checkpoint file to be restored.")
-
-        try:
-            ckpt_dict = torch.load(ckpt_file)
-        except RuntimeError:
-            ckpt_dict = torch.load(ckpt_file,
-                                   map_location=lambda storage, loc: storage)
-
-        # Restore model weights
-        self.load_state_dict(ckpt_dict['model_state_dict'])
-
-        # Restore optimizer status if existing. Evaluation doesn't need this
-        if optimizer:
-            optimizer.load_state_dict(ckpt_dict['optimizer_state_dict'])
-
-        # Return global step
-        return ckpt_dict['global_step']
-
-    def save_checkpoint(self,
-                        directory,
-                        global_step,
-                        optimizer=None,
-                        name=None):
-        r"""
-        Saves checkpoint at a certain global step during training. Optimizer state
-        is also saved together.
-
-        Args:
-            directory (str): Path to save checkpoint to.
-            global_step (int): The global step variable during training.
-            optimizer (Optimizer): Optimizer state to be saved concurrently.
-            name (str): The name to save the checkpoint file as.
-
-        Returns:
-            None
-        """
-        # Create directory to save to
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        # Build checkpoint dict to save.
-        ckpt_dict = {
-            'model_state_dict':
-            self.state_dict(),
-            'optimizer_state_dict':
-            optimizer.state_dict() if optimizer is not None else None,
-            'global_step':
-            global_step
-        }
-
-        # Save the file with specific name
-        if name is None:
-            name = "{}_{}_steps.pth".format(
-                os.path.basename(directory),  # netD or netG
-                global_step)
-
-        torch.save(ckpt_dict, os.path.join(directory, name))
-
-    def count_params(self):
-        r"""
-        Computes the number of parameters in this model.
-
-        Args: None
-
-        Returns:
-            int: Total number of weight parameters for this model.
-            int: Total number of trainable parameters for this model.
-
-        """
-        num_total_params = sum(p.numel() for p in self.parameters())
-        num_trainable_params = sum(p.numel() for p in self.parameters()
-                                   if p.requires_grad)
-
-        return num_total_params, num_trainable_params
-
-class BaseGenerator(BaseModel):
-    r"""
-    Base class for a generic unconditional generator model.
-
-    Attributes:
-        nz (int): Noise dimension for upsampling.
-        ngf (int): Variable controlling generator feature map sizes.
-        bottom_width (int): Starting width for upsampling generator output to an image.
-        loss_type (str): Name of loss to use for GAN loss.
-    """
-    def __init__(self, nz, ngf, bottom_width, loss_type, **kwargs):
-        super().__init__(**kwargs)
-        self.nz = nz
-        self.ngf = ngf
-        self.bottom_width = bottom_width
-        self.loss_type = loss_type
-
-    def generate_images(self, num_images, device=None):
-        r"""
-        Generates num_images randomly.
-
-        Args:
-            num_images (int): Number of images to generate
-            device (torch.device): Device to send images to.
-
-        Returns:
-            Tensor: A batch of generated images.
-        """
-        if device is None:
-            device = self.device
-
-        noise = torch.randn((num_images, self.nz), device=device)
-        fake_images = self.forward(noise)
-
-        return fake_images
-
-    def compute_gan_loss(self, output):
-        r"""
-        Computes GAN loss for generator.
-
-        Args:
-            output (Tensor): A batch of output logits from the discriminator of shape (N, 1).
-
-        Returns:
-            Tensor: A batch of GAN losses for the generator.
-        """
-        # Compute loss and backprop
-        if self.loss_type == "gan":
-            errG = losses.minimax_loss_gen(output)
-
-        elif self.loss_type == "ns":
-            errG = losses.ns_loss_gen(output)
-
-        elif self.loss_type == "hinge":
-            errG = losses.hinge_loss_gen(output)
-
-        elif self.loss_type == "wasserstein":
-            errG = losses.wasserstein_loss_gen(output)
-
-        else:
-            raise ValueError("Invalid loss_type {} selected.".format(
-                self.loss_type))
-
-        return errG
-
-    def train_step(self,
-                   real_batch,
-                   netD,
-                   optG,
-                   log_data,
-                   device=None,
-                   global_step=None,
-                   **kwargs):
-        r"""
-        Takes one training step for G.
-
-        Args:
-            real_batch (Tensor): A batch of real images of shape (N, C, H, W).
-                Used for obtaining current batch size.
-            netD (nn.Module): Discriminator model for obtaining losses.
-            optG (Optimizer): Optimizer for updating generator's parameters.
-            log_data (dict): A dict mapping name to values for logging uses.
-            device (torch.device): Device to use for running the model.
-            global_step (int): Variable to sync training, logging and checkpointing.
-                Useful for dynamic changes to model amidst training.
-
-        Returns:
-            Returns MetricLog object containing updated logging variables after 1 training step.
-
-        """
-        self.zero_grad()
-
-        # Get only batch size from real batch
-        batch_size = real_batch[0].shape[0]
-
-        # Produce fake images
-        fake_images = self.generate_images(num_images=batch_size,
-                                           device=device)
-
-        # Compute output logit of D thinking image real
-        output = netD(fake_images)
-
-        # Compute loss
-        errG = self.compute_gan_loss(output=output)
-
-        # Backprop and update gradients
-        errG.backward()
-        optG.step()
-
-        # Log statistics
-        log_data.add_metric('errG', errG, group='loss')
-
-        return log_data
-
-
-class BaseDiscriminator(BaseModel):
-    r"""
-    Base class for a generic unconditional discriminator model.
-
-    Attributes:
-        ndf (int): Variable controlling discriminator feature map sizes.
-        loss_type (str): Name of loss to use for GAN loss.
-    """
-    def __init__(self, ndf, loss_type, **kwargs):
-        super().__init__(**kwargs)
-        self.ndf = ndf
-        self.loss_type = loss_type
-
-    def compute_gan_loss(self, output_real, output_fake):
-        r"""
-        Computes GAN loss for discriminator.
-
-        Args:
-            output_real (Tensor): A batch of output logits of shape (N, 1) from real images.
-            output_fake (Tensor): A batch of output logits of shape (N, 1) from fake images.
-
-        Returns:
-            errD (Tensor): A batch of GAN losses for the discriminator.
-        """
-        # Compute loss for D
-        if self.loss_type == "gan" or self.loss_type == "ns":
-            errD = losses.minimax_loss_dis(output_fake=output_fake,
-                                           output_real=output_real)
-
-        elif self.loss_type == "hinge":
-            errD = losses.hinge_loss_dis(output_fake=output_fake,
-                                         output_real=output_real)
-
-        elif self.loss_type == "wasserstein":
-            errD = losses.wasserstein_loss_dis(output_fake=output_fake,
-                                               output_real=output_real)
-
-        else:
-            raise ValueError("Invalid loss_type selected.")
-
-        return errD
-
-    def compute_probs(self, output_real, output_fake):
-        r"""
-        Computes probabilities from real/fake images logits.
-
-        Args:
-            output_real (Tensor): A batch of output logits of shape (N, 1) from real images.
-            output_fake (Tensor): A batch of output logits of shape (N, 1) from fake images.
-
-        Returns:
-            tuple: Average probabilities of real/fake image considered as real for the batch.
-        """
-        D_x = torch.sigmoid(output_real).mean().item()
-        D_Gz = torch.sigmoid(output_fake).mean().item()
-
-        return D_x, D_Gz
-
-    def train_step(self,
-                   real_batch,
-                   netG,
-                   optD,
-                   log_data,
-                   device=None,
-                   global_step=None,
-                   **kwargs):
-        r"""
-        Takes one training step for D.
-
-        Args:
-            real_batch (Tensor): A batch of real images of shape (N, C, H, W).
-            loss_type (str): Name of loss to use for GAN loss.
-            netG (nn.Module): Generator model for obtaining fake images.
-            optD (Optimizer): Optimizer for updating discriminator's parameters.
-            device (torch.device): Device to use for running the model.
-            log_data (dict): A dict mapping name to values for logging uses.
-            global_step (int): Variable to sync training, logging and checkpointing.
-                Useful for dynamic changes to model amidst training.
-
-        Returns:
-            MetricLog: Returns MetricLog object containing updated logging variables after 1 training step.
-        """
-        self.zero_grad()
-        real_images, real_labels = real_batch
-        batch_size = real_images.shape[0]  # Match batch sizes for last iter
-
-        # Produce logits for real images
-        output_real = self.forward(real_images)
-
-        # Produce fake images
-        fake_images = netG.generate_images(num_images=batch_size,
-                                           device=device).detach()
-
-        # Produce logits for fake images
-        output_fake = self.forward(fake_images)
-
-        # Compute loss for D
-        errD = self.compute_gan_loss(output_real=output_real,
-                                     output_fake=output_fake)
-
-        # Backprop and update gradients
-        errD.backward()
-        optD.step()
-
-        # Compute probabilities
-        D_x, D_Gz = self.compute_probs(output_real=output_real,
-                                       output_fake=output_fake)
-
-        # Log statistics for D once out of loop
-        log_data.add_metric('errD', errD.item(), group='loss')
-        log_data.add_metric('D(x)', D_x, group='prob')
-        log_data.add_metric('D(G(z))', D_Gz, group='prob')
-
-        return log_data
-
-class SNGANBaseGenerator(BaseGenerator):
-    r"""
-    ResNet backbone generator for SNGAN.
-
-    Attributes:
-        nz (int): Noise dimension for upsampling.
-        ngf (int): Variable controlling generator feature map sizes.
-        bottom_width (int): Starting width for upsampling generator output to an image.
-        loss_type (str): Name of loss to use for GAN loss.
-    """
-    def __init__(self, nz, ngf, bottom_width, loss_type='hinge', **kwargs):
-        super().__init__(nz=nz,
-                         ngf=ngf,
-                         bottom_width=bottom_width,
-                         loss_type=loss_type,
-                         **kwargs)
-
-
-class SNGANBaseDiscriminator(BaseDiscriminator):
-    r"""
-    ResNet backbone discriminator for SNGAN.
-
-    Attributes:
-        ndf (int): Variable controlling discriminator feature map sizes.
-    """
-    def __init__(self, ndf, loss_type='hinge', **kwargs):
-        super().__init__(ndf=ndf, loss_type=loss_type, **kwargs)
-
-class SNGANGenerator128(SNGANBaseGenerator):
+class SNGANGenerator128(FFCModel):
     r"""
     ResNet backbone generator for SNGAN.
 
@@ -740,8 +341,11 @@ class SNGANGenerator128(SNGANBaseGenerator):
         loss_type (str): Name of loss to use for GAN loss.
     """
     def __init__(self, nz=128, ngf=1024, bottom_width=4, **kwargs):
-        super().__init__(nz=nz, ngf=ngf, bottom_width=bottom_width, **kwargs)
-
+        super().__init__()
+        self.nz = nz
+        self.ngf = ngf 
+        self.bottom_width = bottom_width
+        
         # Build the layers
         self.l1 = nn.Linear(self.nz, (self.bottom_width**2) * self.ngf)
         self.block2 = GBlock(self.ngf, self.ngf, upsample=True)
@@ -781,7 +385,7 @@ class SNGANGenerator128(SNGANBaseGenerator):
         return h
 
 
-class SNGANDiscriminator128(SNGANBaseDiscriminator):
+class SNGANDiscriminator128(FFCModel):
     r"""
     ResNet backbone discriminator for SNGAN.
 
@@ -790,8 +394,9 @@ class SNGANDiscriminator128(SNGANBaseDiscriminator):
         loss_type (str): Name of loss to use for GAN loss.
     """
     def __init__(self, ndf=1024, **kwargs):
-        super().__init__(ndf=ndf, **kwargs)
-
+        super().__init__()
+        self.ndf = ndf 
+        sn_fn = torch.nn.utils.spectral_norm 
         # Build layers
         self.block1 = DBlockOptimized(3, self.ndf >> 4)
         self.block2 = DBlock(self.ndf >> 4, self.ndf >> 3, downsample=True)
@@ -799,7 +404,7 @@ class SNGANDiscriminator128(SNGANBaseDiscriminator):
         self.block4 = DBlock(self.ndf >> 2, self.ndf >> 1, downsample=True)
         self.block5 = DBlock(self.ndf >> 1, self.ndf, downsample=True)
         self.block6 = DBlock(self.ndf, self.ndf, downsample=False)
-        self.l7 = SNLinear(self.ndf, 1)
+        self.l7 = sn_fn(nn.Linear(self.ndf, 1))
         self.activation = nn.ReLU(True)
 
         # Initialise the weights
