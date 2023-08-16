@@ -557,8 +557,11 @@ class Discriminator(FFCModel):
         m = self.act(self.conv8(m))
         m = self.act(self.conv9(m))
       #  output = self.fc(m.view(-1, self.mg * self.mg * 512))
+        print(m.shape)
         output = self.last_act(self.last_conv(m))
+        print(output.shape)
         return output
+        
 
 
 def hinge_loss_dis(fake, real):
