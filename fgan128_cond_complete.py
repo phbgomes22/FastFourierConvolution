@@ -236,7 +236,7 @@ def train(args):
 
     # reinterpret command line inputs
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    num_classes = 10 if args.conditional else 0  # unconditional
+    num_classes = args.num_classes if args.conditional else 0  # unconditional
 
     # create Generator and Discriminator models
     G = FCondGenerator(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
@@ -404,6 +404,7 @@ def main():
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
+    parser.add_argument('--num_classes', type=int, default=0)
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_cond'))
     parser.add_argument('--checkpoint', default=False, action='store_true')
     args = parser.parse_args()
