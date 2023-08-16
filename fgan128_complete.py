@@ -537,11 +537,10 @@ class Discriminator(FFCModel):
         self.conv7 = sn_fn(torch.nn.Conv2d(256, 512, 3, stride=1, padding=(1,1)))
         self.conv8 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
         self.conv9 = sn_fn(torch.nn.Conv2d(512, 512, 4, stride=2, padding=(1,1)))
-     #   self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
     #    self.print_layer = Print(debug=True)
         self.act = torch.nn.LeakyReLU(0.1)
 
-        self.last_conv = sn_fn(nn.Conv2d(512, 1, 4, 1, 0, bias=False))
 
         self.last_act =  nn.Sigmoid()
        # self.attn1 = Self_Attn(512, 'relu')
@@ -556,10 +555,10 @@ class Discriminator(FFCModel):
         m = self.act(self.conv7(m))
         m = self.act(self.conv8(m))
         m = self.act(self.conv9(m))
-      #  output = self.fc(m.view(-1, self.mg * self.mg * 512))
-        print(m.shape)
-        output = self.last_act(self.last_conv(m))
-        print(output.shape)
+        output = self.fc(m.view(-1, self.mg * self.mg * 512))
+
+        output = self.last_act(output)
+
         return output
         
 
