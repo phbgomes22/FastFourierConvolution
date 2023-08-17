@@ -141,13 +141,14 @@ def load_flowers(batch_size, image_size):
         ]
     )
 
-    # random_crop_transform = transforms.Compose (
-    #     [   
-    #         transforms.RandomCrop(size=(image_size, image_size)),
-    #         transforms.ToTensor(), 
-    #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    #     ]
-    # )
+    random_crop_transform = transforms.Compose (
+
+        [   transforms.Resize(size=(image_size*1.25, image_size*1.25)),
+            transforms.RandomCrop(size=(image_size, image_size)),
+            transforms.ToTensor(), 
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ]
+    )
     
     
     aug_transform = transforms.Compose(
@@ -190,15 +191,15 @@ def load_flowers(batch_size, image_size):
     train_crop = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=crop_transform)
     val_crop = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=crop_transform)
     test_crop = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=crop_transform)
-    # train_rcrop = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=random_crop_transform)
-    # val_rcrop = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=random_crop_transform)
-    # test_rcrop = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=random_crop_transform)
+    train_rcrop = dset.Flowers102(root='../flowers102_data', split='train', download=True, transform=random_crop_transform)
+    val_rcrop = dset.Flowers102(root='../flowers102_data', split='val', download=True, transform=random_crop_transform)
+    test_rcrop = dset.Flowers102(root='../flowers102_data', split='test', download=True, transform=random_crop_transform)
 
     train_flowers_sets = torch.utils.data.ConcatDataset([ds_instance, ds_instance_val, ds_instance_test, 
                                                          train_hz, val_hz, test_hz,
                                                          train_vert, val_vert, test_vert,
-                                                         train_crop, val_crop, test_crop])
-                                                        #  train_rcrop, val_rcrop, test_rcrop])
+                                                         train_crop, val_crop, test_crop,
+                                                         train_rcrop, val_rcrop, test_rcrop])
                                                  ##        train_color, val_color, test_color])
 
     dataloader = torch.utils.data.DataLoader(train_flowers_sets, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
