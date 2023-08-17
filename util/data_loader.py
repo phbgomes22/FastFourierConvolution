@@ -143,7 +143,7 @@ def load_flowers(batch_size, image_size):
 
     random_crop_transform = transforms.Compose (
 
-        [   transforms.Resize(size=(image_size*1.25, image_size*1.25)),
+        [   transforms.Resize(size=(int(image_size*1.25), int(image_size*1.25))),
             transforms.RandomCrop(size=(image_size, image_size)),
             transforms.ToTensor(), 
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
