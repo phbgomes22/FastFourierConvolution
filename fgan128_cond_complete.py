@@ -162,6 +162,8 @@ class Discriminator(FFCModel):
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 128, 128)
 
+        print(x.shape)
+        print(embedding.shape)
         input = torch.cat([x, embedding], dim=1)
         
         m = self.act(self.conv1(input))
