@@ -62,7 +62,6 @@ class ConditionalBatchNorm2d(nn.Module):
         return out
     
 
-
 class GBlock(nn.Module):
     r"""
     Residual block for generator.
@@ -99,16 +98,16 @@ class GBlock(nn.Module):
         # Build the layers
         # Note: Can't use something like self.conv = SNConv2d to save code length
         # this results in somehow spectral norm working worse consistently.
-        self.c1 = SNConv2d(self.in_channels,
+        self.c1 = sn_fn(nn.Conv2d(self.in_channels,
                             self.hidden_channels,
                             3,
                             1,
-                            padding=1)
-        self.c2 = SNConv2d(self.hidden_channels,
+                            padding=1))
+        self.c2 = sn_fn(nn.Conv2d(self.hidden_channels,
                             self.out_channels,
                             3,
                             1,
-                            padding=1)
+                            padding=1))
 
         if self.num_classes == 0:
             self.b1 = nn.BatchNorm2d(self.in_channels)
@@ -127,18 +126,11 @@ class GBlock(nn.Module):
         sn_fn = torch.nn.utils.spectral_norm
         # Shortcut layer
         if self.learnable_sc:
-            if self.spectral_norm:
-                self.c_sc = SNConv2d(in_channels,
-                                     out_channels,
-                                     1,
-                                     1,
-                                     padding=0)
-            else:
-                self.c_sc = nn.Conv2d(in_channels,
-                                      out_channels,
-                                      1,
-                                      1,
-                                      padding=0)
+            self.c_sc = sn_fn(nn.Conv2d(in_channels,
+                                    out_channels,
+                                    1,
+                                    1,
+                                    padding=0))
 
             nn.init.xavier_uniform_(self.c_sc.weight.data, 1.0)
 
@@ -327,7 +319,6 @@ class DBlockOptimized(nn.Module):
         Residual block feedforward function.
         """
         return self._residual(x) + self._shortcut(x)
-
 
 
 class SNGANGenerator128(FFCModel):

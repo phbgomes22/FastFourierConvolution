@@ -217,7 +217,7 @@ def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_classes = args.num_classes if args.conditional else 0  # unconditional
     mg = 4
-    
+
     # create Generator and Discriminator models
     G = FCondGenerator(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
@@ -289,6 +289,9 @@ def train(args):
             real_img, real_label = next(loader_iter)
         real_img = real_img.to(device)
         real_label = real_label.to(device)
+
+        print(real_img.shape)
+        print(real_label.shape)
 
         # update Generator
         G.requires_grad_(True)
