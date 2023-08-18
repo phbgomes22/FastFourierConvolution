@@ -216,7 +216,8 @@ def train(args):
     # reinterpret command line inputs
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_classes = args.num_classes if args.conditional else 0  # unconditional
-
+    mg = 4
+    
     # create Generator and Discriminator models
     G = FCondGenerator(z_size=args.z_size, mg=mg, num_classes=num_classes).to(device).train()
    # G.apply(weights_init)
