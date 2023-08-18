@@ -247,11 +247,6 @@ def load_textures(batch_size, image_size, file_path: str):
     print("INFO: Loaded Texture dataset with ", len(texture_full), " images!")
 
     dataloader = torch.utils.data.DataLoader(texture_full, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
-    
-    for imgs, labels in texture_full:
-        print(imgs.shape)
-        print(labels)
-        break
 
     try:
         real_batch = next(iter(dataloader))
