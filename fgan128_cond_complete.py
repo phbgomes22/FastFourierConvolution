@@ -162,8 +162,8 @@ class Discriminator(FFCModel):
         embedding = self.label_embed(labels)
         embedding = embedding.view(labels.shape[0], 1, 128, 128)
 
-        print(x.shape)
-        print(embedding.shape)
+        # print(x.shape)
+        # print(embedding.shape)
         input = torch.cat([x, embedding], dim=1)
         
         m = self.act(self.conv1(input))
@@ -201,7 +201,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' or args.dataset == 'svhn' else 48
+    image_size = 128 
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(size=(image_size, image_size)),
