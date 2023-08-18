@@ -597,7 +597,8 @@ def train(args):
     # input2_dataset = 'celeba-64'
     # register_dataset('celeba-64', image_size=image_size)
    # loader = load_cars(batch_size=args.batch_size, image_size=image_size)
-    loader = load_flowers(batch_size=args.batch_size, image_size=image_size) # , file_path=args.dataset_path
+ #   loader = load_flowers(batch_size=args.batch_size, image_size=image_size) # , file_path=args.dataset_path
+    loader = load_textures(batch_size=args.batch_size, image_size=image_size, file_path=args.dataset_path)
 
     loader_iter = iter(loader)
 
