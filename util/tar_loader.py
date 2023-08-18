@@ -111,6 +111,7 @@ class TarDataset(Dataset):
 
     # filter the files to create the samples list
     self.samples = [m.name for m in self.members_by_name.values() if is_valid_file(m)]
+    self.samples = [name.replace("._", "") for name in self.samples]
 
 
   def __getitem__(self, index):
