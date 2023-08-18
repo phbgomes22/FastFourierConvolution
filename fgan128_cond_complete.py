@@ -154,14 +154,14 @@ class Discriminator(FFCModel):
 
 
         ## == Conditional
-        self.label_embed = nn.Embedding(num_classes, 8*8*self.mg*self.mg)
+        self.label_embed = nn.Embedding(num_classes, 128*128)
 
     def forward(self, x, labels):
         labels = torch.unsqueeze(labels, dim=-1)
         labels = torch.unsqueeze(labels, dim=-1)
         embedding = self.label_embed(labels)
-        embedding = embedding.view(labels.shape[0], 1, 8*self.mg, 8*self.mg)
-    
+        embedding = embedding.view(labels.shape[0], 1, 128, 128)
+
         input = torch.cat([x, embedding], dim=1)
         
         m = self.act(self.conv1(input))
