@@ -245,12 +245,14 @@ def load_textures(batch_size, image_size, file_path: str):
     texture_dataset_aug = TarDataset(archive=img_dir, transform=aug_transform)
     texture_full = torch.utils.data.ConcatDataset([texture_dataset, texture_dataset_aug])
     print("INFO: Loaded Texture dataset with ", len(texture_full), " images!")
-    
-    img, lbl = texture_full.__getitem__
-    print(img.shape)
-    
+
     dataloader = torch.utils.data.DataLoader(texture_full, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     
+    for imgs, labels in texture_full:
+        print(imgs.shape)
+        print(labels)
+        break
+
     try:
         real_batch = next(iter(dataloader))
         plt.figure(figsize=(8,8))
