@@ -133,6 +133,7 @@ class TarDataset(Dataset):
       image = self.transform(image)
 
     dummy_label = 0
+    print(image.shape)
     return image, dummy_label if self.labeled else image
 
 
@@ -152,6 +153,7 @@ class TarDataset(Dataset):
     Returns:
       Image or Tensor: The image, possibly in PIL format.
     """
+    print(name)
     image = Image.open(BytesIO(self.get_file(name).read()))
     if pil:
       return image
