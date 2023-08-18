@@ -386,6 +386,7 @@ def main():
     parser.add_argument('--num_classes', type=int, default=0)
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs_fgan_cond'))
     parser.add_argument('--checkpoint', default=False, action='store_true')
+    parser.add_argument('--dataset_path', type=str, required=False)
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
     
