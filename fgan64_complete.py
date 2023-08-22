@@ -84,7 +84,7 @@ class Generator(FFCModel):
 
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size, mg: int = 4):
+    def __init__(self, z_size, mg: int = 4, batch_size: int = 64):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
@@ -92,7 +92,7 @@ class FGenerator(FFCModel):
         self.mg = mg
 
         ## positional encoding test
-        b_values = self._encoding(5.5, 256, 3)
+        b_values = self._encoding(5.5, z_size, batch_size)
         a_values = torch.ones(b_values.shape[1])
         self.a_values = nn.Parameter(a_values, requires_grad=False)
         self.b_values = nn.Parameter(b_values, requires_grad=False)
@@ -264,7 +264,7 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = FGenerator(z_size=args.z_size, mg=mg, args.batch_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
