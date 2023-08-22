@@ -84,20 +84,12 @@ class Generator(FFCModel):
 
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size, mg: int = 4, batch_size: int = 64):
+    def __init__(self, z_size, mg: int = 4):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
         ratio_g = 0.25
         self.mg = mg
-
-        ## positional encoding test
-        b_values = self._encoding(5.5, z_size, batch_size)
-        a_values = torch.ones(b_values.shape[1])
-        self.a_values = nn.Parameter(a_values, requires_grad=False)
-        self.b_values = nn.Parameter(b_values, requires_grad=False)
-
-
 
         sn_fn = torch.nn.utils.spectral_norm 
        # self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
@@ -129,24 +121,10 @@ class FGenerator(FFCModel):
         self.conv6 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
 
-    @staticmethod
-    def _encoding(max_log_scale: float, embedding_size: int, num_inputs: int):
-        """Produces the encoding b_values matrix."""
-        embedding_size = embedding_size // num_inputs
-        frequencies_matrix = 2. ** torch.linspace(0, max_log_scale, embedding_size)
-        frequencies_matrix = frequencies_matrix.reshape(-1, 1, 1)
-        frequencies_matrix = torch.eye(num_inputs) * frequencies_matrix
-        frequencies_matrix = frequencies_matrix.reshape(-1, num_inputs)
-        frequencies_matrix = frequencies_matrix.transpose(0, 1)
-        return frequencies_matrix
 
     def forward(self, z):
-
-        encoded = (math.pi * z) @ self.b_values
-        output = torch.cat([self.a_values * encoded.cos(),
-                            self.a_values * encoded.sin()], dim=-1)
-        print(output.shape)
-        fake = self.noise_to_feature(output)
+        
+        fake = self.noise_to_feature(z)
       
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
 
@@ -198,7 +176,32 @@ class Discriminator(FFCModel):
 
        # self.attn1 = Self_Attn(512, 'relu')
 
+        ## positional encoding test
+        b_values = self._encoding(5.5, z_size, 3)
+        a_values = torch.ones(b_values.shape[1])
+        self.a_values = nn.Parameter(a_values, requires_grad=False)
+        self.b_values = nn.Parameter(b_values, requires_grad=False)
+
+    @staticmethod
+    def _encoding(max_log_scale: float, embedding_size: int, num_inputs: int):
+        """Produces the encoding b_values matrix."""
+        embedding_size = embedding_size // num_inputs
+        frequencies_matrix = 2. ** torch.linspace(0, max_log_scale, embedding_size)
+        frequencies_matrix = frequencies_matrix.reshape(-1, 1, 1)
+        frequencies_matrix = torch.eye(num_inputs) * frequencies_matrix
+        frequencies_matrix = frequencies_matrix.reshape(-1, num_inputs)
+        frequencies_matrix = frequencies_matrix.transpose(0, 1)
+        return frequencies_matrix
+
     def forward(self, x):
+
+        print(z.shape)
+        print(self.b_values.shape)
+        encoded = (math.pi * x) @ self.b_values
+        output = torch.cat([self.a_values * encoded.cos(),
+                            self.a_values * encoded.sin()], dim=-1)
+        print(output.shape)
+
         m = self.act(self.conv1(x))
         m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
