@@ -91,6 +91,14 @@ class FGenerator(FFCModel):
         ratio_g = 0.25
         self.mg = mg
 
+        ## positional encoding test
+        b_values = self._encoding(5.5, 256, 3)
+        a_values = torch.ones(b_values.shape[1])
+        self.a_values = nn.Parameter(a_values, requires_grad=False)
+        self.b_values = nn.Parameter(b_values, requires_grad=False)
+
+
+
         sn_fn = torch.nn.utils.spectral_norm 
        # self.noise_to_feature = sn_fn(nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8))
         self.noise_to_feature = nn.Sequential(
@@ -121,9 +129,24 @@ class FGenerator(FFCModel):
         self.conv6 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
 
+    @staticmethod
+    def _encoding(max_log_scale: float, embedding_size: int, num_inputs: int):
+        """Produces the encoding b_values matrix."""
+        embedding_size = embedding_size // num_inputs
+        frequencies_matrix = 2. ** torch.linspace(0, max_log_scale, embedding_size)
+        frequencies_matrix = frequencies_matrix.reshape(-1, 1, 1)
+        frequencies_matrix = torch.eye(num_inputs) * frequencies_matrix
+        frequencies_matrix = frequencies_matrix.reshape(-1, num_inputs)
+        frequencies_matrix = frequencies_matrix.transpose(0, 1)
+        return frequencies_matrix
+
     def forward(self, z):
-        
-        fake = self.noise_to_feature(z)
+
+        encoded = (math.pi * z) @ self.b_values
+        output = torch.cat([self.a_values * encoded.cos(),
+                            self.a_values * encoded.sin()], dim=-1)
+        print(output.shape)
+        fake = self.noise_to_feature(output)
       
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
 
