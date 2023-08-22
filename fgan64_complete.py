@@ -177,7 +177,7 @@ class Discriminator(FFCModel):
        # self.attn1 = Self_Attn(512, 'relu')
 
         ## positional encoding test
-        b_values = self._encoding(5.5, z_size, 3)
+        b_values = self._encoding(5.5, 256, 3)
         a_values = torch.ones(b_values.shape[1])
         self.a_values = nn.Parameter(a_values, requires_grad=False)
         self.b_values = nn.Parameter(b_values, requires_grad=False)
@@ -195,7 +195,7 @@ class Discriminator(FFCModel):
 
     def forward(self, x):
 
-        print(z.shape)
+        print(x.shape)
         print(self.b_values.shape)
         encoded = (math.pi * x) @ self.b_values
         output = torch.cat([self.a_values * encoded.cos(),
@@ -267,7 +267,7 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg, batch_size=args.batch_size).to(device).train()
+    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     
