@@ -176,32 +176,8 @@ class Discriminator(FFCModel):
 
        # self.attn1 = Self_Attn(512, 'relu')
 
-        ## positional encoding test
-        b_values = self._encoding(5.5, 256, 3)
-        a_values = torch.ones(b_values.shape[1])
-        self.a_values = nn.Parameter(a_values, requires_grad=False)
-        self.b_values = nn.Parameter(b_values, requires_grad=False)
-
-    @staticmethod
-    def _encoding(max_log_scale: float, embedding_size: int, num_inputs: int):
-        """Produces the encoding b_values matrix."""
-        embedding_size = embedding_size // num_inputs
-        frequencies_matrix = 2. ** torch.linspace(0, max_log_scale, embedding_size)
-        frequencies_matrix = frequencies_matrix.reshape(-1, 1, 1)
-        frequencies_matrix = torch.eye(num_inputs) * frequencies_matrix
-        frequencies_matrix = frequencies_matrix.reshape(-1, num_inputs)
-        frequencies_matrix = frequencies_matrix.transpose(0, 1)
-        return frequencies_matrix
 
     def forward(self, x):
-
-        print(x.shape)
-        print(self.b_values.shape)
-        encoded = (math.pi * x) @ self.b_values
-        output = torch.cat([self.a_values * encoded.cos(),
-                            self.a_values * encoded.sin()], dim=-1)
-        print(output.shape)
-
         m = self.act(self.conv1(x))
         m = self.act(self.conv2(m))
         m = self.act(self.conv3(m))
@@ -267,7 +243,7 @@ def train(args):
     num_classes = 0 
 
     # create Generator and Discriminator models
-    G = FGenerator(z_size=args.z_size, mg=mg).to(device).train()
+    G = FGenerator(z_size=args.z_size, mg=mg, batch_size=args.batch_size).to(device).train()
     G.apply(weights_init)
     params = count_parameters(G)
     

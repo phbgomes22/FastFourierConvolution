@@ -12,6 +12,7 @@ import torch.nn.functional as F
 
 device = get_device()
 
+
 class FGenerator(FFCModel):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
     def __init__(self, z_size, mg: int = 4):
@@ -58,33 +59,53 @@ class FGenerator(FFCModel):
                        norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
 
     def forward(self, z):
+
+        feature_maps = []
         
         fake = self.noise_to_feature(z)
       
         fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
+        feature_maps.append(fake)
 
         fake = self.conv2(fake)
         if self.training:
             fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1]) 
+
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
         
         fake = self.conv3(fake)
         if self.training:
             fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
+
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
         
         fake = self.conv4(fake)
         if self.training:
             fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1]) 
 
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
+
         fake = self.conv5(fake)
         if self.training:
             fake = self.lcl_noise5(fake[0]), self.glb_noise5(fake[1]) 
+
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
 
         fake = self.conv6(fake)
         if self.training:
             fake = self.lcl_noise6(fake[0]), self.glb_noise6(fake[1]) 
 
+        feature_maps.append(fake[0])
+        feature_maps.append(fake[1])
+
         fake = self.conv7(fake)
         fake = self.resizer(fake)
+
+        feature_maps.append(fake)
 
         if not self.training:
             min_val = float(fake.min())
@@ -129,7 +150,7 @@ def get_filters(args):
 
 
     nz = 128
-    mg = 4 if args.img_size % 32 == 0 else 6
+    mg = 4 if args.img_size == 32 else 6
 
     model = FGenerator(z_size=nz, mg=mg).to(device) 
     model.restore_checkpoint(ckpt_file=args.checkpoint_file)
@@ -198,21 +219,25 @@ def save_image(fake, logs, num, name='image'):
 def test(args):
    ## Loading generator
 
-    nz = 128
-    mg = 4 if args.img_size % 32 == 0 else 6
+    get_filters(args)
 
-    model = FGenerator(z_size=nz, mg=mg).to(device) 
-    model.restore_checkpoint(ckpt_file=args.checkpoint_file)
-    model.eval()
-    count = 0
+    return
+    # nz = 128
+    # mg = 4 if args.img_size == 32 else 6
 
-    noise = torch.randn(args.number_samples, nz, device=device)
+    # model = FGenerator(z_size=nz, mg=mg).to(device) 
+    # model.restore_checkpoint(ckpt_file=args.checkpoint_file)
+    # netG.eval()
+    # count = 0
 
-    with torch.no_grad():
-        fake = model(noise).detach().cpu()#.numpy()
+    # noise = torch.randn(args.number_samples, nz, device=device)
 
-    for f in fake:
-        save_image(f, args.dir_logs, count)
-        count+=1
+    # with torch.no_grad():
+    #     fake = netG(noise).detach().cpu()#.numpy()
+
+    # for f in fake:
+    #     save_image(f, args.dir_logs, count)
+    #     count+=1
     
+
 main()
