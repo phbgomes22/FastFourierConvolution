@@ -113,7 +113,7 @@ class FGenerator(FFCModel):
             fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
             # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
-        return fake
+        return fake, feature_maps
 
 
 
