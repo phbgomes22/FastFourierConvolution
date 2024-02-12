@@ -445,7 +445,7 @@ class FGenerator(FFCModel):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 128
-        ratio_g = 0.25
+        ratio_g = 0.5
         self.mg = mg
 
         sn_fn = torch.nn.utils.spectral_norm 
