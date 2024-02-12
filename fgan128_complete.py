@@ -444,7 +444,7 @@ class FGenerator(FFCModel):
     def __init__(self, z_size, mg: int = 4):
         super(FGenerator, self).__init__()
         self.z_size = z_size
-        self.ngf = 64
+        self.ngf = 128
         ratio_g = 0.0#0.25
         self.mg = mg
 
