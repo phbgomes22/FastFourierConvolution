@@ -445,7 +445,7 @@ class FGenerator(FFCModel):
         super(FGenerator, self).__init__()
         self.z_size = z_size
         self.ngf = 64
-        ratio_g = 0.25
+        ratio_g = 0.0#0.25
         self.mg = mg
 
         sn_fn = torch.nn.utils.spectral_norm 
@@ -597,8 +597,8 @@ def train(args):
     # input2_dataset = 'celeba-64'
     # register_dataset('celeba-64', image_size=image_size)
    # loader = load_cars(batch_size=args.batch_size, image_size=image_size)
- #   loader = load_flowers(batch_size=args.batch_size, image_size=image_size) # , file_path=args.dataset_path
-    loader = load_textures(batch_size=args.batch_size, image_size=image_size, file_path=args.dataset_path)
+    loader = load_flowers(batch_size=args.batch_size, image_size=image_size) # , file_path=args.dataset_path
+    # loader = load_textures(batch_size=args.batch_size, image_size=image_size, file_path=args.dataset_path)
 
     loader_iter = iter(loader)
 
