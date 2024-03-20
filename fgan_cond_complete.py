@@ -293,7 +293,7 @@ def train(args):
     dir_dataset_name = 'dataset_' + str(args.dataset)
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
-    image_size = 32 if args.dataset == 'cifar10' or args.dataset == 'svhn' else 48
+    image_size = 32 if args.dataset == 'svhn' or args.dataset == 'svhn' else 48
     ds_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(size=(image_size, image_size)),
