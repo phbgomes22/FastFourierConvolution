@@ -97,14 +97,17 @@ def train(args):
     ds_transform = torchvision.transforms.Compose(
         [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
-    ds_instance = torchvision.datasets.CIFAR10(args.dir_dataset, train=True, download=True, transform=ds_transform)
+
+    input2_dataset = 'svhn-32'
+    register_dataset('svhn-32', image_size=32)
+    ds_instance = torchvision.datasets.SVHN(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
+        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=0, pin_memory=True
     )
     loader_iter = iter(loader)
 
     # reinterpret command line inputs
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'mps' #if torch.cuda.is_available() else 'cpu'
     num_classes = 10 if args.conditional else 0  # unconditional
     leading_metric, last_best_metric, metric_greater_cmp = {
         'ISC': (torch_fidelity.KEY_METRIC_ISC_MEAN, 0.0, float.__gt__),
@@ -194,10 +197,10 @@ def train(args):
         metrics = torch_fidelity.calculate_metrics(
             input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
             input1_model_num_samples=args.num_samples_for_metrics,
-            input2='cifar10-train',
+            input2=input2_dataset,
             isc=True,
             fid=True,
-            kid=True,
+            kid=False,
             ppl=False,
             ppl_epsilon=1e-2,
             ppl_sample_similarity_resize=64,
@@ -242,16 +245,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--num_total_steps', type=int, default=100000)
-    parser.add_argument('--num_epoch_steps', type=int, default=5000)
+    parser.add_argument('--num_epoch_steps', type=int, default=10000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
-    parser.add_argument('--num_samples_for_metrics', type=int, default=50000)
+    parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--z_size', type=int, default=128, choices=(128,))
     parser.add_argument('--z_type', type=str, default='normal')
     parser.add_argument('--leading_metric', type=str, default='ISC', choices=('ISC', 'FID', 'KID', 'PPL'))
     parser.add_argument('--disable_sn', default=False, action='store_true')
     parser.add_argument('--conditional', default=False, action='store_true')
-    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset'))
+    parser.add_argument('--dir_dataset', type=str, default=os.path.join(dir, 'dataset_svhn'))
     parser.add_argument('--dir_logs', type=str, default=os.path.join(dir, 'logs'))
     args = parser.parse_args()
     print('Configuration:\n' + ('\n'.join([f'{k:>25}: {v}' for k, v in args.__dict__.items()])))
