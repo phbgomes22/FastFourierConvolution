@@ -456,7 +456,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps) != 0:
+        if next_step > num_total_steps/2 and next_step % (args.num_epoch_steps) != 0:
             continue
         pbar.close()
         G.eval()
