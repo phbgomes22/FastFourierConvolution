@@ -102,12 +102,12 @@ def train(args):
     register_dataset('svhn-32', image_size=32)
     ds_instance = torchvision.datasets.SVHN(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=0, pin_memory=True
+        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
     loader_iter = iter(loader)
 
     # reinterpret command line inputs
-    device = 'mps' #if torch.cuda.is_available() else 'cpu'
+    device = 'cuda' #if torch.cuda.is_available() else 'cpu'
     num_classes = 10 if args.conditional else 0  # unconditional
     leading_metric, last_best_metric, metric_greater_cmp = {
         'ISC': (torch_fidelity.KEY_METRIC_ISC_MEAN, 0.0, float.__gt__),
