@@ -27,11 +27,10 @@ class FGenerator(FFCModel):
         ratio_g = 0.25
         self.mg = mg
 
-        
-        self.conv1 = FFC_BN_ACT(3, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=False)
-        self.lcl_noise1 = NoiseInjection(int(self.ngf*8*(1-ratio_g)))
-        self.glb_noise1 = NoiseInjection(int(self.ngf*8*(ratio_g)))
+        self.noise_to_feature = nn.Sequential(
+            nn.Linear(z_size, (self.mg * self.mg) * self.ngf*8),
+      #      nn.BatchNorm1d((self.mg * self.mg) * self.ngf*8)
+        )
 
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=False)
@@ -53,22 +52,21 @@ class FGenerator(FFCModel):
 
     def forward(self, z):
         
-        fake = self.conv1(z)
+        fake = self.noise_to_feature(z)
       
-      #  if self.training:
-        fake = self.lcl_noise1(fake[0]), self.glb_noise1(fake[1]) 
+        fake = fake.reshape(fake.size(0), -1, self.mg, self.mg)
 
         fake = self.conv2(fake)
-      #  if self.training:
-        fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1]) 
+        if self.training:
+            fake = self.lcl_noise2(fake[0]), self.glb_noise2(fake[1]) 
         
         fake = self.conv3(fake)
-     #   if self.training:
-        fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
+        if self.training:
+            fake = self.lcl_noise3(fake[0]), self.glb_noise3(fake[1])
         
         fake = self.conv4(fake)
-      #  if self.training:
-        fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1]) 
+        if self.training:
+            fake = self.lcl_noise4(fake[0]), self.glb_noise4(fake[1]) 
 
         fake = self.conv5(fake)
         fake = self.resizer(fake)
