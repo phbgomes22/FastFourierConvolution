@@ -288,7 +288,7 @@ def train(args):
             optim_D.step()
         
 
-        if step % (args.num_epoch_steps) != 0:
+        if step % (args.num_epoch_steps/5) != 0:
             D_losses.append(loss_D.item())
 
         # log
@@ -306,7 +306,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps) != 0:
+        if next_step % (args.num_epoch_steps/5) != 0:
             continue
         pbar.close()
         G.eval()
