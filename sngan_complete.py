@@ -160,12 +160,19 @@ def train(args):
         [torchvision.transforms.ToTensor(), torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
 
-    input2_dataset = 'svhn-32'
-    register_dataset('svhn-32', image_size=32)
-    ds_instance = torchvision.datasets.SVHN(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.CIFAR10('dataset_cifar10', train=True, download=True, transform=ds_transform)
+    mg = 4
+    input2_dataset = 'cifar10-train'
     loader = torch.utils.data.DataLoader(
-        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
+        ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
     )
+
+    # input2_dataset = 'svhn-32'
+    # register_dataset('svhn-32', image_size=32)
+    # ds_instance = torchvision.datasets.SVHN(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
+    # loader = torch.utils.data.DataLoader(
+    #     ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
+    # )
     loader_iter = iter(loader)
 
     # reinterpret command line inputs
