@@ -14,6 +14,8 @@ import torch_fidelity
 from models import *
 from util import *
 
+import csv
+
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -79,7 +81,7 @@ class FGenerator(FFCModel):
 
 class Generator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size):
+    def __init__(self, z_size, mg):
         super(Generator, self).__init__()
         self.z_size = z_size
 
@@ -243,7 +245,11 @@ def train(args):
     # initialize logging
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
+
     os.makedirs(args.dir_logs, exist_ok=True)
+
+    G_losses = []
+    D_losses = []
 
     for step in range(args.num_total_steps):
         # read next batch
@@ -266,6 +272,9 @@ def train(args):
         loss_G.backward()
         optim_G.step()
 
+        if step % (args.num_epoch_steps) != 0:
+            G_losses.append(loss_G.item())
+
         # update Discriminator
         G.requires_grad_(False)
         D.requires_grad_(True)
@@ -277,6 +286,10 @@ def train(args):
             loss_D = hinge_loss_dis(D(fake), D(real_img))
             loss_D.backward()
             optim_D.step()
+        
+
+        if step % (args.num_epoch_steps) != 0:
+            D_losses.append(loss_D.item())
 
         # log
         if (step + 1) % 10 == 0:
@@ -300,17 +313,17 @@ def train(args):
         print('Evaluating the generator...')
 
         # compute and log generative metrics
-        metrics = torch_fidelity.calculate_metrics(
-            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
-            input1_model_num_samples=args.num_samples_for_metrics,
-            input2=input2_dataset,
-            isc=True,
-            fid=True,
-            kid=False,
-            ppl=False,
-            ppl_epsilon=1e-2,
-            ppl_sample_similarity_resize=64,
-        )
+        # metrics = torch_fidelity.calculate_metrics(
+        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
+        #     input1_model_num_samples=args.num_samples_for_metrics,
+        #     input2=input2_dataset,
+        #     isc=True,
+        #     fid=True,
+        #     kid=False,
+        #     ppl=False,
+        #     ppl_epsilon=1e-2,
+        #     ppl_sample_similarity_resize=64,
+        # )
         
         # log metrics
         for k, v in metrics.items():
@@ -340,6 +353,13 @@ def train(args):
         if next_step <= args.num_total_steps:
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
+
+
+    with open('gan_losses.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Generator Loss", "Discriminator Loss"])
+        for gen_loss, disc_loss in zip(G_losses, D_losses):
+            writer.writerow([gen_loss, disc_loss])
 
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '
