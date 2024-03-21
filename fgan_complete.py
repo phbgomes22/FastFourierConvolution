@@ -95,22 +95,22 @@ class FGenerator(FFCModel):
         )
 
         self.conv2 = FFC_BN_ACT(self.ngf*8, self.ngf*4, 4, 0.0, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=False)
         self.lcl_noise2 = NoiseInjection(int(self.ngf*4*(1-ratio_g)))
         self.glb_noise2 = NoiseInjection(int(self.ngf*4*(ratio_g)))
         
         self.conv3 = FFC_BN_ACT(self.ngf*4, self.ngf*2, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=False)
         self.lcl_noise3 = NoiseInjection(int(self.ngf*2*(1-ratio_g)))
         self.glb_noise3 = NoiseInjection(int(self.ngf*2*(ratio_g)))
         
         self.conv4 = FFC_BN_ACT(self.ngf*2, self.ngf, 4, ratio_g, ratio_g, stride=2, padding=1, activation_layer=nn.GELU, 
-                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=True)
+                      norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=False)
         self.lcl_noise4 = NoiseInjection(int(self.ngf*(1-ratio_g)))
         self.glb_noise4 = NoiseInjection(int(self.ngf*(ratio_g)))
         
         self.conv5 = FFC_BN_ACT(self.ngf, 3, 3, ratio_g, 0.0, stride=1, padding=1, activation_layer=nn.Tanh, 
-                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=True)
+                       norm_layer=nn.Identity, upsampling=False, uses_noise=True, uses_sn=False)
 
     def forward(self, z):
         
@@ -134,11 +134,9 @@ class FGenerator(FFCModel):
         fake = self.resizer(fake)
 
         if not self.training:
-            min_val = float(fake.min())
-            max_val = float(fake.max())
-            fake = (255 * (fake.clamp(min_val, max_val) * 0.5 + 0.5))
-            # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
+            fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
             fake = fake.to(torch.uint8)
+            # fake = (255 * (fake.clamp(-1, 1) * 0.5 + 0.5))
         return fake
 
 class Discriminator(FFCModel):
@@ -253,30 +251,38 @@ def train(args):
         ]
     )
 
-    if args.dataset == 'cifar10':
-        ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
-        mg = 4
-        input2_dataset = args.dataset + '-train'
-        loader = torch.utils.data.DataLoader(
-            ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
-        )
-    elif args.dataset == 'flowers':
-        mg = 6
-        input2_dataset = 'flowers-48'
-        register_dataset(input2_dataset, image_size=image_size)
-        loader = load_flowers(args.batch_size, image_size)
-    elif args.dataset == 'stl10':
-        mg = 6
-        input2_dataset = 'stl-10-48'
-        register_dataset(input2_dataset, image_size=image_size)
-        loader = load_stl(args.batch_size, ds_transform)
-    elif args.dataset == 'celeba':
-        mg = 6
-        input2_dataset = 'celeba-48'
-        register_dataset('celeba-48', image_size=image_size)
-        loader = load_celeba(batch_size=args.batch_size, file_path=args.dataset_path)
-    else:
-        print("ERROR: DATASET NOT VALIDATED!")
+    mg = 4
+    input2_dataset = 'svhn-32'
+    register_dataset('svhn-32', image_size=32)
+    ds_instance = torchvision.datasets.SVHN(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
+    loader = torch.utils.data.DataLoader(
+        ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
+    )
+
+    # if args.dataset == 'cifar10':
+    #     ds_instance = torchvision.datasets.CIFAR10(dir_dataset, train=True, download=True, transform=ds_transform)
+    #     mg = 4
+    #     input2_dataset = args.dataset + '-train'
+    #     loader = torch.utils.data.DataLoader(
+    #         ds_instance, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True
+    #     )
+    # elif args.dataset == 'flowers':
+    #     mg = 6
+    #     input2_dataset = 'flowers-48'
+    #     register_dataset(input2_dataset, image_size=image_size)
+    #     loader = load_flowers(args.batch_size, image_size)
+    # elif args.dataset == 'stl10':
+    #     mg = 6
+    #     input2_dataset = 'stl-10-48'
+    #     register_dataset(input2_dataset, image_size=image_size)
+    #     loader = load_stl(args.batch_size, ds_transform)
+    # elif args.dataset == 'celeba':
+    #     mg = 6
+    #     input2_dataset = 'celeba-48'
+    #     register_dataset('celeba-48', image_size=image_size)
+    #     loader = load_celeba(batch_size=args.batch_size, file_path=args.dataset_path)
+    # else:
+    #     print("ERROR: DATASET NOT VALIDATED!")
 
     loader_iter = iter(loader)
 
@@ -408,17 +414,17 @@ def train(args):
         print('Evaluating the generator...')
 
         # compute and log generative metrics
-        # metrics = torch_fidelity.calculate_metrics(
-        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
-        #     input1_model_num_samples=args.num_samples_for_metrics,
-        #     input2= input2_dataset,
-        #     isc=True,
-        #     fid=True,
-        #     kid=True,
-        #     ppl=False,
-        #     ppl_epsilon=1e-2,
-        #     ppl_sample_similarity_resize=64,
-        # )
+        metrics = torch_fidelity.calculate_metrics(
+            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, 0),
+            input1_model_num_samples=args.num_samples_for_metrics,
+            input2= input2_dataset,
+            isc=True,
+            fid=True,
+            kid=False,
+            ppl=False,
+            ppl_epsilon=1e-2,
+            ppl_sample_similarity_resize=64,
+        )
         
         # # log metrics
         # for k, v in metrics.items():

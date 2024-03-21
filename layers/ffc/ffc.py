@@ -4,10 +4,7 @@ Adaptations: Pedro Gomes
 '''
 
 import torch.nn as nn
-from util import *
 from .spectral_transform import SpectralTransform
-from ..print_layer import *
-from ..attention_layer import *
 
 
 class FFC(nn.Module):
@@ -30,10 +27,6 @@ class FFC(nn.Module):
 
         assert stride == 1 or stride == 2, "Stride should be 1 or 2."
         self.stride = stride
-
-        debug_print("****")
-        debug_print(kernel_size, padding, stride)
-        debug_print("****")
 
         # calculate the number of input and output channels based on the ratio (alpha) 
         # of the local and global signals 

@@ -6,7 +6,26 @@ Adaptations: Pedro Gomes
 import torch
 import torch.nn as nn
 from .fourier_unity import FourierUnitSN
-from ..cond.cond_bn import *
+
+## LaMA model uses this, what is this?
+## Test, if it improves, study!
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(SELayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel // reduction, channel, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        res = x * y.expand_as(x)
+        return res
 
 '''
 Used in the FFC classs,
@@ -15,12 +34,10 @@ Within, the Fourier Unit
 '''
 class SpectralTransform(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, 
-                stride: int = 1, groups: int = 1, enable_lfu: bool = True, upsample: bool = False, num_classes: int = 1):
+                stride: int = 1, groups: int = 1, enable_lfu: bool = False, upsample: bool = False, num_classes: int = 1):
         # bn_layer not used
         super(SpectralTransform, self).__init__()
         self.enable_lfu = enable_lfu
-
-        sn_fn = torch.nn.utils.spectral_norm
         
         self.downsample = nn.Identity()
         # sets a downsample if the stride is set to 2 (default is one)
@@ -34,11 +51,11 @@ class SpectralTransform(nn.Module):
         # sets the initial 1x1 convolution, batch normalization and relu flow.
         self.conv1 =  nn.Conv2d(in_channels, out_channels //
                       2, kernel_size=1, groups=groups, bias=False) #sn_fn()
-        if num_classes > 1:
-            self.bn1 = ConditionalBatchNorm2d(out_channels // 2, num_classes)
-        else:
-            self.bn1 = nn.BatchNorm2d(out_channels // 2)
-        self.act1 = nn.GELU() # inplace=True 
+        # if num_classes > 1:
+        #     self.bn1 = ConditionalBatchNorm2d(out_channels // 2, num_classes)
+        # else:
+        self.bn1 = nn.BatchNorm2d(out_channels // 2)
+        self.act1 = nn.ReLU(inplace=True) # inplace=True 
 
         # creates the Fourier Unit that will do convolutions in the spectral domain.
         self.fu = FourierUnitSN(
@@ -54,6 +71,8 @@ class SpectralTransform(nn.Module):
             out_channels // 2, out_channels, kernel_size=1, groups=groups, bias=False)
         #sn_fn()
 
+        self.se_block = SELayer(self.conv1.in_channels)
+
 
     def forward(self, x, y = None):
         # the default behavior is no downsample - so this is an identity
@@ -61,28 +80,31 @@ class SpectralTransform(nn.Module):
         # the initial convolution with conv2(1x1), BN and ReLU
    
        # # - testing spectral norm in spectral transform
-        if y is not None: 
-            x = self.act1(self.bn1(self.conv1(x), y))
-        else:
-            x = self.act1(self.bn1(self.conv1(x)))
-            
+        # if y is not None: 
+        #     x = self.act1(self.bn1(self.conv1(x), y))
+        # else:
+
+        x = self.se_block(x)
+
+        x = self.act1(self.bn1(self.conv1(x)))
+        
         output = self.fu(x, y)
      #   print("-- after fu", output.size())
         # lfu is optional
-        if self.enable_lfu:
-            n, c, h, w = x.shape
-            split_no = 2
-            split_s = h // split_no
-            xs = torch.cat(torch.split(
-                x[:, :c // 4], split_s, dim=-2), dim=1).contiguous()
-            xs = torch.cat(torch.split(xs, split_s, dim=-1),
-                           dim=1).contiguous()
-            xs = self.lfu(xs, y)
-            xs = xs.repeat(1, 1, split_no, split_no).contiguous()
-        else:
-            xs = 0
+        # if self.enable_lfu:
+        #     n, c, h, w = x.shape
+        #     split_no = 2
+        #     split_s = h // split_no
+        #     xs = torch.cat(torch.split(
+        #         x[:, :c // 4], split_s, dim=-2), dim=1).contiguous()
+        #     xs = torch.cat(torch.split(xs, split_s, dim=-1),
+        #                    dim=1).contiguous()
+        #     xs = self.lfu(xs, y)
+        #     xs = xs.repeat(1, 1, split_no, split_no).contiguous()
+        # else:
+        #     xs = 0
 
         # does the final 1x1 convolution with the residual connection (x + output)
-        output = self.conv2(x + output + xs)
+        output = self.conv2(x + output) # + xs
         
         return output

@@ -3,11 +3,6 @@ Authors: Pedro Gomes
 '''
 
 import torch.nn as nn
-from util import *
-from .spectral_transform import SpectralTransform
-from config import Config
-from ..print_layer import *
-from ..attention_layer import *
 
 
 class FFCTranspose(nn.Module):
@@ -76,9 +71,7 @@ class FFCTranspose(nn.Module):
         # for the formation of the outputted global signal 
      
         self.convg2g =  module(in_cg, out_cg, stride, 1 if groups == 1 else groups // 2, enable_lfu, True, num_classes)
-        
-        ## -- for debugging
-        self.print_size = nn.Sequential(Print(debug=Config.shared().DEBUG))
+    
 
         
     def convtransp2d(self, condition:bool, in_ch: int, out_ch:int, kernel_size:int,
@@ -107,9 +100,8 @@ class FFCTranspose(nn.Module):
         if self.ratio_gout != 0:
             # creates the output global signal passing the right signals to the right convolutions
             out_xg = self.convl2g(x_l)
-            if type(x_g) is not int:
-                g2g = self.convg2g(x_g, y)
-                out_xg = out_xg + g2g
+            if type(self.convg2g) is not nn.Identity:
+                out_xg = out_xg + self.convg2g(x_g, y)
                 
         
         # returns both signals as a tuple
