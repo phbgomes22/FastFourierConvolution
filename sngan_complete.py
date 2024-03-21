@@ -215,7 +215,7 @@ def train(args):
     loader_iter = iter(loader)
 
     # reinterpret command line inputs
-    device = 'cuda' #if torch.cuda.is_available() else 'cpu'
+    device = 'mps' #if torch.cuda.is_available() else 'cpu'
     num_classes = 10 if args.conditional else 0  # unconditional
     leading_metric, last_best_metric, metric_greater_cmp = {
         'ISC': (torch_fidelity.KEY_METRIC_ISC_MEAN, 0.0, float.__gt__),
@@ -313,21 +313,21 @@ def train(args):
         print('Evaluating the generator...')
 
         # compute and log generative metrics
-        # metrics = torch_fidelity.calculate_metrics(
-        #     input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
-        #     input1_model_num_samples=args.num_samples_for_metrics,
-        #     input2=input2_dataset,
-        #     isc=True,
-        #     fid=True,
-        #     kid=False,
-        #     ppl=False,
-        #     ppl_epsilon=1e-2,
-        #     ppl_sample_similarity_resize=64,
-        # )
+        metrics = torch_fidelity.calculate_metrics(
+            input1=torch_fidelity.GenerativeModelModuleWrapper(G, args.z_size, args.z_type, num_classes),
+            input1_model_num_samples=args.num_samples_for_metrics,
+            input2=input2_dataset,
+            isc=True,
+            fid=True,
+            kid=False,
+            ppl=False,
+            ppl_epsilon=1e-2,
+            ppl_sample_similarity_resize=64,
+        )
         
         # log metrics
-        # for k, v in metrics.items():
-        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        for k, v in metrics.items():
+            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis).detach().cpu()
@@ -337,10 +337,10 @@ def train(args):
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
         # # save the generator if it improved
-        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-        #     last_best_metric = metrics[leading_metric]
+            last_best_metric = metrics[leading_metric]
 
             # dummy_input = torch.zeros(1, args.z_size, device=device)
             # torch.jit.save(torch.jit.trace(G, (dummy_input,)), os.path.join(args.dir_logs, 'generator.pth'))
@@ -370,8 +370,8 @@ def main():
     dir = os.getcwd()
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--num_total_steps', type=int, default=100000)
-    parser.add_argument('--num_epoch_steps', type=int, default=10000)
+    parser.add_argument('--num_total_steps', type=int, default=50000)
+    parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
     parser.add_argument('--lr', type=float, default=2e-4)
