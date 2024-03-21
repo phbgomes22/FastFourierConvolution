@@ -14,6 +14,8 @@ import torch_fidelity
 from models import *
 from util import *
 
+import csv
+
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -79,7 +81,7 @@ class FGenerator(FFCModel):
 
 class Generator(torch.nn.Module):
     # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
-    def __init__(self, z_size):
+    def __init__(self, z_size, mg):
         super(Generator, self).__init__()
         self.z_size = z_size
 
@@ -109,6 +111,50 @@ class Generator(torch.nn.Module):
             fake = fake.to(torch.uint8)
     #    self.print_layer(fake)
         return fake
+
+
+class FDiscriminator(FFCModel):
+    # Adapted from https://github.com/christiancosgrove/pytorch-spectral-normalization-gan
+    def __init__(self, sn=True, mg: int = 4):
+        super(FDiscriminator, self).__init__()
+        self.mg = mg
+        sn_fn = torch.nn.utils.spectral_norm if sn else lambda x: x
+        norm_layer = nn.BatchNorm2d
+        # 3, 4, 3, 4, 3, 4, 3
+        self.main = torch.nn.Sequential(
+            FFC_BN_ACT(in_channels=3, out_channels=64, kernel_size=3,
+                ratio_gin=0.0, ratio_gout=0.25, stride=1, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=nn.Identity),
+            FFC_BN_ACT(in_channels=64, out_channels=128, kernel_size=4,
+                ratio_gin=0.25, ratio_gout=0.25, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
+            FFC_BN_ACT(in_channels=128, out_channels=256, kernel_size=4,
+                ratio_gin=0.25, ratio_gout=0.25, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
+            FFC_BN_ACT(in_channels=256, out_channels=512, kernel_size=4,
+                ratio_gin=0.25, ratio_gout=0.0, stride=2, padding=1, bias=True, 
+                uses_noise=False, uses_sn=True, activation_layer=nn.LeakyReLU, norm_layer=norm_layer),
+            # FFC_BN_ACT(in_channels=256, out_channels=1, kernel_size=4,
+            #     ratio_gin=0, ratio_gout=0, stride=1, padding=0, bias=False, 
+            #     uses_noise=False, uses_sn=True, norm_layer=nn.Identity, 
+            #     activation_layer=nn.Sigmoid)
+        )
+
+        self.fc = sn_fn(torch.nn.Linear(self.mg * self.mg * 512, 1))
+      #  self.print_size = Print(debug=True)
+        self.gaus_noise = GaussianNoise(0.05)
+        # self.act = torch.nn.LeakyReLU(0.1)
+
+    def forward(self, x):
+      #  x = self.gaus_noise(x)
+        self.print_size(x)
+        m = self.main(x)
+        m = self.resizer(m)
+       # self.print_size(m)
+       # m = m.view(-1, 1)
+      #  self.print_size(m)
+       
+        return self.fc(m.view(-1, self.mg * self.mg * 512))
 
 
 class Discriminator(torch.nn.Module):
@@ -190,7 +236,7 @@ def train(args):
     params = count_parameters(G)
     print("- Parameters on generator: ", params)
     
-    D = Discriminator(not args.disable_sn).to(device).train()
+    D = FDiscriminator().to(device).train()
     params = count_parameters(D)
     print("- Parameters on discriminator: ", params)
     
@@ -206,7 +252,11 @@ def train(args):
     # initialize logging
     tb = tensorboard.SummaryWriter(log_dir=args.dir_logs)
     pbar = tqdm.tqdm(total=args.num_total_steps, desc='Training', unit='batch')
+
     os.makedirs(args.dir_logs, exist_ok=True)
+
+    G_losses = []
+    D_losses = []
 
     for step in range(args.num_total_steps):
         # read next batch
@@ -229,6 +279,9 @@ def train(args):
         loss_G.backward()
         optim_G.step()
 
+        if step % (args.num_epoch_steps/5) != 0:
+            G_losses.append(loss_G.item())
+
         # update Discriminator
         G.requires_grad_(False)
         D.requires_grad_(True)
@@ -240,6 +293,10 @@ def train(args):
             loss_D = hinge_loss_dis(D(fake), D(real_img))
             loss_D.backward()
             optim_D.step()
+        
+
+        if step % (args.num_epoch_steps/5) != 0:
+            D_losses.append(loss_D.item())
 
         # log
         if (step + 1) % 10 == 0:
@@ -286,7 +343,7 @@ def train(args):
         samples_vis = PIL.Image.fromarray(samples_vis)
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
-        # save the generator if it improved
+        # # save the generator if it improved
         if metric_greater_cmp(metrics[leading_metric], last_best_metric):
             print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
@@ -304,6 +361,13 @@ def train(args):
             pbar = tqdm.tqdm(total=args.num_total_steps, initial=next_step, desc='Training', unit='batch')
             G.train()
 
+
+    with open('gan_losses.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Generator Loss", "Discriminator Loss"])
+        for gen_loss, disc_loss in zip(G_losses, D_losses):
+            writer.writerow([gen_loss, disc_loss])
+
     tb.close()
     print(f'Training finished; the model with best {args.leading_metric} value ({last_best_metric}) is saved as '
           f'{args.dir_logs}/generator.onnx and {args.dir_logs}/generator.pth')
@@ -313,8 +377,8 @@ def main():
     dir = os.getcwd()
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--num_total_steps', type=int, default=100000)
-    parser.add_argument('--num_epoch_steps', type=int, default=10000)
+    parser.add_argument('--num_total_steps', type=int, default=50000)
+    parser.add_argument('--num_epoch_steps', type=int, default=5000)
     parser.add_argument('--num_dis_updates', type=int, default=1)
     parser.add_argument('--num_samples_for_metrics', type=int, default=10000)
     parser.add_argument('--lr', type=float, default=2e-4)

@@ -16,7 +16,7 @@ from config import Config, Datasets
 from .tar_loader import TarImageFolder, TarDataset
 import torchvision.transforms.functional as F
 import torch_fidelity
-from natsort import natsorted
+# from natsort import natsorted
 import PIL
 import os
 
@@ -278,7 +278,7 @@ class CelebADataset(torch.utils.data.Dataset):
 
     self.root_dir = root_dir
     self.transform = transform 
-    self.image_names = natsorted(image_names)
+    self.image_names = [] # natsorted(image_names)
 
   def __len__(self): 
     return len(self.image_names)
