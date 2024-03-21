@@ -3,6 +3,8 @@ Authors: Pedro Gomes
 '''
 
 import torch.nn as nn
+from .spectral_transform import SpectralTransform
+
 
 
 class FFCTranspose(nn.Module):
