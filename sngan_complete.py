@@ -272,7 +272,7 @@ def train(args):
         loss_G.backward()
         optim_G.step()
 
-        if step % (args.num_epoch_steps) != 0:
+        if step % (args.num_epoch_steps/5) != 0:
             G_losses.append(loss_G.item())
 
         # update Discriminator
@@ -306,7 +306,7 @@ def train(args):
 
         # check if it is validation time
         next_step = step + 1
-        if next_step % (args.num_epoch_steps/5) != 0:
+        if next_step % (args.num_epoch_steps) != 0:
             continue
         pbar.close()
         G.eval()
