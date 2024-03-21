@@ -326,8 +326,8 @@ def train(args):
         # )
         
         # log metrics
-        for k, v in metrics.items():
-            tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
+        # for k, v in metrics.items():
+        #     tb.add_scalar(f'metrics/{k}', v, global_step=next_step)
 
         # log observed images
         samples_vis = G(z_vis).detach().cpu()
@@ -336,11 +336,11 @@ def train(args):
         samples_vis = PIL.Image.fromarray(samples_vis)
         samples_vis.save(os.path.join(args.dir_logs, f'{next_step:06d}.png'))
 
-        # save the generator if it improved
-        if metric_greater_cmp(metrics[leading_metric], last_best_metric):
-            print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
+        # # save the generator if it improved
+        # if metric_greater_cmp(metrics[leading_metric], last_best_metric):
+        #     print(f'Leading metric {args.leading_metric} improved from {last_best_metric} to {metrics[leading_metric]}')
 
-            last_best_metric = metrics[leading_metric]
+        #     last_best_metric = metrics[leading_metric]
 
             # dummy_input = torch.zeros(1, args.z_size, device=device)
             # torch.jit.save(torch.jit.trace(G, (dummy_input,)), os.path.join(args.dir_logs, 'generator.pth'))
