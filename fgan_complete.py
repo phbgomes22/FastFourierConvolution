@@ -238,7 +238,7 @@ def hinge_loss_gen(fake):
 def train(args):
     # set up dataset loader
     dir = os.getcwd()
-    dir_dataset_name = 'dataset_' + str(args.dataset)
+    dir_dataset_name = 'dataset_svhn'
     dir_dataset = os.path.join(dir, dir_dataset_name)
     os.makedirs(dir_dataset, exist_ok=True)
     image_size = 32 if args.dataset == 'cifar10' else 48
@@ -254,7 +254,7 @@ def train(args):
     mg = 4
     input2_dataset = 'svhn-32'
     register_dataset('svhn-32', image_size=32)
-    ds_instance = torchvision.datasets.SVHN(root=args.dir_dataset, split='train', download=True, transform=ds_transform)
+    ds_instance = torchvision.datasets.SVHN(root=dir_dataset, split='train', download=True, transform=ds_transform)
     loader = torch.utils.data.DataLoader(
         ds_instance, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=8, pin_memory=True
     )
