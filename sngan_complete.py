@@ -28,7 +28,7 @@ class FGenerator(FFCModel):
         self.mg = mg
 
         
-        self.conv1 = FFC_BN_ACT(3, self.ngf*8, 4, 0.0, ratio_g, stride=4, padding=1, activation_layer=nn.GELU, 
+        self.conv1 = FFC_BN_ACT(3, self.ngf*8, 4, 0.0, ratio_g, stride=1, padding=0, activation_layer=nn.GELU, 
                       norm_layer=nn.BatchNorm2d, upsampling=True, uses_noise=True, uses_sn=False)
         self.lcl_noise1 = NoiseInjection(int(self.ngf*8*(1-ratio_g)))
         self.glb_noise1 = NoiseInjection(int(self.ngf*8*(ratio_g)))
