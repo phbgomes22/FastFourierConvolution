@@ -215,7 +215,7 @@ def train(args):
     loader_iter = iter(loader)
 
     # reinterpret command line inputs
-    device = 'mps' #if torch.cuda.is_available() else 'cpu'
+    device = 'cuda' #if torch.cuda.is_available() else 'cpu'
     num_classes = 10 if args.conditional else 0  # unconditional
     leading_metric, last_best_metric, metric_greater_cmp = {
         'ISC': (torch_fidelity.KEY_METRIC_ISC_MEAN, 0.0, float.__gt__),
